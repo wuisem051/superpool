@@ -6,10 +6,29 @@ import {
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore'; // Importar setDoc
+import { doc, getDoc, setDoc, getDocFromCache } from 'firebase/firestore'; // Importar setDoc y getDocFromCache
 import { db } from '../services/firebase'; // Importar db desde firebase.js
 
 const AuthContext = React.createContext();
+
+// Función de ayuda para evitar bloqueos perpetuos si el cliente está offline o tiene mala conexión
+const withTimeout = (promise, ms) => {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error("Timeout: La petición de datos tomó demasiado tiempo."));
+    }, ms);
+    promise.then(
+      value => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      err => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+};
 
 export function useAuth() {
   return useContext(AuthContext);
@@ -58,7 +77,12 @@ export function AuthProvider({ children }) {
 
       // Verify if the user exists in Firestore (important for consistency with onAuthStateChanged)
       const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
+      let userDoc;
+      try {
+        userDoc = await getDocFromCache(userDocRef);
+      } catch (cacheError) {
+        userDoc = await withTimeout(getDoc(userDocRef), 3500);
+      }
 
       if (!userDoc.exists()) {
         // If user document doesn't exist, it means this account was not properly registered.
@@ -84,16 +108,26 @@ export function AuthProvider({ children }) {
         // Obtener el rol del usuario desde Firestore
         try {
           const userDocRef = doc(db, "users", user.uid);
-          const userDoc = await getDoc(userDocRef);
+          let userDoc;
+          try {
+            // Intentar primero obtener desde la caché local (instantáneo)
+            userDoc = await getDocFromCache(userDocRef);
+            console.log("Rol de usuario obtenido desde la caché local para UID:", user.uid);
+          } catch (cacheError) {
+            // Si no está en caché, traer del servidor con timeout de 3.5s
+            console.warn("Rol no encontrado en caché, solicitando al servidor de Firestore...");
+            userDoc = await withTimeout(getDoc(userDocRef), 3500);
+          }
+
           if (userDoc.exists()) {
-          const userData = userDoc.data();
-          console.log("User data from Firestore for UID:", user.uid, ":", userData);
-          setIsAdmin(userData.role === 'admin');
-          console.log("Is Admin:", userData.role === 'admin');
+            const userData = userDoc.data();
+            console.log("User data from Firestore for UID:", user.uid, ":", userData);
+            setIsAdmin(userData.role === 'admin');
+            console.log("Is Admin:", userData.role === 'admin');
           } else {
-        console.log("User document does not exist for UID:", user.uid);
-        setIsAdmin(false);
-        console.log("Is Admin: false (user document not found)");
+            console.log("User document does not exist for UID:", user.uid);
+            setIsAdmin(false);
+            console.log("Is Admin: false (user document not found)");
           }
         } catch (error) {
           console.error("Error fetching user role from Firestore:", error);
@@ -116,7 +150,14 @@ export function AuthProvider({ children }) {
 
       // Obtener el rol del usuario desde Firestore
       const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
+      let userDoc;
+      try {
+        userDoc = await getDocFromCache(userDocRef);
+        console.log("Admin login - Rol obtenido desde caché local");
+      } catch (cacheError) {
+        console.warn("Admin login - Rol no disponible en caché, consultando servidor...");
+        userDoc = await withTimeout(getDoc(userDocRef), 3500);
+      }
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
@@ -152,7 +193,17 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {loading ? (
+        <div className="fixed inset-0 bg-[#090d16] z-50 flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center gap-4 animate-pulse">
+            <svg className="animate-spin h-10 w-10 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span className="text-[#a0aec0] font-sans font-medium text-sm tracking-wide">Cargando MaxiOS Pool...</span>
+          </div>
+        </div>
+      ) : children}
     </AuthContext.Provider>
   );
 }
