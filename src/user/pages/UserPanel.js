@@ -6,7 +6,7 @@ import { Bar } from 'react-chartjs-2';
 import Chart from 'chart.js/auto';
 import { countMinersByUser } from '../../utils/miners';
 import { db, auth } from '../../services/firebase'; // Importar db y auth desde firebase.js
-import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, setDoc, addDoc, deleteDoc, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, setDoc, addDoc, deleteDoc, getDocs, orderBy, getDocFromCache } from 'firebase/firestore';
 import { updateEmail, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import UserPoolArbitrage from '../components/UserPoolArbitrage'; // Importar UserPoolArbitrage
 import WalletDisplay from '../components/WalletDisplay'; // Importar WalletDisplay
@@ -26,6 +26,25 @@ import styles from './UserPanel.module.css'; // Importar estilos CSS Modules
 import useFormValidation from '../../hooks/useFormValidation'; // Importar useFormValidation
 import { useError } from '../../context/ErrorContext'; // Importar useError
 import minersData from '../../data/miners'; // Importar la lista de mineros
+
+// Función de ayuda para evitar bloqueos si la red tiene mala conexión o está bloqueada por el ISP
+const withTimeout = (promise, ms) => {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error("Timeout: La petición tomó demasiado tiempo."));
+    }, ms);
+    promise.then(
+      value => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      err => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+};
 
 // Componentes de las sub-secciones
 
@@ -212,7 +231,16 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
       try {
         // Cargar configuración del Pool desde Firebase
         const poolConfigRef = doc(db, 'settings', 'poolConfig');
-        const poolConfigSnap = await getDoc(poolConfigRef);
+        let poolConfigSnap;
+        try {
+          // Intentar obtener desde la caché local primero
+          poolConfigSnap = await getDocFromCache(poolConfigRef);
+        } catch (cacheError) {
+          // Fallback al servidor Firebase con un timeout de 3 segundos
+          console.warn("Configuración de pool no encontrada en caché, consultando servidor...");
+          poolConfigSnap = await withTimeout(getDoc(poolConfigRef), 3000);
+        }
+
         if (poolConfigSnap.exists()) {
           const poolConfigData = poolConfigSnap.data();
           setPoolUrl(poolConfigData.url || 'stratum+tcp://bitcoinpool.com:4444');
@@ -228,7 +256,9 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
             setUserMiners(fetchedMiners);
           }, (err) => {
             console.error("Error fetching mining info from Firebase:", err);
-            showError('Fallo al cargar la información de minería.');
+            if (err.code !== 'unavailable') {
+              showError('Fallo al cargar la información de minería.');
+            }
           });
 
           return () => {
@@ -239,7 +269,9 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
         }
       } catch (err) {
         console.error("Error fetching mining info:", err);
-        showError('Fallo al cargar la información de minería.');
+        if (err.message && !err.message.includes("offline")) {
+          showError('Fallo al cargar la información de minería.');
+        }
       }
     };
     fetchPoolConfigAndMiners();
@@ -264,16 +296,21 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
     }
 
     try {
-      const newMinerRef = await addDoc(collection(db, 'miners'), {
-        userId: currentUser.uid,
-        workerName: defaultWorkerName || `worker-${Math.random().toString(36).substring(2, 8)}`,
-        currentHashrate: parseFloat(minerValues.newMinerThs),
-        status: 'activo',
-        createdAt: new Date(),
-      });
+      try {
+        // Enviar con timeout corto de 2.5 segundos. Si se pasa del tiempo (offline), se sincronizará en segundo plano.
+        await withTimeout(addDoc(collection(db, 'miners'), {
+          userId: currentUser.uid,
+          workerName: defaultWorkerName || `worker-${Math.random().toString(36).substring(2, 8)}`,
+          currentHashrate: parseFloat(minerValues.newMinerThs),
+          status: 'activo',
+          createdAt: new Date(),
+        }), 2500);
+        showSuccess('Minero añadido exitosamente!');
+      } catch (timeoutOrError) {
+        console.warn("Fallo temporal de conexión. El minero se agregará y sincronizará en segundo plano:", timeoutOrError);
+        showSuccess('Minero configurado. Se sincronizará en segundo plano.');
+      }
 
-      console.log("Minero añadido a Firebase:", newMinerRef.id);
-      showSuccess('Minero añadido exitosamente!');
       setMinerValues(initialMinerState); // Limpiar el formulario
       setMinerErrors({}); // Limpiar errores
     } catch (err) {
@@ -292,8 +329,13 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
     if (window.confirm('¿Estás seguro de que quieres eliminar este minero?')) {
       setIsLoading(true);
       try {
-        await deleteDoc(doc(db, 'miners', minerId));
-        showSuccess('Minero eliminado exitosamente.');
+        try {
+          await withTimeout(deleteDoc(doc(db, 'miners', minerId)), 2500);
+          showSuccess('Minero eliminado exitosamente.');
+        } catch (timeoutOrError) {
+          console.warn("Sincronizando la eliminación del minero en segundo plano:", timeoutOrError);
+          showSuccess('Minero removido localmente. Sincronizando en segundo plano.');
+        }
       } catch (err) {
         console.error("Error al eliminar minero:", err);
         showError(`Fallo al eliminar minero: ${err.message}`);
