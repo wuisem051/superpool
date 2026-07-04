@@ -177,82 +177,164 @@ const UserPoolArbitrage = () => {
   };
 
   if (loading) {
-    return <div className="text-center text-gray-800 p-8">Cargando panel de arbitraje...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <svg className="animate-spin h-10 w-10 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p className="text-gray-400 font-medium">Cargando panel de arbitraje...</p>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-center text-red-500 p-8">{error}</div>;
+    return (
+      <div className="flex items-center justify-center h-48">
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-2xl p-6 text-center max-w-md">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <p className="font-semibold">{error}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="p-4 space-y-6 bg-gray-50 text-gray-900">
-      {/* Pools de Arbitraje Disponibles */}
-      <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
-        <div className="flex items-center mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-yellow-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-2">
+        <div className="p-3 bg-yellow-500/10 rounded-2xl">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
-          <h2 className="text-2xl font-bold text-gray-800">Pools de Arbitraje Disponibles</h2>
         </div>
-        <p className="text-gray-600 mb-6">Participa en pools de arbitraje para maximizar tus ganancias en diferentes criptomonedas</p>
-
-        {availablePools.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
-            <p className="mb-2">No hay pools de arbitraje disponibles en este momento.</p>
-            <p>Vuelve más tarde para ver nuevas oportunidades.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {availablePools.map((pool) => (
-              <div key={pool.id} className="bg-gray-100 p-5 rounded-lg flex items-center justify-between border border-gray-200">
-                <div>
-                  <h3 className="text-xl font-semibold text-blue-700">{pool.name} ({pool.cryptocurrency})</h3>
-                  <p className="text-gray-700 text-sm">${pool.thsRate.toFixed(3)} por TH/s | Comisión: {pool.commission.toFixed(1)}%</p>
-                </div>
-                <button
-                  onClick={() => handleJoinPool(pool)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md text-sm"
-                >
-                  Unirse
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+        <div>
+          <h1 className="text-2xl font-bold text-white">Pools de Arbitraje</h1>
+          <p className="text-gray-400 text-sm">Maximiza tus ganancias conectándote a las mejores pools</p>
+        </div>
       </div>
 
-      {/* Mis Pools de Arbitraje Activas */}
-      <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
-        <div className="flex items-center mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-green-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <h2 className="text-2xl font-bold text-gray-800">Mis Pools de Arbitraje Activas</h2>
+      {/* Estadísticas Rápidas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { label: 'Pools Activas', value: activePoolsCount, icon: '⚡', color: 'from-blue-400 to-cyan-300', bg: 'bg-blue-500/10' },
+          { label: 'Ganancias Totales', value: `$${totalEarnings.toFixed(2)}`, icon: '💰', color: 'from-green-400 to-emerald-300', bg: 'bg-green-500/10' },
+          { label: 'Mejor Tasa', value: `${bestRate.toFixed(2)}%`, icon: '📈', color: 'from-purple-400 to-violet-300', bg: 'bg-purple-500/10' },
+        ].map(({ label, value, icon, color, bg }) => (
+          <div key={label} className="relative overflow-hidden bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform duration-300">
+            <div className={`absolute top-0 right-0 w-32 h-32 ${bg} rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none`}></div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-gray-400 text-sm font-semibold">{label}</p>
+              <span className={`text-sm ${bg} w-7 h-7 flex items-center justify-center rounded-lg`}>{icon}</span>
+            </div>
+            <p className={`text-3xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r ${color}`}>{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Pools de Arbitraje Disponibles */}
+      <div className="bg-[#0b0e14] border border-[#1e2330] rounded-3xl p-6 shadow-xl">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-yellow-500/10 rounded-xl">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">Pools Disponibles</h2>
+            <p className="text-gray-500 text-xs">Únete a una pool para comenzar a generar rendimientos</p>
+          </div>
+          <span className="ml-auto text-xs bg-yellow-500/10 text-yellow-400 px-3 py-1 rounded-full font-bold">{availablePools.length} disponibles</span>
+        </div>
+
+        <div className="mt-5">
+          {availablePools.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-14 border-2 border-dashed border-[#1e2330] rounded-2xl text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+              <p className="font-semibold mb-1">Sin pools disponibles</p>
+              <p className="text-sm">Vuelve más tarde para ver nuevas oportunidades.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {availablePools.map((pool) => (
+                <div key={pool.id} className="group bg-[#131824] border border-[#1e2330] hover:border-yellow-500/30 rounded-2xl p-5 flex items-center justify-between transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center text-xl font-bold text-yellow-400 flex-shrink-0">
+                      {pool.cryptocurrency?.[0] || '?'}
+                    </div>
+                    <div>
+                      <h3 className="text-white font-bold text-base leading-tight">{pool.name}</h3>
+                      <span className="text-xs text-yellow-400 font-mono bg-yellow-500/10 px-2 py-0.5 rounded-full">{pool.cryptocurrency}</span>
+                      <div className="mt-1.5 flex flex-wrap gap-2">
+                        <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-md">💵 ${pool.thsRate.toFixed(3)} /TH/s</span>
+                        <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-md">🏷️ {pool.commission.toFixed(1)}% comisión</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleJoinPool(pool)}
+                    className="ml-4 flex-shrink-0 px-5 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-bold rounded-xl shadow-lg shadow-yellow-500/20 transition-all text-sm"
+                  >
+                    Unirse
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mis Pools Activas */}
+      <div className="bg-[#0b0e14] border border-[#1e2330] rounded-3xl p-6 shadow-xl">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="p-2 bg-green-500/10 rounded-xl">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">Mis Pools Activas</h2>
+            <p className="text-gray-500 text-xs">Pools a las que actualmente estás conectado</p>
+          </div>
+          <span className="ml-auto text-xs bg-green-500/10 text-green-400 px-3 py-1 rounded-full font-bold">{userActivePools.length} activas</span>
         </div>
 
         {userActivePools.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
-            <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="mt-4 mb-2 text-gray-600">No has aceptado ninguna pool de arbitraje aún</p>
-            <p className="text-sm text-gray-500">Acepta pools arriba para ver la información de minería aquí</p>
+          <div className="flex flex-col items-center justify-center py-14 border-2 border-dashed border-[#1e2330] rounded-2xl text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <p className="font-semibold mb-1">Ninguna pool activa</p>
+            <p className="text-sm">Únete a una pool arriba para comenzar a generar ganancias.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {userActivePools.map((pool) => (
-              <div key={pool.id} className="bg-gray-100 p-5 rounded-lg flex items-center justify-between border border-gray-200">
-                <div>
-                  <h3 className="text-xl font-semibold text-green-700">{pool.poolName} ({pool.cryptocurrency})</h3>
-                  <p className="text-gray-700 text-sm">Estado: {pool.status} | Ganancias: ${pool.earnings.toFixed(2)}</p>
-                  <p className="text-gray-700 text-sm">Tasa TH/s: ${pool.thsRate.toFixed(3)} | Comisión: {pool.commission.toFixed(1)}%</p>
-                  {pool.url && pool.port && (
-                    <p className="text-gray-700 text-sm">Conexión: {pool.url}:{pool.port} | Worker: {pool.defaultWorkerName}</p>
-                  )}
+              <div key={pool.id} className="bg-[#131824] border border-green-500/20 rounded-2xl p-5 flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4 flex-1 min-w-0">
+                  <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center text-xl font-bold text-green-400 flex-shrink-0">
+                    {pool.cryptocurrency?.[0] || '?'}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-white font-bold text-base truncate">{pool.poolName}</h3>
+                    <span className="text-xs text-green-400 font-mono bg-green-500/10 px-2 py-0.5 rounded-full">{pool.cryptocurrency}</span>
+                    <div className="mt-2 space-y-1">
+                      <div className="flex flex-wrap gap-2">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pool.status === 'Activa' ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>● {pool.status}</span>
+                        <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-md">💵 ${pool.earnings.toFixed(2)} ganados</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-md">📊 ${pool.thsRate.toFixed(3)} /TH/s</span>
+                        <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-md">🏷️ {pool.commission.toFixed(1)}%</span>
+                      </div>
+                      {pool.url && pool.port && (
+                        <p className="text-xs text-gray-500 font-mono truncate">🔗 {pool.url}:{pool.port} | {pool.defaultWorkerName}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <button
                   onClick={() => handleLeavePool(pool)}
-                  className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md text-sm"
+                  className="flex-shrink-0 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 font-bold rounded-xl border border-red-500/20 transition-all text-sm"
                 >
                   Desconectar
                 </button>
@@ -262,76 +344,33 @@ const UserPoolArbitrage = () => {
         )}
       </div>
 
-      {/* Estadísticas de Arbitraje */}
-      <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
-        <div className="flex items-center mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-orange-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9 0 1020.945 13H11V3.055z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-          </svg>
-          <h2 className="text-2xl font-bold text-gray-800">Estadísticas de Arbitraje</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-          <div className="bg-gray-100 p-5 rounded-lg border border-gray-200 flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11.356 2H15M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <p className="text-3xl font-bold text-gray-800">{activePoolsCount}</p>
-            <p className="text-gray-600 text-sm">Pools Activas</p>
-          </div>
-
-          <div className="bg-gray-100 p-5 rounded-lg border border-gray-200 flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V3a1 1 0 00-1-1H4a1 1 0 00-1 1v18a1 1 0 001 1h12a1 1 0 001-1v-5m-1-10v4m-4 0h4" />
-              </svg>
-            </div>
-            <p className="text-3xl font-bold text-gray-800">${totalEarnings.toFixed(2)}</p>
-            <p className="text-gray-600 text-sm">Ganancias Totales</p>
-          </div>
-
-          <div className="bg-gray-100 p-5 rounded-lg border border-gray-200 flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-              </svg>
-            </div>
-            <p className="text-3xl font-bold text-gray-800">{bestRate.toFixed(2)}%</p>
-            <p className="text-gray-600 text-sm">Mejor Tasa</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Modal de Confirmación para Unirse a la Pool */}
+      {/* Modal: Confirmar Unión */}
       {poolToJoin && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full text-center">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">Confirmar Unión a Pool</h3>
-            <p className="text-gray-700 mb-6">
-              ¿Estás seguro de que quieres unirte a la pool <span className="font-semibold">{poolToJoin.name} ({poolToJoin.cryptocurrency})</span>?
-              <br />
-              Tasa: ${poolToJoin.thsRate.toFixed(3)} por TH/s | Comisión: {poolToJoin.commission.toFixed(1)}%
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0b0e14] border border-[#1e2330] rounded-3xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-yellow-500/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Confirmar Unión</h3>
+              <p className="text-gray-400 text-sm">¿Unirte a la siguiente pool de arbitraje?</p>
+            </div>
+            <div className="bg-[#131824] border border-[#1e2330] rounded-2xl p-5 mb-6 space-y-2">
+              <p className="text-white font-bold text-lg">{poolToJoin.name} <span className="text-yellow-400 text-base font-mono">({poolToJoin.cryptocurrency})</span></p>
+              <div className="flex flex-wrap gap-2 mt-2">
+                <span className="text-xs text-gray-300 bg-white/5 px-3 py-1 rounded-lg">💵 ${poolToJoin.thsRate.toFixed(3)} / TH/s</span>
+                <span className="text-xs text-gray-300 bg-white/5 px-3 py-1 rounded-lg">🏷️ {poolToJoin.commission.toFixed(1)}% comisión</span>
+              </div>
               {poolToJoin.url && poolToJoin.port && (
-                <>
-                  <br />
-                  Conexión: {poolToJoin.url}:{poolToJoin.port} | Worker: {poolToJoin.defaultWorkerName}
-                </>
+                <p className="text-xs text-gray-500 font-mono mt-1">🔗 {poolToJoin.url}:{poolToJoin.port} | Worker: {poolToJoin.defaultWorkerName}</p>
               )}
-            </p>
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={confirmJoinPool}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-5 rounded-md text-lg"
-              >
-                Confirmar Unión
+            </div>
+            <div className="flex gap-3">
+              <button onClick={confirmJoinPool} className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all">
+                ✓ Confirmar
               </button>
-              <button
-                onClick={cancelJoinPool}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-md text-lg"
-              >
+              <button onClick={cancelJoinPool} className="flex-1 py-3 bg-[#131824] hover:bg-white/5 text-gray-400 hover:text-white font-bold rounded-xl border border-[#1e2330] transition-all">
                 Cancelar
               </button>
             </div>
@@ -339,33 +378,33 @@ const UserPoolArbitrage = () => {
         </div>
       )}
 
-      {/* Modal de Confirmación para Desconectarse de la Pool */}
+      {/* Modal: Confirmar Desconexión */}
       {poolToLeave && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full text-center">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">Confirmar Desconexión de Pool</h3>
-            <p className="text-gray-700 mb-6">
-              ¿Estás seguro de que quieres desconectarte de la pool <span className="font-semibold">{poolToLeave.poolName} ({poolToLeave.cryptocurrency})</span>?
-              <br />
-              Esta acción marcará la pool como inactiva.
-            </p>
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={confirmLeavePool}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-md text-lg"
-              >
-                Confirmar Desconexión
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0b0e14] border border-[#1e2330] rounded-3xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-red-500/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Confirmar Desconexión</h3>
+              <p className="text-gray-400 text-sm">Esta acción marcará la pool como inactiva.</p>
+            </div>
+            <div className="bg-[#131824] border border-red-500/20 rounded-2xl p-5 mb-6">
+              <p className="text-white font-bold text-lg">{poolToLeave.poolName} <span className="text-red-400 text-base font-mono">({poolToLeave.cryptocurrency})</span></p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={confirmLeavePool} className="flex-1 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white font-bold rounded-xl shadow-lg shadow-red-500/20 transition-all">
+                Desconectar
               </button>
-              <button
-                onClick={cancelLeavePool}
-                className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-5 rounded-md text-lg"
-              >
+              <button onClick={cancelLeavePool} className="flex-1 py-3 bg-[#131824] hover:bg-white/5 text-gray-400 hover:text-white font-bold rounded-xl border border-[#1e2330] transition-all">
                 Cancelar
               </button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };
