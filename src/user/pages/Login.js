@@ -21,14 +21,17 @@ const Login = () => {
     try {
       showError(null); // Limpiar errores previos
       setLoading(true);
-      // Sanitizar las entradas antes de usarlas
       const sanitizedIdentifier = sanitizeInput(identifierRef.current.value);
-      const sanitizedPassword = sanitizeInput(passwordRef.current.value);
+      const password = passwordRef.current.value;
 
-      await login(sanitizedIdentifier, sanitizedPassword);
+      await login(sanitizedIdentifier, password);
       navigate('/user/dashboard'); // Redirigir al dashboard del usuario después del login exitoso
     } catch (err) {
-      showError('Fallo al iniciar sesión. Revisa tus credenciales.');
+      if (err.message && err.message.includes('No se encontró el perfil')) {
+        showError(err.message);
+      } else {
+        showError('Fallo al iniciar sesión: ' + (err.code || err.message));
+      }
       console.error("Error al iniciar sesión:", err);
     }
     setLoading(false);

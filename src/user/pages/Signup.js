@@ -26,10 +26,10 @@ const Signup = () => {
 
     const sanitizedEmail = sanitizeInput(emailRef.current.value);
     const sanitizedPayeerAccount = sanitizeInput(payeerAccountRef.current.value);
-    const sanitizedPassword = sanitizeInput(passwordRef.current.value);
-    const sanitizedPasswordConfirm = sanitizeInput(passwordConfirmRef.current.value);
+    const password = passwordRef.current.value;
+    const passwordConfirm = passwordConfirmRef.current.value;
 
-    if (sanitizedPassword !== sanitizedPasswordConfirm) {
+    if (password !== passwordConfirm) {
       return showError('Las contraseñas no coinciden');
     }
 
@@ -41,9 +41,9 @@ const Signup = () => {
       }
       // Usar el número Payeer como parte del 'email' para Firebase Auth
       const payeerEmail = `${sanitizedPayeerAccount}@payeer.com`;
-      authPromise = signupWithPayeer(payeerEmail, sanitizedPassword, sanitizedPayeerAccount);
+      authPromise = signupWithPayeer(payeerEmail, password, sanitizedPayeerAccount);
     } else if (sanitizedEmail) {
-      authPromise = signup(sanitizedEmail, sanitizedPassword);
+      authPromise = signup(sanitizedEmail, password);
     } else {
       return showError('Por favor, ingresa un correo electrónico o un número de cuenta Payeer.');
     }
@@ -75,45 +75,45 @@ const Signup = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <input 
-                ref={emailRef} 
-                id="email-address" 
-                name="email" 
-                type="email" 
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${theme.borderColor} ${theme.inputBackground} ${theme.text} rounded-t-md focus:outline-none focus:ring-accent focus:border-accent`} 
-                placeholder="Correo electrónico (opcional)" 
+              <input
+                ref={emailRef}
+                id="email-address"
+                name="email"
+                type="email"
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${theme.borderColor} ${theme.inputBackground} ${theme.text} rounded-t-md focus:outline-none focus:ring-accent focus:border-accent`}
+                placeholder="Correo electrónico (opcional)"
               />
             </div>
             <div>
-              <input 
-                ref={payeerAccountRef} 
-                id="payeer-account" 
-                name="payeer-account" 
-                type="text" 
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${theme.borderColor} ${theme.inputBackground} ${theme.text} focus:outline-none focus:ring-accent focus:border-accent`} 
-                placeholder="Número de cuenta Payeer (ej. P12345678) (opcional)" 
+              <input
+                ref={payeerAccountRef}
+                id="payeer-account"
+                name="payeer-account"
+                type="text"
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${theme.borderColor} ${theme.inputBackground} ${theme.text} focus:outline-none focus:ring-accent focus:border-accent`}
+                placeholder="Número de cuenta Payeer (ej. P12345678) (opcional)"
               />
             </div>
             <div>
-              <input 
-                ref={passwordRef} 
-                id="password" 
-                name="password" 
-                type="password" 
-                required 
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${theme.borderColor} ${theme.inputBackground} ${theme.text} focus:outline-none focus:ring-accent focus:border-accent`} 
-                placeholder="Contraseña" 
+              <input
+                ref={passwordRef}
+                id="password"
+                name="password"
+                type="password"
+                required
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${theme.borderColor} ${theme.inputBackground} ${theme.text} focus:outline-none focus:ring-accent focus:border-accent`}
+                placeholder="Contraseña"
               />
             </div>
             <div>
-              <input 
-                ref={passwordConfirmRef} 
-                id="password-confirm" 
-                name="password-confirm" 
-                type="password" 
-                required 
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${theme.borderColor} ${theme.inputBackground} ${theme.text} rounded-b-md focus:outline-none focus:ring-accent focus:border-accent`} 
-                placeholder="Confirmar contraseña" 
+              <input
+                ref={passwordConfirmRef}
+                id="password-confirm"
+                name="password-confirm"
+                type="password"
+                required
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${theme.borderColor} ${theme.inputBackground} ${theme.text} rounded-b-md focus:outline-none focus:ring-accent focus:border-accent`}
+                placeholder="Confirmar contraseña"
               />
             </div>
           </div>
@@ -121,9 +121,9 @@ const Signup = () => {
             O regístrate con Payeer
           </div>
           <div>
-            <button 
-              type="submit" 
-              disabled={loading} 
+            <button
+              type="submit"
+              disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-accent hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
             >
               {loading ? 'Creando cuenta...' : 'Registrarse'}
