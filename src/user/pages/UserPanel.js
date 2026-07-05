@@ -1552,7 +1552,11 @@ const UserPanel = () => {
     balanceDOGE: 0,
     balanceVES: 0, // Añadir balanceVES
   });
-  const [paymentRate, setPaymentRate] = useState(0.00); // Nuevo estado para la tasa de pago
+  const [profitabilitySettings, setProfitabilitySettings] = useState({
+    fixedRatePerTHs: 0.05,
+    fixedPoolCommission: 1,
+    useFixedRate: false
+  });
   const [btcToUsdRate, setBtcToUsdRate] = useState(20000); // Nuevo estado para la tasa de BTC a USD, valor por defecto
   const [minPaymentThresholds, setMinPaymentThresholds] = useState({ // Nuevo estado para los umbrales mínimos de retiro por moneda
     BTC: 0.001,
@@ -1563,7 +1567,6 @@ const UserPanel = () => {
   });
   const [totalHashratePool, setTotalHashratePool] = useState(0); // Nuevo estado para el hashrate total de la pool
   const [activeMinersAllUsers, setActiveMinersAllUsers] = useState(0); // Nuevo estado para mineros activos de la pool
-  const [poolCommission, setPoolCommission] = useState(0); // Nuevo estado para la comisión de la pool
   const [paymentsHistory, setPaymentsHistory] = useState([]); // Estado para el historial de pagos
   const [withdrawalsHistory, setWithdrawalsHistory] = useState([]); // Estado para el historial de retiros
   const [userPaymentAddresses, setUserPaymentAddresses] = useState({}); // Nuevo estado para las direcciones de pago del usuario
@@ -1587,6 +1590,22 @@ const UserPanel = () => {
   console.log("UserPanel: withdrawalsHistory", withdrawalsHistory);
   console.log("UserPanel: userPaymentAddresses", userPaymentAddresses);
 
+
+  const paymentRate = useMemo(() => {
+    if (profitabilitySettings.useFixedRate) {
+      return profitabilitySettings.fixedRatePerTHs;
+    } else {
+      const difficulty = 73197634206448;
+      const btcPrice = btcToUsdRate || 121692;
+      const btcPerTHsPerDay = (60 * 60 * 24 * 1 * 10 ** 12) / (difficulty * 2 ** 32);
+      const calculatedDailyBtcGain = btcPerTHsPerDay * (1 - profitabilitySettings.fixedPoolCommission / 100);
+      return calculatedDailyBtcGain * btcPrice;
+    }
+  }, [profitabilitySettings, btcToUsdRate]);
+
+  const poolCommission = useMemo(() => {
+    return profitabilitySettings.fixedPoolCommission;
+  }, [profitabilitySettings]);
 
   const totalHashrate = useMemo(() => {
     return userMiners.reduce((sum, miner) => sum + (miner.currentHashrate || 0), 0);
@@ -1715,11 +1734,28 @@ const UserPanel = () => {
     const poolConfigQuery = query(collection(db, "settings"), where("key", "==", "poolConfig"));
     const unsubscribe = onSnapshot(poolConfigQuery, (snapshot) => {
       const settingsData = snapshot.docs.length > 0 ? snapshot.docs[0].data() : {};
-      setPaymentRate(settingsData.obsoletePrice || 0.00);
       setBtcToUsdRate(settingsData.btcToUsdRate || 20000);
-      setPoolCommission(settingsData.commission || 0);
     }, (error) => {
       console.error("UserPanel: Error en la suscripción de poolConfig:", error);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Suscripción para configuración de rentabilidad
+  useEffect(() => {
+    console.log("UserPanel: Configurando suscripción para settings/profitability.");
+    const docRef = doc(db, "settings", "profitability");
+    const unsubscribe = onSnapshot(docRef, (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        setProfitabilitySettings({
+          fixedRatePerTHs: data.fixedRatePerTHs ?? 0.05,
+          fixedPoolCommission: data.fixedPoolCommission ?? 1,
+          useFixedRate: data.useFixedRate ?? false
+        });
+      }
+    }, (error) => {
+      console.error("UserPanel: Error en la suscripción de profitability:", error);
     });
     return () => unsubscribe();
   }, []);
