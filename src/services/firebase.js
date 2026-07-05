@@ -28,11 +28,11 @@ const db = initializeFirestore(app, {
 });
 
 // Conectar a los emuladores de Firebase si estamos en desarrollo
-if (process.env.NODE_ENV === 'development') {
-  if (window.location.hostname === "localhost") {
-    connectAuthEmulator(auth, "http://localhost:9099"); // Puerto por defecto para Auth Emulator
-    connectFirestoreEmulator(db, "localhost", 8081); // Puerto configurado en firebase.json
-  }
-}
+// if (process.env.NODE_ENV === 'development') {
+//   if (window.location.hostname === "localhost") {
+//     connectAuthEmulator(auth, "http://localhost:9099"); // Puerto por defecto para Auth Emulator
+//     connectFirestoreEmulator(db, "localhost", 8081); // Puerto configurado en firebase.json
+//   }
+// }
 
 export { auth, db };
