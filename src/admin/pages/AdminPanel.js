@@ -13,7 +13,7 @@ import ContactRequestsManagement from '../components/ContactRequestsManagement';
 import WithdrawalRequestsManagement from '../components/WithdrawalRequestsManagement';
 import BalanceManagement from '../../user/components/BalanceManagement';
 import SiteSettingsContent from '../components/SiteSettingsContent'; // Importar el nuevo componente
-import TradingSignalManagement from '../components/TradingSignalManagement'; // Importar el nuevo componente
+
 
 const AdminPanel = () => {
   const { darkMode } = useContext(ThemeContext); // Usar ThemeContext
@@ -53,13 +53,12 @@ const AdminPanel = () => {
         <nav>
           <ul>
             <li className="mb-0.5">
-              <Link 
-                to="/admin/miners" 
-                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${
-                  location.pathname === '/admin/miners' 
-                    ? 'bg-accent text-white' 
+              <Link
+                to="/admin/miners"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/miners'
+                    ? 'bg-accent text-white'
                     : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
-                }`}
+                  }`}
                 onClick={handleClearMinerNotification} // Limpiar notificación al hacer clic
               >
                 Gestión de Mineros (Usuario y Tienda)
@@ -71,97 +70,89 @@ const AdminPanel = () => {
               </Link>
             </li>
             <li className="mb-0.5">
-              <Link 
-                to="/admin/pool-config" 
-                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${
-                  location.pathname === '/admin/pool-config' 
-                    ? 'bg-accent text-white' 
+              <Link
+                to="/admin/pool-config"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/pool-config'
+                    ? 'bg-accent text-white'
                     : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
-                }`}
+                  }`}
               >
                 Configuración del Pool
               </Link>
             </li>
             <li className="mb-0.5">
-              <Link 
-                to="/admin/users" 
-                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${
-                  location.pathname === '/admin/users' 
-                    ? 'bg-accent text-white' 
+              <Link
+                to="/admin/users"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/users'
+                    ? 'bg-accent text-white'
                     : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
-                }`}
+                  }`}
               >
                 Gestión de Usuarios
               </Link>
             </li>
             <li className="mb-0.5">
-              <Link 
-                to="/admin/profitability-settings" 
-                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${
-                  location.pathname === '/admin/profitability-settings' 
-                    ? 'bg-accent text-white' 
+              <Link
+                to="/admin/profitability-settings"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/profitability-settings'
+                    ? 'bg-accent text-white'
                     : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
-                }`}
+                  }`}
               >
                 Configuración de Rentabilidad
               </Link>
             </li>
             <li className="mb-0.5">
-              <Link 
-                to="/admin/pool-arbitrage" 
-                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${
-                  location.pathname === '/admin/pool-arbitrage' 
-                    ? 'bg-accent text-white' 
+              <Link
+                to="/admin/pool-arbitrage"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/pool-arbitrage'
+                    ? 'bg-accent text-white'
                     : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
-                }`}
+                  }`}
               >
                 Arbitraje de Pools
               </Link>
             </li>
             <li className="mb-0.5">
-              <Link 
-                to="/admin/backup" 
-                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${
-                  location.pathname === '/admin/backup' 
-                    ? 'bg-accent text-white' 
+              <Link
+                to="/admin/backup"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/backup'
+                    ? 'bg-accent text-white'
                     : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
-                }`}
+                  }`}
               >
                 Respaldo de Datos
               </Link>
             </li>
             <li className="mb-0.5">
-              <Link 
-                to="/admin/news" 
-                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${
-                  location.pathname === '/admin/news' 
-                    ? 'bg-accent text-white' 
+              <Link
+                to="/admin/news"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/news'
+                    ? 'bg-accent text-white'
                     : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
-                }`}
+                  }`}
               >
                 Gestión de Noticias
               </Link>
             </li>
             <li className="mb-0.5">
-              <Link 
-                to="/admin/content" 
-                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${
-                  location.pathname === '/admin/content' 
-                    ? 'bg-accent text-white' 
+              <Link
+                to="/admin/content"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/content'
+                    ? 'bg-accent text-white'
                     : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
-                }`}
+                  }`}
               >
                 Gestión de Contenido
               </Link>
             </li>
             <li className="mb-0.5">
-              <Link 
-                to="/admin/contact-requests" 
-                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${
-                  location.pathname === '/admin/contact-requests' 
-                    ? 'bg-accent text-white' 
+              <Link
+                to="/admin/contact-requests"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/contact-requests'
+                    ? 'bg-accent text-white'
                     : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
-                }`}
+                  }`}
               >
                 Solicitudes de Contacto
                 {unreadContactRequests > 0 && (
@@ -172,13 +163,12 @@ const AdminPanel = () => {
               </Link>
             </li>
             <li className="mb-0.5"> {/* Nuevo enlace para Solicitudes de Pago */}
-              <Link 
-                to="/admin/withdrawal-requests" 
-                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${
-                  location.pathname === '/admin/withdrawal-requests' 
-                    ? 'bg-accent text-white' 
+              <Link
+                to="/admin/withdrawal-requests"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/withdrawal-requests'
+                    ? 'bg-accent text-white'
                     : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
-                }`}
+                  }`}
               >
                 Solicitudes de Pago
                 {unreadWithdrawalRequests > 0 && ( // Añadir notificación numérica
@@ -189,37 +179,24 @@ const AdminPanel = () => {
               </Link>
             </li>
             <li className="mb-0.5"> {/* Nuevo enlace para Gestión de Balance */}
-              <Link 
-                to="/admin/balance-management" 
-                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${
-                  location.pathname === '/admin/balance-management' 
-                    ? 'bg-accent text-white' 
+              <Link
+                to="/admin/balance-management"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/balance-management'
+                    ? 'bg-accent text-white'
                     : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
-                }`}
+                  }`}
               >
                 Gestión de Balance
               </Link>
             </li>
-            <li className="mb-0.5"> {/* Nuevo enlace para Gestión de Señales de Trading */}
-              <Link 
-                to="/admin/trading-signal-management" 
-                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${
-                  location.pathname === '/admin/trading-signal-management' 
-                    ? 'bg-accent text-white' 
-                    : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
-                }`}
-              >
-                Gestión de Señales Trading
-              </Link>
-            </li>
+
             <li className="mb-0.5"> {/* Nuevo enlace para Configuración del Sitio */}
-              <Link 
-                to="/admin/site-settings" 
-                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${
-                  location.pathname === '/admin/site-settings' 
-                    ? 'bg-accent text-white' 
+              <Link
+                to="/admin/site-settings"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/site-settings'
+                    ? 'bg-accent text-white'
                     : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
-                }`}
+                  }`}
               >
                 Configuración del Sitio
               </Link>
@@ -232,9 +209,9 @@ const AdminPanel = () => {
       <main className="flex-1 p-8 overflow-y-auto">
         <h1 className={`text-4xl font-bold mb-8 ${darkMode ? 'text-light_text' : 'text-white'}`}>Panel de Administración</h1>
         <Routes>
-          <Route 
-            path="miners" 
-            element={<MinerManagement onNewMinerAdded={handleNewMinerNotification} />} 
+          <Route
+            path="miners"
+            element={<MinerManagement onNewMinerAdded={handleNewMinerNotification} />}
           />
           <Route path="pool-config" element={<PoolConfiguration />} />
           <Route path="users" element={<UserManagement />} />
@@ -243,16 +220,15 @@ const AdminPanel = () => {
           <Route path="backup" element={<Backup />} />
           <Route path="news" element={<NewsManagement />} />
           <Route path="content" element={<ContentManagement />} />
-          <Route 
-            path="contact-requests" 
-            element={<ContactRequestsManagement onUnreadCountChange={handleUnreadContactRequestsChange} />} 
+          <Route
+            path="contact-requests"
+            element={<ContactRequestsManagement onUnreadCountChange={handleUnreadContactRequestsChange} />}
           />
-          <Route 
-            path="withdrawal-requests" 
-            element={<WithdrawalRequestsManagement onUnreadCountChange={handleUnreadWithdrawalRequestsChange} />} 
+          <Route
+            path="withdrawal-requests"
+            element={<WithdrawalRequestsManagement onUnreadCountChange={handleUnreadWithdrawalRequestsChange} />}
           />
           <Route path="balance-management" element={<BalanceManagement />} />
-          <Route path="trading-signal-management" element={<TradingSignalManagement />} /> {/* Nueva ruta para Gestión de Señales de Trading */}
           <Route path="site-settings" element={<SiteSettingsContent />} /> {/* Nueva ruta para Configuración del Sitio */}
           {/* Ruta por defecto o dashboard overview */}
           <Route path="/" element={

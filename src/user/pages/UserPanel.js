@@ -1580,16 +1580,8 @@ const UserPanel = () => {
   const displayUser = currentUser || demoUser;
 
   const paymentRate = useMemo(() => {
-    if (profitabilitySettings.useFixedRate) {
-      return profitabilitySettings.fixedRatePerTHs;
-    } else {
-      const difficulty = 73197634206448;
-      const btcPrice = btcToUsdRate || 121692;
-      const btcPerTHsPerDay = (60 * 60 * 24 * 1 * 10 ** 12) / (difficulty * 2 ** 32);
-      const calculatedDailyBtcGain = btcPerTHsPerDay * (1 - profitabilitySettings.fixedPoolCommission / 100);
-      return calculatedDailyBtcGain * btcPrice;
-    }
-  }, [profitabilitySettings, btcToUsdRate]);
+    return profitabilitySettings.fixedRatePerTHs;
+  }, [profitabilitySettings]);
 
   const poolCommission = useMemo(() => {
     return profitabilitySettings.fixedPoolCommission;

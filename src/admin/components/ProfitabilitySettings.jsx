@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react'; // Importar useContext
 import { db } from '../../services/firebase'; // Importar la instancia de Firebase Firestore
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { ThemeContext } from '../../context/ThemeContext'; // Importar ThemeContext
 import { useError } from '../../context/ErrorContext'; // Importar useError
 
@@ -12,41 +12,28 @@ const ProfitabilitySettings = () => {
   const [useFixedRate, setUseFixedRate] = useState(false);
 
 
-  // Cargar la configuración al iniciar el componente
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const docRef = doc(db, 'settings', 'profitability');
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setFixedRatePerTHs(data.fixedRatePerTHs ?? 0.06);
-          setFixedPoolCommission(data.fixedPoolCommission ?? 1);
-          setUseFixedRate(data.useFixedRate ?? false);
-        } else {
-          // Si no existe, establecer valores por defecto y crearlo en Firebase
-          setFixedRatePerTHs(0.06);
-          setFixedPoolCommission(1);
-          setUseFixedRate(false);
-          try {
-            await setDoc(docRef, {
-              fixedRatePerTHs: 0.06,
-              fixedPoolCommission: 1,
-              useFixedRate: false,
-            });
-          } catch (createError) {
-            console.error("Error creating default profitability settings in Firebase:", createError);
-            showError('Error al crear la configuración de rentabilidad por defecto.');
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching profitability settings from Firebase:", err);
-        showError('Error al cargar la configuración de rentabilidad.');
+    const docRef = doc(db, 'settings', 'profitability');
+    // Usar onSnapshot garantiza resilencia offline. Si no hay red, carga de caché local automáticamente.
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setFixedRatePerTHs(data.fixedRatePerTHs ?? 0.06);
+        setFixedPoolCommission(data.fixedPoolCommission ?? 1);
+        setUseFixedRate(data.useFixedRate ?? false);
+      } else {
+        // Valores por defecto si no hay doc
+        setFixedRatePerTHs(0.06);
+        setFixedPoolCommission(1);
+        setUseFixedRate(false);
       }
-    };
-    fetchSettings();
-  }, [showError]);
+    }, (err) => {
+      console.error("Error fetching profitability settings from Firebase:", err);
+      // No mostramos error UI aquí para no interrumpir si solo es offline momentaneo
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleSaveSettings = async () => {
     try {
@@ -56,13 +43,7 @@ const ProfitabilitySettings = () => {
         useFixedRate,
       };
       const docRef = doc(db, 'settings', 'profitability');
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        await updateDoc(docRef, dataToSave);
-      } else {
-        await setDoc(docRef, dataToSave);
-      }
+      await setDoc(docRef, dataToSave, { merge: true });
       showSuccess('Configuración guardada exitosamente en Firebase!');
     } catch (error) {
       console.error('Error al guardar la configuración:', error);
