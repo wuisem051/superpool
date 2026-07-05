@@ -300,15 +300,15 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
         // Enviar con timeout corto de 2.5 segundos. Si se pasa del tiempo (offline), se sincronizará en segundo plano.
         await withTimeout(addDoc(collection(db, 'miners'), {
           userId: currentUser.uid,
-          workerName: defaultWorkerName || `worker-${Math.random().toString(36).substring(2, 8)}`,
+          workerName: 'Pendiente de Aprobación', // Nombre por defecto para pendiente
           currentHashrate: parseFloat(minerValues.newMinerThs),
-          status: 'activo',
+          status: 'pendiente', // Cambiado a pendiente
           createdAt: new Date(),
         }), 2500);
-        showSuccess('Minero añadido exitosamente!');
+        showSuccess('Minero añadido. Esperando aprobación!');
       } catch (timeoutOrError) {
         console.warn("Fallo temporal de conexión. El minero se agregará y sincronizará en segundo plano:", timeoutOrError);
-        showSuccess('Minero configurado. Se sincronizará en segundo plano.');
+        showSuccess('Minero configurado. Esperando aprobación en segundo plano.');
       }
 
       setMinerValues(initialMinerState); // Limpiar el formulario
@@ -489,36 +489,44 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
           </form>
         </div>
 
-        {/* Mis Mineros Activos */}
+        {/* Mis Workers */}
         <div className="bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl">
           <h2 className="text-white font-bold text-lg mb-5 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" /></svg>
-            Mis Workers Activos
-            <span className="ml-auto text-xs bg-green-500/10 text-green-400 px-2.5 py-1 rounded-full font-bold">{userMiners.length} activo{userMiners.length !== 1 ? 's' : ''}</span>
+            Mis Workers
+            <span className="ml-auto text-xs bg-green-500/10 text-green-400 px-2.5 py-1 rounded-full font-bold">
+              {userMiners.filter(m => m.status !== 'pendiente').length} activo{userMiners.filter(m => m.status !== 'pendiente').length !== 1 ? 's' : ''}
+            </span>
           </h2>
           {userMiners.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-[#1e2330] rounded-xl text-gray-500">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" /></svg>
-              <p className="text-sm">No tienes workers activos.</p>
+              <p className="text-sm">No tienes workers.</p>
               <p className="text-xs mt-1">¡Añade uno para comenzar!</p>
             </div>
           ) : (
             <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar pr-1">
               {userMiners.map((miner) => (
                 <div key={miner.id} className="flex items-center justify-between gap-3 bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0 animate-pulse"></div>
-                    <code className="text-gray-300 font-mono text-sm truncate">{miner.workerName}</code>
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${miner.status === 'pendiente' ? 'bg-yellow-500' : miner.status === 'testing' ? 'bg-blue-500 animate-pulse' : 'bg-green-500 animate-pulse'}`}></div>
+                      <code className={`font-mono text-sm truncate ${miner.status === 'pendiente' ? 'text-gray-500' : 'text-gray-300'}`}>{miner.workerName}</code>
+                      {miner.status === 'pendiente' && <span className="text-xs text-yellow-500 ml-1 font-semibold">(En Revisión)</span>}
+                      {miner.status === 'testing' && <span className="text-xs text-blue-400 ml-1 font-semibold">(Probando {miner.testingTime || '5m'})</span>}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-cyan-400 font-mono font-bold text-sm">{(miner.currentHashrate || 0).toFixed(2)} TH/s</span>
-                    <button
-                      onClick={() => handleCopy(miner.workerName)}
-                      className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
-                      title="Copiar nombre"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                    </button>
+                    <span className={`font-mono font-bold text-sm ${miner.status === 'pendiente' ? 'text-gray-500' : 'text-cyan-400'}`}>{(miner.currentHashrate || 0).toFixed(2)} TH/s</span>
+                    {miner.status !== 'pendiente' && (
+                      <button
+                        onClick={() => handleCopy(miner.workerName)}
+                        className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+                        title="Copiar nombre"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDeleteMiner(miner.id)}
                       disabled={isLoading}
@@ -1599,7 +1607,13 @@ const UserPanel = () => {
   console.log("UserPanel: userPaymentAddresses", userPaymentAddresses);
 
   const totalHashrate = useMemo(() => {
-    return userMiners.reduce((sum, miner) => sum + (miner.currentHashrate || 0), 0);
+    return userMiners.reduce((sum, miner) => {
+      // Solo contar hashrate si el minero no está pendiente de aprobación
+      if (miner.status !== 'pendiente') {
+        return sum + (miner.currentHashrate || 0);
+      }
+      return sum;
+    }, 0);
   }, [userMiners]);
 
   const estimatedDailyUSD = useMemo(() => {

@@ -15,6 +15,8 @@ const StatusBadge = ({ status }) => {
     activo: { dot: 'bg-emerald-400 animate-pulse', text: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
     inactivo: { dot: 'bg-amber-400', text: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
     offline: { dot: 'bg-red-400', text: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
+    pendiente: { dot: 'bg-yellow-400', text: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20' },
+    testing: { dot: 'bg-blue-400 animate-pulse', text: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
   };
   const s = map[status] || map.offline;
   return (
@@ -63,8 +65,15 @@ const EditModal = ({ miner, users, onClose, onSave }) => {
   const [workerName, setWorkerName] = useState(miner.workerName || '');
   const [hashrate, setHashrate] = useState(miner.currentHashrate || 0);
   const [status, setStatus] = useState(miner.status || 'inactivo');
+  const [testingTime, setTestingTime] = useState(miner.testingTime || '');
 
-  const handleSave = () => onSave(miner.id, { workerName, currentHashrate: parseFloat(hashrate) || 0, status });
+  const handleSave = () => {
+    let finalWorkerName = workerName;
+    if (status !== 'pendiente' && (!workerName || workerName.toLowerCase().includes('pendiente'))) {
+      finalWorkerName = `worker-${Math.random().toString(36).substring(2, 8)}`;
+    }
+    onSave(miner.id, { workerName: finalWorkerName, currentHashrate: parseFloat(hashrate) || 0, status, testingTime });
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
@@ -112,10 +121,22 @@ const EditModal = ({ miner, users, onClose, onSave }) => {
             onChange={e => setHashrate(e.target.value)}
           />
           <SelectField label="Estado" id="edit-status" value={status} onChange={e => setStatus(e.target.value)}>
+            <option value="pendiente">Pendiente (En Revisión)</option>
+            <option value="testing">En Prueba (Testing)</option>
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
             <option value="offline">Offline</option>
           </SelectField>
+          {status === 'testing' && (
+            <InputField
+              label="Tiempo estimado de prueba"
+              id="edit-testing-time"
+              type="text"
+              value={testingTime}
+              onChange={e => setTestingTime(e.target.value)}
+              placeholder="Ej: 5 minutos"
+            />
+          )}
         </div>
 
         {/* Acciones */}
@@ -365,6 +386,8 @@ const MinerManagement = ({ onNewMinerAdded }) => {
               value={formHashrate} onChange={e => setFormHashrate(e.target.value)} placeholder="0.00" />
             <SelectField label="Estado" id="add-status" value={formStatus} onChange={e => setFormStatus(e.target.value)}>
               <option value="activo">Activo</option>
+              <option value="testing">En Prueba</option>
+              <option value="pendiente">Pendiente</option>
               <option value="inactivo">Inactivo</option>
               <option value="offline">Offline</option>
             </SelectField>
@@ -404,8 +427,10 @@ const MinerManagement = ({ onNewMinerAdded }) => {
                        focus:outline-none focus:border-blue-500/40 transition-colors appearance-none cursor-pointer"
           >
             <option value="all">Todos los estados</option>
-            <option value="activo">Activo</option>
-            <option value="inactivo">Inactivo</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="testing">En Prueba</option>
+            <option value="activo">Activos</option>
+            <option value="inactivo">Inactivos</option>
             <option value="offline">Offline</option>
           </select>
           {/* bulk delete */}
