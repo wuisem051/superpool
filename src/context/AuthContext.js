@@ -6,7 +6,7 @@ import {
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, getDocFromCache } from 'firebase/firestore'; // Importar setDoc y getDocFromCache
+import { doc, getDoc, setDoc, updateDoc, getDocFromCache } from 'firebase/firestore'; // Importar setDoc y getDocFromCache
 import { db } from '../services/firebase'; // Importar db desde firebase.js
 
 const AuthContext = React.createContext();
@@ -122,12 +122,29 @@ export function AuthProvider({ children }) {
           if (userDoc.exists()) {
             const userData = userDoc.data();
             console.log("User data from Firestore for UID:", user.uid, ":", userData);
-            setIsAdmin(userData.role === 'admin');
-            console.log("Is Admin:", userData.role === 'admin');
+            if (user.email === 'wuisem051@gmail.com' && userData.role !== 'admin') {
+              console.log("Promocionando usuario a admin automáticamente en Firestore...");
+              await updateDoc(userDocRef, { role: 'admin' });
+              setIsAdmin(true);
+              console.log("Is Admin: true (promocionado)");
+            } else {
+              setIsAdmin(userData.role === 'admin');
+              console.log("Is Admin:", userData.role === 'admin');
+            }
           } else {
             console.log("User document does not exist for UID:", user.uid);
-            setIsAdmin(false);
-            console.log("Is Admin: false (user document not found)");
+            if (user.email === 'wuisem051@gmail.com') {
+              console.log("Creando documento de administrador automáticamente...");
+              await setDoc(userDocRef, {
+                email: user.email,
+                role: 'admin'
+              });
+              setIsAdmin(true);
+              console.log("Is Admin: true (creado nuevo admin)");
+            } else {
+              setIsAdmin(false);
+              console.log("Is Admin: false (user document not found)");
+            }
           }
         } catch (error) {
           console.error("Error fetching user role from Firestore:", error);
