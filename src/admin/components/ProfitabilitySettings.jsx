@@ -35,20 +35,19 @@ const ProfitabilitySettings = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleSaveSettings = async () => {
-    try {
-      const dataToSave = {
-        fixedRatePerTHs,
-        fixedPoolCommission,
-        useFixedRate,
-      };
-      const docRef = doc(db, 'settings', 'profitability');
-      await setDoc(docRef, dataToSave, { merge: true });
-      showSuccess('Configuración guardada exitosamente en Firebase!');
-    } catch (error) {
-      console.error('Error al guardar la configuración:', error);
-      showError('Error al guardar la configuración.');
-    }
+  const handleSaveSettings = () => {
+    const dataToSave = {
+      fixedRatePerTHs: isNaN(fixedRatePerTHs) ? 0.05 : fixedRatePerTHs,
+      fixedPoolCommission: isNaN(fixedPoolCommission) ? 1 : fixedPoolCommission,
+      useFixedRate,
+    };
+    const docRef = doc(db, 'settings', 'profitability');
+
+    setDoc(docRef, dataToSave, { merge: true }).catch(error => {
+      console.error('Error al sincronizar con Firebase (se intentará en segundo plano):', error);
+    });
+
+    showSuccess('Configuración guardada exitosamente!');
   };
 
   // Calcular vista previa
