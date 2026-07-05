@@ -21,9 +21,9 @@ const ProfitabilitySettings = () => {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setFixedRatePerTHs(data.fixedRatePerTHs || 0.06);
-          setFixedPoolCommission(data.fixedPoolCommission || 1);
-          setUseFixedRate(data.useFixedRate || false);
+          setFixedRatePerTHs(data.fixedRatePerTHs ?? 0.06);
+          setFixedPoolCommission(data.fixedPoolCommission ?? 1);
+          setUseFixedRate(data.useFixedRate ?? false);
         } else {
           // Si no existe, establecer valores por defecto y crearlo en Firebase
           setFixedRatePerTHs(0.06);
@@ -78,7 +78,7 @@ const ProfitabilitySettings = () => {
   return (
     <div className={`${darkMode ? 'bg-dark_card text-light_text' : 'bg-gray-800 text-white'} p-6 rounded-lg shadow-md`}>
       <h2 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-light_text' : 'text-white'}`}>Configuración de Calculadora de Rentabilidad</h2>
-      
+
       <div className="mb-4">
         <label htmlFor="fixedRatePerTHs" className={`block text-sm mb-1 ${darkMode ? 'text-light_text' : 'text-gray-400'}`}>Tasa Fija por TH/s (USD)</label>
         <input
