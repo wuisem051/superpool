@@ -1823,9 +1823,7 @@ const UserPanel = () => {
     }
   }
 
-  const showNavbar = [
-    '/user-panel/home-miners', // Ruta para "Hogar" (mineros adquiridos)
-  ].some(path => location.pathname.startsWith(path));
+  const showNavbar = false;
 
   return (
     <div className="flex bg-[#06080d] min-h-screen text-slate-200 selection:bg-orange-500/30 font-sans">
@@ -1838,7 +1836,7 @@ const UserPanel = () => {
 
         <Routes>
           <Route path="dashboard/*" element={<DashboardContent userMiners={userMiners} chartData={chartData} userBalances={userBalances} paymentRate={paymentRate} btcToUsdRate={btcToUsdRate} totalHashratePool={totalHashratePool} poolCommission={poolCommission} paymentsHistory={paymentsHistory} withdrawalsHistory={withdrawalsHistory} styles={styles} totalHashrate={totalHashrate} estimatedDailyUSD={estimatedDailyUSD} activeMinersAllUsers={activeMinersAllUsers} pricePerTHs={paymentRate} />} />
-          <Route path="home-miners/*" element={<HomeMinersContent />} /> {/* Nueva ruta para Hogar - Mineros Adquiridos */}
+
           <Route path="mining-info/*" element={<MiningInfoContent currentUser={currentUser} userMiners={userMiners} setUserMiners={setUserMiners} styles={styles} />} />
           <Route path="contact-support/*" element={<ContactSupportContent onUnreadCountChange={handleUnreadCountChange} styles={styles} />} />
           <Route path="referrals/*" element={<ReferralsContent styles={styles} />} />

@@ -1,5 +1,5 @@
-import React, { lazy, Suspense } from 'react'; // Importar lazy y Suspense
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { lazy, Suspense, useContext, useEffect } from 'react'; // Importar lazy y Suspense
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import Header from './common/layout/Header';
 import Footer from './common/layout/Footer';
@@ -8,7 +8,6 @@ import './App.css';
 import { db } from './services/firebase'; // Importar db desde firebase.js
 import { doc, getDoc } from 'firebase/firestore';
 import { ThemeContext } from './context/ThemeContext'; // Importar ThemeContext
-import { useContext, useEffect } from 'react'; // Importar useContext y useEffect
 
 // Carga perezosa de componentes de página
 const Home = lazy(() => import('./user/pages/Home')); // Mantener el Home original por ahora, pero no se usará en la ruta principal
@@ -21,8 +20,15 @@ const AdminLogin = lazy(() => import('./admin/pages/AdminLogin'));
 const AllNewsPage = lazy(() => import('./user/pages/AllNewsPage')); // Nueva página para todas las noticias
 const ProfitabilityCalculatorPage = lazy(() => import('./user/pages/ProfitabilityCalculatorPage')); // Página de la calculadora de rentabilidad
 
-function App() {
-  const { darkMode, theme } = useContext(ThemeContext); // Usar ThemeContext
+// Componente interno que puede usar useLocation (debe estar dentro del Router)
+function AppContent() {
+  const { darkMode, theme } = useContext(ThemeContext);
+  const location = useLocation();
+
+  // El footer NO aparece dentro del panel de usuario
+  const hideFooter = location.pathname.startsWith('/user') ||
+    location.pathname.startsWith('/test-user-settings') ||
+    location.pathname.startsWith('/admin');
 
   // Efecto para cargar el favicon dinámicamente
   useEffect(() => {
@@ -47,63 +53,65 @@ function App() {
           if (data.siteName) {
             document.title = data.siteName;
           } else {
-            document.title = 'MaxiOS Pool'; // Valor por defecto si no hay siteName en Firebase
+            document.title = 'MaxiOS Pool';
           }
         } else {
-          document.title = 'MaxiOS Pool'; // Valor por defecto si no existe siteConfig
+          document.title = 'MaxiOS Pool';
         }
       } catch (err) {
         console.error("Error fetching site settings for App component from Firebase:", err);
-        document.title = 'MaxiOS Pool'; // Fallback en caso de error
+        document.title = 'MaxiOS Pool';
       }
     };
     fetchSiteSettings();
-
-    // No aplicar la clase 'dark' al body globalmente, ya que cada panel debe tener su propio CSS.
-    // Los componentes individuales usarán las clases de tema de ThemeContext.
-  }, []); // No hay dependencia de darkMode ya que el modo oscuro se gestiona a nivel de componente
+  }, []);
 
   return (
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <main className="flex-grow">
+        <AuthProvider>
+          <Suspense fallback={<div>Cargando...</div>}>
+            <Routes>
+              <Route path="/" element={<FuturisticHome />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route
+                path="/test-user-settings/*"
+                element={
+                  <ProtectedRoute>
+                    <UserPanel />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/user/*"
+                element={
+                  <ProtectedRoute>
+                    <UserPanel />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/*"
+                element={<AdminPanel />}
+              />
+              <Route path="/admin-login" element={<AdminLogin />} />
+              <Route path="/news" element={<AllNewsPage />} />
+              <Route path="/calculator" element={<ProfitabilityCalculatorPage />} />
+            </Routes>
+          </Suspense>
+        </AuthProvider>
+      </main>
+      {!hideFooter && <Footer />}
+    </div>
+  );
+}
+
+function App() {
+  return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <div className="flex flex-col min-h-screen"> {/* Eliminar clases de tema globales */}
-        <Header />
-        <main className="flex-grow">
-          <AuthProvider>
-            <Suspense fallback={<div>Cargando...</div>}> {/* Mostrar un mensaje de carga mientras los componentes se cargan */}
-              <Routes>
-                <Route path="/" element={<FuturisticHome />} /> {/* Usar el nuevo Home futurista */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                {/* Ruta temporal para acceso de prueba a la configuración del usuario */}
-                <Route 
-                  path="/test-user-settings/*" 
-                  element={
-                    <ProtectedRoute>
-                      <UserPanel />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/user/*" 
-                  element={
-                    <ProtectedRoute>
-                      <UserPanel />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route
-                  path="/admin/*"
-                  element={<AdminPanel />}
-                />
-                <Route path="/admin-login" element={<AdminLogin />} /> {/* Nueva ruta para el login de administrador */}
-                <Route path="/news" element={<AllNewsPage />} /> {/* Nueva ruta para todas las noticias */}
-                <Route path="/calculator" element={<ProfitabilityCalculatorPage />} /> {/* Ruta para la calculadora de rentabilidad */}
-              </Routes>
-            </Suspense>
-          </AuthProvider>
-        </main>
-        <Footer />
-      </div>
+      <AppContent />
     </Router>
   );
 }

@@ -63,7 +63,6 @@ const Sidebar = ({ unreadTicketsCount, displayUser }) => {
     collectiveFund: useMatch(`${basePath}/collective-fund`),
     portfolio: useMatch(`${basePath}/mining-portfolio`),
     miners: useMatch(`${basePath}/miners`),
-    homeMiners: useMatch(`${basePath}/home-miners`),
     settings: useMatch(`${basePath}/settings`),
     support: useMatch(`${basePath}/contact-support`),
   };
@@ -123,8 +122,6 @@ const Sidebar = ({ unreadTicketsCount, displayUser }) => {
           <h3 className="text-[11px] font-bold uppercase text-gray-500 tracking-wider mt-8 mb-4 px-4">Finanzas</h3>
           <SidebarItem to={`${basePath}/my-wallet`} icon={Icons.wallet} label="Mi Billetera" isActive={activePaths.myWallet} />
 
-          <h3 className="text-[11px] font-bold uppercase text-gray-500 tracking-wider mt-8 mb-4 px-4">Gestión de Mineros</h3>
-          <SidebarItem to={`${basePath}/home-miners`} icon={Icons.home} label="Mis Mineros" isActive={activePaths.homeMiners} />
           <SidebarItem to={`${basePath}/mining-portfolio`} icon={Icons.portfolio} label="Portafolio" isActive={activePaths.portfolio} />
 
           <h3 className="text-[11px] font-bold uppercase text-gray-500 tracking-wider mt-8 mb-4 px-4">Sistema</h3>
