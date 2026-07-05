@@ -14,13 +14,20 @@ const ContactRequestsManagement = ({ onUnreadCountChange }) => {
   useEffect(() => {
     const q = query(collection(db, 'contactRequests'), orderBy('createdAt', 'desc'));
 
+    const safeToDate = (val) => {
+      if (!val) return new Date();
+      if (val.toDate && typeof val.toDate === 'function') return val.toDate();
+      if (val instanceof Date) return val;
+      return new Date(val);
+    };
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       console.log("ContactRequestsManagement: Firebase suscripción - Evento recibido.");
       const fetchedRequests = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt.toDate(), // Convertir Timestamp a Date
-        updatedAt: doc.data().updatedAt ? doc.data().updatedAt.toDate() : doc.data().createdAt.toDate(), // Convertir Timestamp a Date
+        createdAt: safeToDate(doc.data().createdAt),
+        updatedAt: safeToDate(doc.data().updatedAt),
       }));
       setRequests(fetchedRequests);
 
@@ -99,7 +106,7 @@ const ContactRequestsManagement = ({ onUnreadCountChange }) => {
     try {
       const closedRequestsQuery = query(collection(db, 'contactRequests'), where('status', '==', 'Cerrado'));
       const snapshot = await getDocs(closedRequestsQuery);
-      
+
       const deletePromises = snapshot.docs.map(docToDelete => deleteDoc(doc(db, 'contactRequests', docToDelete.id)));
       await Promise.all(deletePromises);
 
@@ -133,23 +140,21 @@ const ContactRequestsManagement = ({ onUnreadCountChange }) => {
             {requests.map(req => (
               <li
                 key={req.id}
-                className={`p-3 mb-2 rounded-lg cursor-pointer ${
-                  selectedRequest && selectedRequest.id === req.id 
-                    ? (darkMode ? 'bg-accent text-white' : 'bg-yellow-200') 
+                className={`p-3 mb-2 rounded-lg cursor-pointer ${selectedRequest && selectedRequest.id === req.id
+                    ? (darkMode ? 'bg-accent text-white' : 'bg-yellow-200')
                     : (darkMode ? 'bg-dark_bg hover:bg-dark_border' : 'bg-gray-100 hover:bg-gray-200')
-                }`}
+                  }`}
                 onClick={() => handleSelectRequest(req)}
               >
                 <p className={`font-semibold ${darkMode ? 'text-light_text' : 'text-gray-800'}`}>{req.subject}</p>
                 <p className={`text-sm truncate ${darkMode ? 'text-light_text' : 'text-gray-600'}`}>{req.conversation[req.conversation.length - 1]?.text}</p>
                 <div className={`flex justify-between items-center text-xs mt-1 ${darkMode ? 'text-light_text' : 'text-gray-500'}`}>
                   <span>{req.userEmail}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xxs font-semibold ${
-                    req.status === 'Abierto' ? 'bg-blue-100 text-blue-800' :
-                    req.status === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' :
-                    req.status === 'Respondido' ? 'bg-purple-100 text-purple-800' :
-                    'bg-green-100 text-green-800'
-                  }`}>
+                  <span className={`px-2 py-0.5 rounded-full text-xxs font-semibold ${req.status === 'Abierto' ? 'bg-blue-100 text-blue-800' :
+                      req.status === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' :
+                        req.status === 'Respondido' ? 'bg-purple-100 text-purple-800' :
+                          'bg-green-100 text-green-800'
+                    }`}>
                     {req.status}
                   </span>
                 </div>
@@ -165,12 +170,11 @@ const ContactRequestsManagement = ({ onUnreadCountChange }) => {
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className={`text-2xl font-bold ${darkMode ? 'text-light_text' : 'text-gray-800'}`}>{selectedRequest.subject}</h2>
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                selectedRequest.status === 'Abierto' ? 'bg-blue-100 text-blue-800' :
-                selectedRequest.status === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' :
-                selectedRequest.status === 'Respondido' ? 'bg-purple-100 text-purple-800' :
-                'bg-green-100 text-green-800'
-              }`}>
+              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${selectedRequest.status === 'Abierto' ? 'bg-blue-100 text-blue-800' :
+                  selectedRequest.status === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' :
+                    selectedRequest.status === 'Respondido' ? 'bg-purple-100 text-purple-800' :
+                      'bg-green-100 text-green-800'
+                }`}>
                 {selectedRequest.status}
               </span>
             </div>
@@ -180,12 +184,11 @@ const ContactRequestsManagement = ({ onUnreadCountChange }) => {
             <div className={`${darkMode ? 'bg-dark_bg border-dark_border' : 'bg-gray-50'} p-4 rounded-lg shadow-inner mb-4 h-64 overflow-y-auto border`}>
               {selectedRequest.conversation.map((msg, index) => (
                 <div key={index} className={`mb-3 ${msg.sender === 'admin' ? 'text-right' : 'text-left'}`}>
-                  <span className={`inline-block p-2 rounded-lg text-sm ${
-                    msg.sender === 'admin' ? 'bg-blue-100 text-blue-800' : (darkMode ? 'bg-dark_border text-light_text' : 'bg-gray-200 text-gray-800')
-                  }`}>
+                  <span className={`inline-block p-2 rounded-lg text-sm ${msg.sender === 'admin' ? 'bg-blue-100 text-blue-800' : (darkMode ? 'bg-dark_border text-light_text' : 'bg-gray-200 text-gray-800')
+                    }`}>
                     {msg.text}
                   </span>
-                  <p className={`text-xxs mt-1 ${darkMode ? 'text-light_text' : 'text-gray-500'}`}>{new Date(msg.timestamp).toLocaleString()}</p>
+                  <p className={`text-xxs mt-1 ${darkMode ? 'text-light_text' : 'text-gray-500'}`}>{(() => { try { const t = msg.timestamp; if (!t) return ''; if (t.toDate && typeof t.toDate === 'function') return t.toDate().toLocaleString(); return new Date(t).toLocaleString(); } catch { return ''; } })()}</p>
                 </div>
               ))}
             </div>

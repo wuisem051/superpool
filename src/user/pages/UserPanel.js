@@ -890,13 +890,20 @@ const ContactSupportContent = ({ onUnreadCountChange, styles }) => {
       orderBy('createdAt', 'desc')
     );
 
+    const safeToDate = (val) => {
+      if (!val) return new Date();
+      if (val.toDate && typeof val.toDate === 'function') return val.toDate();
+      if (val instanceof Date) return val;
+      return new Date(val);
+    };
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       try {
         const fetchedTickets = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-          createdAt: doc.data().createdAt.toDate(),
-          updatedAt: doc.data().updatedAt.toDate(),
+          createdAt: safeToDate(doc.data().createdAt),
+          updatedAt: safeToDate(doc.data().updatedAt),
         }));
         setTickets(fetchedTickets);
 
@@ -944,10 +951,10 @@ const ContactSupportContent = ({ onUnreadCountChange, styles }) => {
 
     try {
       if (selectedTicket) {
-        const newConversation = [...selectedTicket.conversation, { // Corregido: eliminar el conflicto aquí
+        const newConversation = [...selectedTicket.conversation, {
           sender: 'user',
           text: messageContent,
-          timestamp: new Date(),
+          timestamp: new Date().toISOString(),
         }];
         const ticketRef = doc(db, 'contactRequests', selectedTicket.id);
         await updateDoc(ticketRef, {
@@ -972,7 +979,7 @@ const ContactSupportContent = ({ onUnreadCountChange, styles }) => {
           conversation: [{
             sender: 'user',
             text: messageContent,
-            timestamp: new Date(),
+            timestamp: new Date().toISOString(),
           }],
         });
         showSuccess('Tu nueva consulta ha sido enviada. Te responderemos a la brevedad.');
@@ -1127,7 +1134,7 @@ const ContactSupportContent = ({ onUnreadCountChange, styles }) => {
                       {msg.text}
                     </div>
                     <span className="text-[10px] text-gray-500 mt-1 px-1">
-                      {msg.sender === 'admin' ? 'Admin' : 'Tú'} - {new Date(msg.timestamp).toLocaleString()}
+                      {msg.sender === 'admin' ? 'Admin' : 'Tú'} - {(() => { try { const t = msg.timestamp; if (!t) return ''; if (t.toDate && typeof t.toDate === 'function') return t.toDate().toLocaleString(); return new Date(t).toLocaleString(); } catch { return ''; } })()}
                     </span>
                   </div>
                 ))}
