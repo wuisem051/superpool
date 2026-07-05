@@ -122,7 +122,7 @@ const Sidebar = ({ unreadTicketsCount, displayUser }) => {
           <h3 className="text-[11px] font-bold uppercase text-gray-500 tracking-wider mt-8 mb-4 px-4">Finanzas</h3>
           <SidebarItem to={`${basePath}/my-wallet`} icon={Icons.wallet} label="Mi Billetera" isActive={activePaths.myWallet} />
 
-          <SidebarItem to={`${basePath}/mining-portfolio`} icon={Icons.portfolio} label="Portafolio" isActive={activePaths.portfolio} />
+          <SidebarItem to={`${basePath}/mining-portfolio`} icon={Icons.portfolio} label="Inicio" isActive={activePaths.portfolio} />
 
           <h3 className="text-[11px] font-bold uppercase text-gray-500 tracking-wider mt-8 mb-4 px-4">Sistema</h3>
           <SidebarItem to={`${basePath}/referrals`} icon={Icons.users} label="Referidos" isActive={activePaths.referrals} />
