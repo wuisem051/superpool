@@ -12,7 +12,8 @@ import ContentManagement from '../components/ContentManagement';
 import ContactRequestsManagement from '../components/ContactRequestsManagement';
 import WithdrawalRequestsManagement from '../components/WithdrawalRequestsManagement';
 import BalanceManagement from '../../user/components/BalanceManagement';
-import SiteSettingsContent from '../components/SiteSettingsContent'; // Importar el nuevo componente
+import SiteSettingsContent from '../components/SiteSettingsContent';
+import MinerApproval from '../components/MinerApproval';
 
 
 const AdminPanel = () => {
@@ -56,8 +57,8 @@ const AdminPanel = () => {
               <Link
                 to="/admin/miners"
                 className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/miners'
-                    ? 'bg-accent text-white'
-                    : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
+                  ? 'bg-accent text-white'
+                  : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
                   }`}
                 onClick={handleClearMinerNotification} // Limpiar notificación al hacer clic
               >
@@ -71,10 +72,26 @@ const AdminPanel = () => {
             </li>
             <li className="mb-0.5">
               <Link
-                to="/admin/pool-config"
-                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/pool-config'
+                to="/admin/miner-approval"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/miner-approval'
                     ? 'bg-accent text-white'
                     : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
+                  }`}
+              >
+                Aprobación de Mineros
+                {unreadMinersCount > 0 && (
+                  <span className="ml-2 bg-yellow-500 text-gray-900 text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
+                    {unreadMinersCount}
+                  </span>
+                )}
+              </Link>
+            </li>
+            <li className="mb-0.5">
+              <Link
+                to="/admin/pool-config"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/pool-config'
+                  ? 'bg-accent text-white'
+                  : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
                   }`}
               >
                 Configuración del Pool
@@ -84,8 +101,8 @@ const AdminPanel = () => {
               <Link
                 to="/admin/users"
                 className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/users'
-                    ? 'bg-accent text-white'
-                    : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
+                  ? 'bg-accent text-white'
+                  : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
                   }`}
               >
                 Gestión de Usuarios
@@ -95,8 +112,8 @@ const AdminPanel = () => {
               <Link
                 to="/admin/profitability-settings"
                 className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/profitability-settings'
-                    ? 'bg-accent text-white'
-                    : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
+                  ? 'bg-accent text-white'
+                  : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
                   }`}
               >
                 Configuración de Rentabilidad
@@ -106,8 +123,8 @@ const AdminPanel = () => {
               <Link
                 to="/admin/pool-arbitrage"
                 className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/pool-arbitrage'
-                    ? 'bg-accent text-white'
-                    : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
+                  ? 'bg-accent text-white'
+                  : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
                   }`}
               >
                 Arbitraje de Pools
@@ -117,8 +134,8 @@ const AdminPanel = () => {
               <Link
                 to="/admin/backup"
                 className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/backup'
-                    ? 'bg-accent text-white'
-                    : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
+                  ? 'bg-accent text-white'
+                  : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
                   }`}
               >
                 Respaldo de Datos
@@ -128,8 +145,8 @@ const AdminPanel = () => {
               <Link
                 to="/admin/news"
                 className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/news'
-                    ? 'bg-accent text-white'
-                    : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
+                  ? 'bg-accent text-white'
+                  : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
                   }`}
               >
                 Gestión de Noticias
@@ -139,8 +156,8 @@ const AdminPanel = () => {
               <Link
                 to="/admin/content"
                 className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/content'
-                    ? 'bg-accent text-white'
-                    : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
+                  ? 'bg-accent text-white'
+                  : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
                   }`}
               >
                 Gestión de Contenido
@@ -150,8 +167,8 @@ const AdminPanel = () => {
               <Link
                 to="/admin/contact-requests"
                 className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/contact-requests'
-                    ? 'bg-accent text-white'
-                    : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
+                  ? 'bg-accent text-white'
+                  : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
                   }`}
               >
                 Solicitudes de Contacto
@@ -166,8 +183,8 @@ const AdminPanel = () => {
               <Link
                 to="/admin/withdrawal-requests"
                 className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/withdrawal-requests'
-                    ? 'bg-accent text-white'
-                    : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
+                  ? 'bg-accent text-white'
+                  : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
                   }`}
               >
                 Solicitudes de Pago
@@ -182,8 +199,8 @@ const AdminPanel = () => {
               <Link
                 to="/admin/balance-management"
                 className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/balance-management'
-                    ? 'bg-accent text-white'
-                    : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
+                  ? 'bg-accent text-white'
+                  : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
                   }`}
               >
                 Gestión de Balance
@@ -194,8 +211,8 @@ const AdminPanel = () => {
               <Link
                 to="/admin/site-settings"
                 className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/site-settings'
-                    ? 'bg-accent text-white'
-                    : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
+                  ? 'bg-accent text-white'
+                  : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
                   }`}
               >
                 Configuración del Sitio
@@ -213,6 +230,7 @@ const AdminPanel = () => {
             path="miners"
             element={<MinerManagement onNewMinerAdded={handleNewMinerNotification} />}
           />
+          <Route path="miner-approval" element={<MinerApproval />} />
           <Route path="pool-config" element={<PoolConfiguration />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="profitability-settings" element={<ProfitabilitySettings />} />
