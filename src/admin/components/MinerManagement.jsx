@@ -1,815 +1,561 @@
-import React, { useState, useEffect, useRef, useContext } from 'react'; // Importar useContext
-import { db } from '../../services/firebase'; // Importar Firebase Firestore
-import { collection, getDocs, onSnapshot, doc, addDoc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js/auto';
-import { Bar } from 'react-chartjs-2';
-import { ThemeContext } from '../../context/ThemeContext'; // Importar ThemeContext
-import { useError } from '../../context/ErrorContext'; // Importar useError
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { db } from '../../services/firebase';
+import {
+  collection, getDocs, onSnapshot, doc,
+  addDoc, updateDoc, deleteDoc, query, where
+} from 'firebase/firestore';
+import { useError } from '../../context/ErrorContext';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+/* ════════════════════════════════════════════
+   HELPERS / MINI-COMPONENTS
+════════════════════════════════════════════ */
 
-const MinerManagement = ({ onNewMinerAdded }) => { // Aceptar prop para notificaciones
-  const { darkMode } = useContext(ThemeContext); // Usar ThemeContext
-  const { showError, showSuccess } = useError(); // Usar el contexto de errores
-  const [miners, setMiners] = useState([]); // Mantener la lista combinada
-  const [userMiners, setUserMiners] = useState([]); // Mineros asignados a usuarios
-  const [storeMiners, setStoreMiners] = useState([]); // Mineros de la tienda
+const StatusBadge = ({ status }) => {
+  const map = {
+    activo: { dot: 'bg-emerald-400 animate-pulse', text: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+    inactivo: { dot: 'bg-amber-400', text: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
+    offline: { dot: 'bg-red-400', text: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
+  };
+  const s = map[status] || map.offline;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${s.bg} ${s.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+      {status}
+    </span>
+  );
+};
+
+const InputField = ({ label, id, ...props }) => (
+  <div>
+    <label htmlFor={id} className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
+      {label}
+    </label>
+    <input
+      id={id}
+      {...props}
+      className="w-full bg-[#0d1117] border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-gray-600
+                 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 transition-colors text-sm"
+    />
+  </div>
+);
+
+const SelectField = ({ label, id, children, ...props }) => (
+  <div>
+    <label htmlFor={id} className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
+      {label}
+    </label>
+    <select
+      id={id}
+      {...props}
+      className="w-full bg-[#0d1117] border border-white/10 rounded-xl px-4 py-2.5 text-white
+                 focus:outline-none focus:border-blue-500/50 transition-colors text-sm appearance-none"
+    >
+      {children}
+    </select>
+  </div>
+);
+
+/* ════════════════════════════════════════════
+   MODAL DE EDICIÓN
+════════════════════════════════════════════ */
+const EditModal = ({ miner, users, onClose, onSave }) => {
+  const userEmail = users.find(u => u.id === miner.userId)?.email || miner.userId;
+  const [workerName, setWorkerName] = useState(miner.workerName || '');
+  const [hashrate, setHashrate] = useState(miner.currentHashrate || 0);
+  const [status, setStatus] = useState(miner.status || 'inactivo');
+
+  const handleSave = () => onSave(miner.id, { workerName, currentHashrate: parseFloat(hashrate) || 0, status });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div className="bg-[#0b0e14] border border-white/10 rounded-3xl shadow-2xl w-full max-w-md p-8 relative">
+        {/* Glow */}
+        <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -mr-10 -mt-10" />
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-white">Editar Minero</h2>
+            <p className="text-xs text-gray-500 mt-0.5 font-mono">{miner.id}</p>
+          </div>
+          <button onClick={onClose}
+            className="p-2 rounded-xl text-gray-500 hover:text-white hover:bg-white/5 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Usuario (solo lectura) */}
+        <div className="mb-5 p-4 bg-[#131824] border border-white/5 rounded-2xl">
+          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Usuario propietario</p>
+          <p className="text-white font-medium text-sm truncate">{userEmail}</p>
+          <p className="text-gray-600 font-mono text-xs mt-0.5">{miner.userId}</p>
+        </div>
+
+        {/* Campos editables */}
+        <div className="space-y-4 mb-6">
+          <InputField
+            label="Nombre del Worker"
+            id="edit-worker"
+            type="text"
+            value={workerName}
+            onChange={e => setWorkerName(e.target.value)}
+            placeholder="Ej: worker01"
+          />
+          <InputField
+            label="Hashrate (TH/s)"
+            id="edit-hashrate"
+            type="number"
+            step="0.01"
+            value={hashrate}
+            onChange={e => setHashrate(e.target.value)}
+          />
+          <SelectField label="Estado" id="edit-status" value={status} onChange={e => setStatus(e.target.value)}>
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+            <option value="offline">Offline</option>
+          </SelectField>
+        </div>
+
+        {/* Acciones */}
+        <div className="flex gap-3">
+          <button onClick={onClose}
+            className="flex-1 py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-sm font-semibold">
+            Cancelar
+          </button>
+          <button onClick={handleSave}
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-blue-500/20 transition-all">
+            Guardar Cambios
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ════════════════════════════════════════════
+   MODAL CONFIRMAR ELIMINACIÓN
+════════════════════════════════════════════ */
+const ConfirmModal = ({ count, onConfirm, onClose }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+    <div className="bg-[#0b0e14] border border-red-500/20 rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center">
+      <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-bold text-white mb-2">¿Eliminar {count > 1 ? `${count} mineros` : 'este minero'}?</h3>
+      <p className="text-gray-500 text-sm mb-6">Esta acción no se puede deshacer.</p>
+      <div className="flex gap-3">
+        <button onClick={onClose}
+          className="flex-1 py-2.5 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-sm font-semibold">
+          Cancelar
+        </button>
+        <button onClick={onConfirm}
+          className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white font-bold text-sm shadow-lg shadow-red-500/20 transition-all">
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+/* ════════════════════════════════════════════
+   MAIN COMPONENT
+════════════════════════════════════════════ */
+const MinerManagement = ({ onNewMinerAdded }) => {
+  const { showError, showSuccess } = useError();
+
+  /* ── STATE ── */
+  const [miners, setMiners] = useState([]);
   const [users, setUsers] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingMiner, setEditingMiner] = useState(null);
-  const [newMinerUserId, setNewMinerUserId] = useState('');
-  const [newMinerWorkerName, setNewMinerWorkerName] = useState('');
-  const [newMinerHashrate, setNewMinerHashrate] = useState(0);
-  const [newMinerStatus, setNewMinerStatus] = useState('inactivo');
-
-  // Estados para añadir nuevo minero de la tienda
-  const [newStoreMinerName, setNewStoreMinerName] = useState('');
-  const [newStoreMinerImageUrl, setNewStoreMinerImageUrl] = useState('');
-  const [newStoreMinerCost, setNewStoreMinerCost] = useState(0);
-  const [newStoreMinerHashrate, setNewStoreMinerHashrate] = useState(''); // String como en src/data/miners.js
-  const [newStoreMinerPowerConsumption, setNewStoreMinerPowerConsumption] = useState('');
-  const [newStoreMinerProfitability, setNewStoreMinerProfitability] = useState('');
-
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [minersPerPage] = useState(10);
-  const previousMinersCount = useRef(null); // Usar useRef para previousMinersCount
-  const [selectedMiners, setSelectedMiners] = useState([]); // Nuevo estado para mineros seleccionados
+  const MINERS_PER_PAGE = 12;
 
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [editingMiner, setEditingMiner] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null); // null | 'selected' | minerId
+
+  /* form — add miner */
+  const [formUserId, setFormUserId] = useState('');
+  const [formWorker, setFormWorker] = useState('');
+  const [formHashrate, setFormHashrate] = useState('');
+  const [formStatus, setFormStatus] = useState('activo');
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  const prevCount = useRef(null);
+
+  /* ── SUBSCRIPTIONS ── */
   useEffect(() => {
-    console.log("MinerManagement: useEffect ejecutado. Configurando suscripción para 'miners'.");
-    const fetchMinersAndSubscribe = async () => {
-      try {
-        const unsubscribe = onSnapshot(collection(db, 'miners'), (snapshot) => {
-          console.log("MinerManagement: Firebase suscripción - Evento recibido.");
-          const updatedMiners = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const unsubMiners = onSnapshot(collection(db, 'miners'), snap => {
+      const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // solo mineros de usuario (type === 'user' o sin type != 'store')
+      const userMiners = all.filter(m => m.type !== 'store');
+      setMiners(userMiners);
 
-          const fetchedUserMiners = updatedMiners.filter(miner => miner.type === 'user');
-          const fetchedStoreMiners = updatedMiners.filter(miner => miner.type === 'store');
-
-          setUserMiners(fetchedUserMiners);
-          setStoreMiners(fetchedStoreMiners);
-          setMiners(updatedMiners); // Mantener la lista combinada para la búsqueda general
-
-          // Para notificar sobre nuevos mineros en general, independientemente del tipo
-          if (updatedMiners.length > previousMinersCount.current && onNewMinerAdded) {
-            const newMinersCount = updatedMiners.length - previousMinersCount.current;
-            onNewMinerAdded(newMinersCount);
-          }
-          previousMinersCount.current = updatedMiners.length;
-        }, (error) => {
-          console.error("MinerManagement: Error subscribing to miners collection:", error);
-          showError('Error al cargar los mineros.');
-        });
-        return unsubscribe; // Retorna la función de desuscripción
-      } catch (error) {
-        console.error("MinerManagement: Error fetching initial miners or setting up subscription: ", error);
-        showError('Error al cargar los mineros.');
-        return () => {}; // Retorna una función vacía en caso de error para evitar problemas
+      if (prevCount.current !== null && userMiners.length > prevCount.current && onNewMinerAdded) {
+        onNewMinerAdded(userMiners.length - prevCount.current);
       }
-    };
+      prevCount.current = userMiners.length;
+    }, err => { console.error(err); showError('Error al cargar mineros.'); });
 
     const fetchUsers = async () => {
       try {
-        const usersSnapshot = await getDocs(collection(db, 'users'));
-        const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setUsers(usersData);
-      } catch (error) {
-        console.error("MinerManagement: Error fetching users for miner management: ", error);
-        showError('Error al cargar los usuarios.');
-      }
+        const snap = await getDocs(collection(db, 'users'));
+        setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch (e) { showError('Error al cargar usuarios.'); }
     };
+    fetchUsers();
 
-    let unsubscribeMinersFunction; // Declara una variable para almacenar la función de desuscripción
-
-    const setupSubscriptions = async () => {
-      unsubscribeMinersFunction = await fetchMinersAndSubscribe();
-      fetchUsers();
-    };
-
-    setupSubscriptions();
-
-    return () => {
-      console.log("MinerManagement: Limpiando suscripciones.");
-      if (unsubscribeMinersFunction) {
-        unsubscribeMinersFunction();
-      }
-    };
+    return () => unsubMiners();
   }, [onNewMinerAdded, showError]);
 
-  // Abrir el modal para editar un minero
-  const handleEditClick = (miner) => {
-    console.log("MinerManagement: Editando minero:", miner);
-    setEditingMiner({ ...miner });
+  /* ── FILTER + PAGINATE ── */
+  const filtered = miners.filter(m => {
+    const userEmail = users.find(u => u.id === m.userId)?.email || '';
+    const matchSearch = !searchTerm ||
+      m.workerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      userEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.userId?.includes(searchTerm) ||
+      m.id?.includes(searchTerm);
+    const matchStatus = filterStatus === 'all' || m.status === filterStatus;
+    return matchSearch && matchStatus;
+  });
 
-    if (miner.type === 'user') {
-      setNewMinerUserId(miner.userId);
-      setNewMinerWorkerName(miner.workerName);
-      setNewMinerHashrate(miner.currentHashrate || 0);
-      setNewMinerStatus(miner.status || 'inactivo');
-      // Limpiar estados de minero de tienda al editar un minero de usuario
-      setNewStoreMinerName('');
-      setNewStoreMinerImageUrl('');
-      setNewStoreMinerCost(0);
-      setNewStoreMinerHashrate('');
-      setNewStoreMinerPowerConsumption('');
-      setNewStoreMinerProfitability('');
-    } else if (miner.type === 'store') {
-      setNewStoreMinerName(miner.name || '');
-      setNewStoreMinerImageUrl(miner.imageUrl || '');
-      setNewStoreMinerCost(miner.cost || 0);
-      setNewStoreMinerHashrate(miner.hashrate || '');
-      setNewStoreMinerPowerConsumption(miner.powerConsumption || '');
-      setNewStoreMinerProfitability(miner.profitability || '');
-      // Limpiar estados de minero de usuario al editar un minero de tienda
-      setNewMinerUserId('');
-      setNewMinerWorkerName('');
-      setNewMinerHashrate(0);
-      setNewMinerStatus('inactivo');
+  const totalPages = Math.ceil(filtered.length / MINERS_PER_PAGE);
+  const paginated = filtered.slice((currentPage - 1) * MINERS_PER_PAGE, currentPage * MINERS_PER_PAGE);
+
+  /* ── STATS ── */
+  const totalHashrate = miners.reduce((s, m) => s + (m.currentHashrate || 0), 0);
+  const activeCount = miners.filter(m => m.status === 'activo').length;
+  const offlineCount = miners.filter(m => m.status === 'offline').length;
+
+  /* ── HANDLERS ── */
+  const handleAddMiner = async () => {
+    if (!formUserId || !formWorker.trim()) {
+      showError('Selecciona un usuario e ingresa el nombre del worker.');
+      return;
     }
-    setIsModalOpen(true);
-  };
-
-  // Manejar cambios en el formulario de edición del minero
-  const handleMinerEditChange = (e) => {
-    const { name, value } = e.target;
-    console.log(`MinerManagement: Cambiando campo '${name}' a '${value}'`);
-
-    if (editingMiner.type === 'user') {
-      if (name === "userId") {
-        setNewMinerUserId(value);
-      } else if (name === "workerName") {
-        setNewMinerWorkerName(value);
-      } else if (name === "currentHashrate") {
-        setNewMinerHashrate(parseFloat(value) || 0);
-      } else if (name === "status") {
-        setNewMinerStatus(value);
-      }
-    } else if (editingMiner.type === 'store') {
-      if (name === "name") {
-        setNewStoreMinerName(value);
-      } else if (name === "imageUrl") {
-        setNewStoreMinerImageUrl(value);
-      } else if (name === "cost") {
-        setNewStoreMinerCost(parseFloat(value) || 0);
-      } else if (name === "hashrate") {
-        setNewStoreMinerHashrate(value);
-      } else if (name === "powerConsumption") {
-        setNewStoreMinerPowerConsumption(value);
-      } else if (name === "profitability") {
-        setNewStoreMinerProfitability(value);
-      }
-    }
-    setEditingMiner((prevMiner) => ({
-      ...prevMiner,
-      [name]: value,
-      // Asegurarse de que los valores de hashrate, cost, etc. se actualicen correctamente en editingMiner
-      ...(name === "currentHashrate" && { currentHashrate: parseFloat(value) || 0 }),
-      ...(name === "cost" && { cost: parseFloat(value) || 0 }),
-      ...(name === "hashrate" && { hashrate: value }),
-      ...(name === "powerConsumption" && { powerConsumption: value }),
-      ...(name === "profitability" && { profitability: value }),
-      ...(name === "name" && { name: value }),
-      ...(name === "imageUrl" && { imageUrl: value }),
-    }));
-  };
-
-  const handleAddMiner = async (minerData, type) => {
     try {
-      const dataToSave = { ...minerData, type, createdAt: new Date() };
-      const docRef = await addDoc(collection(db, 'miners'), dataToSave);
-      showSuccess(`${type === 'user' ? 'Minero de usuario' : 'Minero de la tienda'} añadido exitosamente.`);
-      console.log(`${type === 'user' ? 'Minero de usuario' : 'Minero de la tienda'} añadido a Firebase con ID:`, docRef.id);
-      return true; // Éxito al añadir
-    } catch (error) {
-      console.error(`Error al añadir ${type === 'user' ? 'minero de usuario' : 'minero de la tienda'}:`, error);
-      showError(`Error al añadir ${type === 'user' ? 'minero de usuario' : 'minero de la tienda'}: ${error.message}`);
-      return false; // Fallo al añadir
-    }
+      await addDoc(collection(db, 'miners'), {
+        userId: formUserId,
+        workerName: formWorker.trim(),
+        currentHashrate: parseFloat(formHashrate) || 0,
+        status: formStatus,
+        type: 'user',
+        createdAt: new Date(),
+      });
+      showSuccess('Minero añadido exitosamente.');
+      setFormUserId(''); setFormWorker(''); setFormHashrate(''); setFormStatus('activo');
+      setShowAddForm(false);
+    } catch (e) { showError(`Error al añadir minero: ${e.message}`); }
   };
 
-  const handleAddNewUserMiner = async () => {
-    if (!newMinerUserId.trim() || !newMinerWorkerName.trim()) {
-      showError('El ID de usuario y el nombre del worker no pueden estar vacíos.');
-      return;
-    }
-    const minerData = {
-      userId: newMinerUserId,
-      workerName: newMinerWorkerName,
-      currentHashrate: newMinerHashrate,
-      status: newMinerStatus,
-    };
-    const success = await handleAddMiner(minerData, 'user');
-    if (success) {
-      setNewMinerUserId('');
-      setNewMinerWorkerName('');
-      setNewMinerHashrate(0);
-      setNewMinerStatus('inactivo');
-    }
+  const handleSaveEdit = async (id, data) => {
+    try {
+      await updateDoc(doc(db, 'miners', id), data);
+      showSuccess('Minero actualizado.');
+      setEditingMiner(null);
+    } catch (e) { showError(`Error al actualizar: ${e.message}`); }
   };
 
-  const handleAddNewStoreMiner = async () => {
-    if (!newStoreMinerName.trim() || !newStoreMinerImageUrl.trim() || !newStoreMinerHashrate.trim() || newStoreMinerCost <= 0) {
-      showError('Todos los campos de Nombre, URL de Imagen, Hashrate y Costo (mayor a 0) son obligatorios para un minero de la tienda.');
-      return;
-    }
-    const minerData = {
-      name: newStoreMinerName,
-      imageUrl: newStoreMinerImageUrl,
-      cost: newStoreMinerCost,
-      hashrate: newStoreMinerHashrate,
-      powerConsumption: newStoreMinerPowerConsumption,
-      profitability: newStoreMinerProfitability,
-    };
-    const success = await handleAddMiner(minerData, 'store');
-    if (success) {
-      setNewStoreMinerName('');
-      setNewStoreMinerImageUrl('');
-      setNewStoreMinerCost(0);
-      setNewStoreMinerHashrate('');
-      setNewStoreMinerPowerConsumption('');
-      setNewStoreMinerProfitability('');
-    }
-  };
-
-  const handleDeleteMiner = async (minerId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este minero?')) {
-      try {
-        console.log("MinerManagement: Eliminando minero con ID:", minerId);
-        await deleteDoc(doc(db, 'miners', minerId));
-        showSuccess('Minero eliminado exitosamente.');
-        console.log("MinerManagement: Minero eliminado exitosamente.");
-      } catch (error) {
-        console.error("MinerManagement: Error deleting miner: ", error);
-        showError(`Error al eliminar minero: ${error.message}`);
+  const handleConfirmDelete = async () => {
+    try {
+      if (deleteTarget === 'selected') {
+        await Promise.all(selectedIds.map(id => deleteDoc(doc(db, 'miners', id))));
+        showSuccess(`${selectedIds.length} minero(s) eliminado(s).`);
+        setSelectedIds([]);
+      } else {
+        await deleteDoc(doc(db, 'miners', deleteTarget));
+        showSuccess('Minero eliminado.');
+        setSelectedIds(prev => prev.filter(id => id !== deleteTarget));
       }
-    }
+    } catch (e) { showError(`Error al eliminar: ${e.message}`); }
+    setDeleteTarget(null);
   };
 
-  const handleSaveChanges = async () => {
-    if (editingMiner.type === 'user') { // Es un minero asignado a un usuario
-      console.log("MinerManagement: Guardando cambios para minero de usuario:", editingMiner.id);
-      console.log("MinerManagement: Nuevos valores - userId:", newMinerUserId, "workerName:", newMinerWorkerName, "hashrate:", newMinerHashrate, "status:", newMinerStatus);
-      try {
-        const minerRef = doc(db, 'miners', editingMiner.id);
-        await updateDoc(minerRef, {
-          userId: newMinerUserId,
-          workerName: newMinerWorkerName,
-          currentHashrate: newMinerHashrate,
-          status: newMinerStatus
-        });
-        setIsModalOpen(false);
-        setEditingMiner(null);
-        showSuccess('Minero de usuario actualizado exitosamente.');
-        console.log("MinerManagement: Minero de usuario actualizado exitosamente.");
-      } catch (error) {
-        console.error("MinerManagement: Error updating user miner: ", error);
-        showError(`Error al actualizar minero de usuario: ${error.message}`);
-      }
-    } else if (editingMiner.type === 'store') { // Es un minero de la tienda
-      console.log("MinerManagement: Guardando cambios para minero de la tienda:", editingMiner.id);
-      console.log("MinerManagement: Nuevos valores - name:", newStoreMinerName, "imageUrl:", newStoreMinerImageUrl, "cost:", newStoreMinerCost, "hashrate:", newStoreMinerHashrate, "powerConsumption:", newStoreMinerPowerConsumption, "profitability:", newStoreMinerProfitability);
-      try {
-        const minerRef = doc(db, 'miners', editingMiner.id);
-        await updateDoc(minerRef, {
-          name: newStoreMinerName,
-          imageUrl: newStoreMinerImageUrl,
-          cost: newStoreMinerCost,
-          hashrate: newStoreMinerHashrate,
-          powerConsumption: newStoreMinerPowerConsumption,
-          profitability: newStoreMinerProfitability,
-        });
-        setIsModalOpen(false);
-        setEditingMiner(null);
-        showSuccess('Minero de la tienda actualizado exitosamente.');
-        console.log("MinerManagement: Minero de la tienda actualizado exitosamente.");
-      } catch (error) {
-        console.error("MinerManagement: Error updating store miner: ", error);
-        showError(`Error al actualizar minero de la tienda: ${error.message}`);
-      }
-    }
-  };
+  const toggleSelect = id =>
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
-  // Lógica de paginación para mineros de usuario
-  const indexOfLastMiner = currentPage * minersPerPage;
-  const indexOfFirstMiner = indexOfLastMiner - minersPerPage;
-  const currentUserMiners = userMiners
-    .filter(miner => {
-      const matchesSearch = searchTerm === '' || 
-                            miner.workerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            (users.find(user => user.id === miner.userId)?.email || '').toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || miner.status === filterStatus;
-      return matchesSearch && matchesStatus;
-    })
-    .slice(indexOfFirstMiner, indexOfLastMiner);
+  const toggleSelectAll = () =>
+    setSelectedIds(selectedIds.length === paginated.length ? [] : paginated.map(m => m.id));
 
-  const totalPages = Math.ceil(userMiners.length / minersPerPage); // Paginación solo para mineros de usuario
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  const handleSelectAllMiners = (e) => {
-    if (e.target.checked) {
-      const allMinerIds = currentUserMiners.map(miner => miner.id);
-      setSelectedMiners(allMinerIds);
-    } else {
-      setSelectedMiners([]);
-    }
-  };
-
-  const handleSelectMiner = (minerId) => {
-    setSelectedMiners(prevSelected =>
-      prevSelected.includes(minerId)
-        ? prevSelected.filter(id => id !== minerId)
-        : [...prevSelected, minerId]
-    );
-  };
-
-  const handleDeleteSelectedMiners = async () => {
-    if (window.confirm(`¿Estás seguro de que quieres eliminar ${selectedMiners.length} minero(s) seleccionado(s)?`)) {
-      try {
-        console.log("MinerManagement: Eliminando mineros seleccionados:", selectedMiners);
-        const deletePromises = selectedMiners.map(minerId => deleteDoc(doc(db, 'miners', minerId)));
-        await Promise.all(deletePromises);
-        setSelectedMiners([]); // Limpiar selección después de eliminar
-        showSuccess('Mineros eliminados exitosamente.');
-        console.log("MinerManagement: Mineros eliminados exitosamente.");
-      } catch (error) {
-        console.error("MinerManagement: Error deleting selected miners: ", error);
-        showError(`Error al eliminar mineros seleccionados: ${error.message}`);
-      }
-    }
-  };
-
-  // Datos para la gráfica de estado de mineros
-  const minerStatusData = userMiners.reduce((acc, miner) => {
-    acc[miner.status] = (acc[miner.status] || 0) + 1; // Solo mineros de usuario para la gráfica de estado
-    return acc;
-  }, {});
-
-  const chartData = {
-    labels: Object.keys(minerStatusData).length > 0 ? Object.keys(minerStatusData) : ["No hay mineros"],
-    datasets: [{
-      label: 'Mineros por Estado',
-      data: Object.values(minerStatusData),
-      backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(255, 206, 86, 0.6)', 'rgba(255, 99, 132, 0.6)'],
-      borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 206, 86, 1)', 'rgba(255, 99, 132, 1)'],
-      borderWidth: 1,
-    }],
-  };
-
-  console.log("Mineros de usuario filtrados y paginados (currentUserMiners):", currentUserMiners); // Log para depuración
-
+  /* ════════════════════════════════════════════
+     RENDER
+  ════════════════════════════════════════════ */
   return (
-    <div className={`${darkMode ? 'bg-dark_card text-light_text' : 'bg-gray-800 text-white'} p-6 rounded-lg`}>
-      <h2 className="text-2xl font-semibold mb-4">Gestión de Mineros</h2>
-      
-      {/* Formulario para añadir nuevo minero de usuario */}
-      <h3 className="text-xl font-semibold mb-3">Añadir Minero de Usuario</h3>
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 border p-4 rounded-lg shadow-sm">
-        <div>
-          <label htmlFor="newMinerUserId" className={`block text-sm font-medium mb-1 ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>ID de Usuario:</label>
+    <div className="min-h-screen bg-[#06080d] text-gray-100 p-6 lg:p-8">
+      {/* ── MODALS ── */}
+      {editingMiner && (
+        <EditModal
+          miner={editingMiner}
+          users={users}
+          onClose={() => setEditingMiner(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
+      {deleteTarget && (
+        <ConfirmModal
+          count={deleteTarget === 'selected' ? selectedIds.length : 1}
+          onConfirm={handleConfirmDelete}
+          onClose={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {/* ── HEADER ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3H7a2 2 0 00-2 2v2m14-4h-2a2 2 0 012 2v2M9 21H7a2 2 0 01-2-2v-2m14 4h-2a2 2 0 002-2v-2M3 9v6m18-6v6M9 9h6v6H9z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-extrabold text-white">Gestión de Mineros</h1>
+            <p className="text-gray-500 text-sm">Mineros activos de todos los usuarios</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowAddForm(v => !v)}
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500
+                     text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/20 transition-all"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          {showAddForm ? 'Cancelar' : 'Añadir Minero'}
+        </button>
+      </div>
+
+      {/* ── STAT CARDS ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {[
+          { label: 'Total Mineros', value: miners.length, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+          { label: 'Activos', value: activeCount, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+          { label: 'Offline', value: offlineCount, color: 'text-red-400', bg: 'bg-red-500/10' },
+          { label: 'Hashrate Total', value: `${totalHashrate.toFixed(1)} TH/s`, color: 'text-orange-400', bg: 'bg-orange-500/10' },
+        ].map(({ label, value, color, bg }) => (
+          <div key={label} className={`${bg} border border-white/5 rounded-2xl p-4`}>
+            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">{label}</p>
+            <p className={`text-2xl font-extrabold ${color}`}>{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── ADD MINER FORM ── */}
+      {showAddForm && (
+        <div className="mb-8 bg-[#0d1117] border border-white/5 rounded-2xl p-6 shadow-xl">
+          <h2 className="text-base font-bold text-white mb-5 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-blue-400" />
+            Añadir nuevo minero de usuario
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <SelectField label="Usuario" id="add-user" value={formUserId} onChange={e => setFormUserId(e.target.value)}>
+              <option value="">Seleccionar usuario...</option>
+              {users.map(u => (
+                <option key={u.id} value={u.id}>{u.email}</option>
+              ))}
+            </SelectField>
+            <InputField label="Worker Name" id="add-worker" type="text" value={formWorker}
+              onChange={e => setFormWorker(e.target.value)} placeholder="Ej: worker01" />
+            <InputField label="Hashrate (TH/s)" id="add-hashrate" type="number" step="0.01"
+              value={formHashrate} onChange={e => setFormHashrate(e.target.value)} placeholder="0.00" />
+            <SelectField label="Estado" id="add-status" value={formStatus} onChange={e => setFormStatus(e.target.value)}>
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+              <option value="offline">Offline</option>
+            </SelectField>
+          </div>
+          <div className="mt-5 flex justify-end">
+            <button onClick={handleAddMiner}
+              className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500
+                         text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/20 transition-all">
+              Crear Minero
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── SEARCH + FILTER ── */}
+      <div className="bg-[#0d1117] border border-white/5 rounded-2xl shadow-xl overflow-hidden">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-4 border-b border-white/5">
+          {/* search */}
+          <div className="relative flex-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              placeholder="Buscar por email, worker, ID usuario o ID minero..."
+              className="w-full pl-9 pr-4 py-2.5 bg-[#131824] border border-white/5 rounded-xl text-sm text-white
+                         placeholder-gray-600 focus:outline-none focus:border-blue-500/40 transition-colors"
+            />
+          </div>
+          {/* filter */}
           <select
-            id="newMinerUserId"
-            value={newMinerUserId}
-            onChange={(e) => setNewMinerUserId(e.target.value)}
-            className={`w-full rounded-md shadow-sm sm:text-sm p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
+            value={filterStatus}
+            onChange={e => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+            className="bg-[#131824] border border-white/5 rounded-xl px-4 py-2.5 text-sm text-white
+                       focus:outline-none focus:border-blue-500/40 transition-colors appearance-none cursor-pointer"
           >
-            <option value="">Selecciona un Usuario</option>
-            {users.map(user => (
-              <option key={user.id} value={user.id}>{user.email} (ID: {user.id})</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="newMinerWorkerName" className={`block text-sm font-medium mb-1 ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Nombre del Worker:</label>
-          <input
-            type="text"
-            id="newMinerWorkerName"
-            value={newMinerWorkerName}
-            onChange={(e) => setNewMinerWorkerName(e.target.value)}
-            placeholder="Ej: worker01 o wuisem.345076"
-            className={`w-full rounded-md shadow-sm sm:text-sm p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-          />
-        </div>
-        <div>
-          <label htmlFor="newMinerHashrate" className={`block text-sm font-medium mb-1 ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Hashrate (TH/s):</label>
-          <input
-            type="number"
-            id="newMinerHashrate"
-            value={newMinerHashrate}
-            onChange={(e) => setNewMinerHashrate(parseFloat(e.target.value))}
-            placeholder="0"
-            step="0.01"
-            className={`w-full rounded-md shadow-sm sm:text-sm p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-          />
-        </div>
-        <div>
-          <label htmlFor="newMinerStatus" className={`block text-sm font-medium mb-1 ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Estado:</label>
-          <select
-            id="newMinerStatus"
-            value={newMinerStatus}
-            onChange={(e) => setNewMinerStatus(e.target.value)}
-            className={`w-full rounded-md shadow-sm sm:text-sm p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-          >
+            <option value="all">Todos los estados</option>
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
             <option value="offline">Offline</option>
           </select>
-        </div>
-        <div className="md:col-span-4 flex justify-end">
-          <button
-            onClick={handleAddNewUserMiner}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-          >
-            Añadir Minero de Usuario
-          </button>
-        </div>
-      </div>
-
-      {/* Formulario para añadir nuevo minero de la tienda */}
-      <h3 className="text-xl font-semibold mb-3 mt-8">Añadir Minero a la Tienda</h3>
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 border p-4 rounded-lg shadow-sm">
-        <div>
-          <label htmlFor="newStoreMinerName" className={`block text-sm font-medium mb-1 ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Nombre del Minero:</label>
-          <input
-            type="text"
-            id="newStoreMinerName"
-            value={newStoreMinerName}
-            onChange={(e) => setNewStoreMinerName(e.target.value)}
-            placeholder="Ej: Limerminer 17M"
-            className={`w-full rounded-md shadow-sm sm:text-sm p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-          />
-        </div>
-        <div>
-          <label htmlFor="newStoreMinerImageUrl" className={`block text-sm font-medium mb-1 ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>URL de la Imagen:</label>
-          <input
-            type="text"
-            id="newStoreMinerImageUrl"
-            value={newStoreMinerImageUrl}
-            onChange={(e) => setNewStoreMinerImageUrl(e.target.value)}
-            placeholder="https://example.com/miner.gif"
-            className={`w-full rounded-md shadow-sm sm:text-sm p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-          />
-        </div>
-        <div>
-          <label htmlFor="newStoreMinerCost" className={`block text-sm font-medium mb-1 ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Costo:</label>
-          <input
-            type="number"
-            id="newStoreMinerCost"
-            value={newStoreMinerCost}
-            onChange={(e) => setNewStoreMinerCost(parseFloat(e.target.value))}
-            placeholder="0"
-            step="1"
-            className={`w-full rounded-md shadow-sm sm:text-sm p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-          />
-        </div>
-        <div>
-          <label htmlFor="newStoreMinerHashrate" className={`block text-sm font-medium mb-1 ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Hashrate:</label>
-          <input
-            type="text"
-            id="newStoreMinerHashrate"
-            value={newStoreMinerHashrate}
-            onChange={(e) => setNewStoreMinerHashrate(e.target.value)}
-            placeholder="Ej: 17 MH/s o 5 TH/s"
-            className={`w-full rounded-md shadow-sm sm:text-sm p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-          />
-        </div>
-        <div>
-          <label htmlFor="newStoreMinerPowerConsumption" className={`block text-sm font-medium mb-1 ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Consumo de Energía (W):</label>
-          <input
-            type="text"
-            id="newStoreMinerPowerConsumption"
-            value={newStoreMinerPowerConsumption}
-            onChange={(e) => setNewStoreMinerPowerConsumption(e.target.value)}
-            placeholder="Ej: 60W"
-            className={`w-full rounded-md shadow-sm sm:text-sm p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-          />
-        </div>
-        <div>
-          <label htmlFor="newStoreMinerProfitability" className={`block text-sm font-medium mb-1 ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Rentabilidad (BTC/día):</label>
-          <input
-            type="text"
-            id="newStoreMinerProfitability"
-            value={newStoreMinerProfitability}
-            onChange={(e) => setNewStoreMinerProfitability(e.target.value)}
-            placeholder="Ej: 0.00000005 BTC/día"
-            className={`w-full rounded-md shadow-sm sm:text-sm p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-          />
-        </div>
-        <div className="md:col-span-3 flex justify-end">
-          <button
-            onClick={handleAddNewStoreMiner}
-            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
-          >
-            Añadir Minero a la Tienda
-          </button>
-        </div>
-      </div>
-
-      {/* Sección de Búsqueda y Filtro */}
-      <div className="mb-6 flex flex-col md:flex-row gap-4">
-        <input
-          type="text"
-          placeholder="Buscar por nombre de worker, ID de usuario o nombre de minero..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className={`w-full md:w-2/3 rounded-md shadow-sm sm:text-sm p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-        />
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className={`w-full md:w-1/3 rounded-md shadow-sm sm:text-sm p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-        >
-          <option value="all">Todos los estados</option>
-          <option value="activo">Activo</option>
-          <option value="inactivo">Inactivo</option>
-          <option value="offline">Offline</option>
-        </select>
-      </div>
-
-      {/* Tabla de Gestión de Mineros de la Tienda */}
-      <h3 className="text-xl font-semibold mt-8 mb-4">Mineros de la Tienda</h3>
-      <div className="overflow-x-auto rounded-lg shadow-md mb-8">
-        <table className={`min-w-full divide-y ${darkMode ? 'divide-dark_border' : 'divide-gray-700'}`}>
-          <thead className={`${darkMode ? 'bg-dark_bg' : 'bg-gray-700'}`}>
-            <tr>
-              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Nombre</th>
-              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Imagen</th>
-              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Costo</th>
-              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Hashrate</th>
-              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Consumo</th>
-              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Rentabilidad</th>
-              <th className={`px-6 py-3 text-right text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody className={`${darkMode ? 'bg-dark_card divide-dark_border' : 'bg-gray-800 divide-gray-700'} divide-y`}>
-            {storeMiners.filter(miner => 
-                searchTerm === '' || 
-                miner.name.toLowerCase().includes(searchTerm.toLowerCase())
-            ).map((miner) => (
-              <tr key={miner.id} className={`${darkMode ? 'hover:bg-dark_border' : 'hover:bg-gray-700'} transition-colors duration-200`}>
-                <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>{miner.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <img src={miner.imageUrl} alt={miner.name} className="h-10 w-10 object-cover rounded-full" />
-                </td>
-                <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>{miner.cost}</td>
-                <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>{miner.hashrate}</td>
-                <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>{miner.powerConsumption}</td>
-                <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>{miner.profitability}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => handleEditClick(miner)}
-                    className="text-indigo-400 hover:text-indigo-600 mr-3 transition-colors duration-200"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDeleteMiner(miner.id)}
-                    className="text-red-400 hover:text-red-600 transition-colors duration-200"
-                  >
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {storeMiners.filter(miner => 
-                searchTerm === '' || 
-                miner.name.toLowerCase().includes(searchTerm.toLowerCase())
-            ).length === 0 && (
-              <tr>
-                <td colSpan="7" className={`px-6 py-4 text-center text-sm ${darkMode ? 'text-light_text' : 'text-gray-400'}`}>No se encontraron mineros de la tienda.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Sección de Gestión de Mineros de Usuario */}
-      <h3 className="text-xl font-semibold mt-8 mb-4">Mineros Asignados a Usuarios</h3>
-
-      {/* Tabla de Gestión de Mineros */}
-      <div className="overflow-x-auto rounded-lg shadow-md">
-        <table className={`min-w-full divide-y ${darkMode ? 'divide-dark_border' : 'divide-gray-700'}`}>
-          <thead className={`${darkMode ? 'bg-dark_bg' : 'bg-gray-700'}`}>
-            <tr>
-              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>
-                <input
-                  type="checkbox"
-                  className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
-                  onChange={handleSelectAllMiners}
-                  checked={currentUserMiners.length > 0 && selectedMiners.length === currentUserMiners.length}
-                />
-              </th>
-              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Usuario (Email)</th>
-              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Nombre del Worker</th>
-              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Hashrate (TH/s)</th>
-              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Estado</th>
-              <th className={`px-6 py-3 text-right text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody className={`${darkMode ? 'bg-dark_card divide-dark_border' : 'bg-gray-800 divide-gray-700'} divide-y`}>
-            {currentUserMiners.map((miner) => (
-              <tr key={miner.id} className={`${darkMode ? 'hover:bg-dark_border' : 'hover:bg-gray-700'} transition-colors duration-200`}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
-                    checked={selectedMiners.includes(miner.id)}
-                    onChange={() => handleSelectMiner(miner.id)}
-                  />
-                </td>
-                <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>
-                  {users.find(user => user.id === miner.userId)?.email || miner.userId}
-                </td>
-                <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>{miner.workerName}</td>
-                <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>{miner.currentHashrate ? miner.currentHashrate.toFixed(2) : '0.00'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    miner.status === 'activo' ? 'bg-green-100 text-green-800' :
-                    miner.status === 'inactivo' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {miner.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => handleEditClick(miner)}
-                    className="text-indigo-400 hover:text-indigo-600 mr-3 transition-colors duration-200"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDeleteMiner(miner.id)}
-                    className="text-red-400 hover:text-red-600 transition-colors duration-200"
-                  >
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {currentUserMiners.length === 0 && (
-              <tr>
-                <td colSpan="6" className={`px-6 py-4 text-center text-sm ${darkMode ? 'text-light_text' : 'text-gray-400'}`}>No se encontraron mineros.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Botón de Eliminar Seleccionados */}
-      {selectedMiners.length > 0 && (
-        <div className="mt-4 flex justify-end">
-          <button
-            onClick={handleDeleteSelectedMiners}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-          >
-            Eliminar Seleccionados ({selectedMiners.length})
-          </button>
-        </div>
-      )}
-
-      {/* Controles de Paginación */}
-      {totalPages > 1 && (
-        <div className="mt-6 flex justify-center">
-          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-            {[...Array(totalPages).keys()].map((number) => (
-              <button
-                key={number + 1}
-                onClick={() => paginate(number + 1)}
-                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                  currentPage === number + 1
-                    ? 'bg-blue-600 text-white'
-                    : (darkMode ? 'bg-dark_bg border-dark_border text-light_text hover:bg-dark_border' : 'bg-gray-700 border-gray-700 text-gray-300 hover:bg-gray-600')
-                }`}
-              >
-                {number + 1}
-              </button>
-            ))}
-          </nav>
-        </div>
-      )}
-
-      {/* Gráfica de Estado de Mineros */}
-      <div className={`mt-8 p-6 rounded-lg shadow-md ${darkMode ? 'bg-dark_card' : 'bg-gray-800'}`}>
-        <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-light_text' : 'text-white'}`}>Estado de Mineros de Usuario</h3>
-        <div className="h-64">
-          {userMiners.length > 0 ? (
-            <Bar data={chartData} options={{ maintainAspectRatio: false, responsive: true }} />
-          ) : (
-            <p className={`${darkMode ? 'text-light_text' : 'text-gray-400'} text-center py-8`}>No hay datos de mineros de usuario para mostrar en la gráfica.</p>
+          {/* bulk delete */}
+          {selectedIds.length > 0 && (
+            <button onClick={() => setDeleteTarget('selected')}
+              className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 border border-red-500/20 text-red-400
+                         hover:bg-red-500/20 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Eliminar ({selectedIds.length})
+            </button>
           )}
         </div>
-      </div>
 
-      {/* Modal de Edición */}
-      {isModalOpen && editingMiner && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`${darkMode ? 'bg-dark_card text-light_text' : 'bg-gray-800 text-white'} p-8 rounded-lg shadow-xl w-full max-w-md`}>
-            <h2 className="text-2xl font-bold mb-4">Editar Minero</h2>
-            {editingMiner.type === 'user' ? (
-              <div className="space-y-4">
-                {/* Campos para mineros de usuario */}
-                <div>
-                  <label htmlFor="editMinerUserId" className={`block text-sm font-medium ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>ID de Usuario</label>
-                  <select
-                    id="editMinerUserId"
-                    name="userId"
-                    value={newMinerUserId}
-                    onChange={handleMinerEditChange}
-                    className={`w-full rounded-md shadow-sm sm:text-sm p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-                  >
-                    <option value="">Selecciona un Usuario</option>
-                    {users.map(user => (
-                      <option key={user.id} value={user.id}>{user.email} (ID: {user.id})</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="editWorkerName" className={`block text-sm font-medium ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Nombre del Worker</label>
-                  <input
-                    type="text"
-                    name="workerName"
-                    id="editWorkerName"
-                    value={newMinerWorkerName}
-                    onChange={handleMinerEditChange}
-                    className={`mt-1 block w-full rounded-md p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="editCurrentHashrate" className={`block text-sm font-medium ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Hashrate (TH/s)</label>
-                  <input
-                    type="number"
-                    name="currentHashrate"
-                    id="editCurrentHashrate"
-                    value={newMinerHashrate}
-                    onChange={handleMinerEditChange}
-                    step="0.01"
-                    className={`mt-1 block w-full rounded-md p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="editStatus" className={`block text-sm font-medium ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Estado</label>
-                  <select
-                    name="status"
-                    id="editStatus"
-                    value={newMinerStatus}
-                    onChange={handleMinerEditChange}
-                    className={`mt-1 block w-full rounded-md p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-                  >
-                    <option value="activo">Activo</option>
-                    <option value="inactivo">Inactivo</option>
-                    <option value="offline">Offline</option>
-                  </select>
-                </div>
-              </div>
-            ) : editingMiner.type === 'store' ? (
-              <div className="space-y-4">
-                {/* Campos para mineros de la tienda */}
-                <div>
-                  <label htmlFor="editStoreMinerName" className={`block text-sm font-medium ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Nombre del Minero</label>
-                  <input type="text" name="name" id="editStoreMinerName" value={newStoreMinerName} onChange={handleMinerEditChange} className={`mt-1 block w-full rounded-md p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`} />
-                </div>
-                <div>
-                  <label htmlFor="editStoreMinerImageUrl" className={`block text-sm font-medium ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>URL de la Imagen</label>
-                  <input type="text" name="imageUrl" id="editStoreMinerImageUrl" value={newStoreMinerImageUrl} onChange={handleMinerEditChange} className={`mt-1 block w-full rounded-md p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`} />
-                </div>
-                <div>
-                  <label htmlFor="editStoreMinerCost" className={`block text-sm font-medium ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Costo</label>
-                  <input type="number" name="cost" id="editStoreMinerCost" value={newStoreMinerCost} onChange={handleMinerEditChange} step="1" className={`mt-1 block w-full rounded-md p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`} />
-                </div>
-                <div>
-                  <label htmlFor="editStoreMinerHashrate" className={`block text-sm font-medium ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Hashrate (MH/s o TH/s)</label>
-                  <input type="text" name="hashrate" id="editStoreMinerHashrate" value={newStoreMinerHashrate} onChange={handleMinerEditChange} className={`mt-1 block w-full rounded-md p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`} />
-                </div>
-                <div>
-                  <label htmlFor="editStoreMinerPowerConsumption" className={`block text-sm font-medium ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Consumo de Energía (W)</label>
-                  <input type="text" name="powerConsumption" id="editStoreMinerPowerConsumption" value={newStoreMinerPowerConsumption} onChange={handleMinerEditChange} className={`mt-1 block w-full rounded-md p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`} />
-                </div>
-                <div>
-                  <label htmlFor="editStoreMinerProfitability" className={`block text-sm font-medium ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Rentabilidad (BTC/día)</label>
-                  <input type="text" name="profitability" id="editStoreMinerProfitability" value={newStoreMinerProfitability} onChange={handleMinerEditChange} className={`mt-1 block w-full rounded-md p-2 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`} />
-                </div>
-              </div>
-            ) : null}
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-              >
-                Cancelar
+        {/* ── TABLE ── */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/5 bg-[#0a0d12]">
+                <th className="px-4 py-3 w-10">
+                  <input type="checkbox"
+                    checked={paginated.length > 0 && selectedIds.length === paginated.length}
+                    onChange={toggleSelectAll}
+                    className="rounded border-gray-600 bg-[#1a2035] accent-blue-500 cursor-pointer" />
+                </th>
+                {['ID Minero', 'Usuario (Email)', 'ID Usuario', 'Worker Name', 'Hashrate', 'Estado', 'Creado', 'Acciones'].map(h => (
+                  <th key={h} className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-widest text-gray-500 whitespace-nowrap">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {paginated.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-4 py-16 text-center text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 3H7a2 2 0 00-2 2v2m14-4h-2a2 2 0 012 2v2M9 21H7a2 2 0 01-2-2v-2m14 4h-2a2 2 0 002-2v-2M3 9v6m18-6v6M9 9h6v6H9z" />
+                    </svg>
+                    No se encontraron mineros
+                  </td>
+                </tr>
+              ) : (
+                paginated.map((miner, idx) => {
+                  const userEmail = users.find(u => u.id === miner.userId)?.email || '—';
+                  const isSelected = selectedIds.includes(miner.id);
+                  return (
+                    <tr key={miner.id}
+                      className={`border-b border-white/[0.03] transition-colors duration-150 hover:bg-white/[0.02]
+                        ${isSelected ? 'bg-blue-500/[0.04]' : idx % 2 === 0 ? '' : 'bg-white/[0.01]'}`}
+                    >
+                      {/* checkbox */}
+                      <td className="px-4 py-3">
+                        <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(miner.id)}
+                          className="rounded border-gray-600 bg-[#1a2035] accent-blue-500 cursor-pointer" />
+                      </td>
+
+                      {/* ID Minero */}
+                      <td className="px-4 py-3">
+                        <span className="font-mono text-xs bg-[#1a2035] px-2 py-1 rounded-lg text-gray-400">
+                          {miner.id.substring(0, 10)}…
+                        </span>
+                      </td>
+
+                      {/* Email */}
+                      <td className="px-4 py-3 text-white font-medium max-w-[180px] truncate">{userEmail}</td>
+
+                      {/* ID Usuario */}
+                      <td className="px-4 py-3">
+                        <span className="font-mono text-xs bg-[#1a2035] px-2 py-1 rounded-lg text-gray-500">
+                          {miner.userId?.substring(0, 10)}…
+                        </span>
+                      </td>
+
+                      {/* Worker */}
+                      <td className="px-4 py-3 text-blue-300 font-mono text-xs font-semibold">{miner.workerName || '—'}</td>
+
+                      {/* Hashrate */}
+                      <td className="px-4 py-3">
+                        <span className="text-orange-400 font-bold">{(miner.currentHashrate || 0).toFixed(2)}</span>
+                        <span className="text-gray-600 text-xs ml-1">TH/s</span>
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-4 py-3">
+                        <StatusBadge status={miner.status || 'inactivo'} />
+                      </td>
+
+                      {/* Fecha */}
+                      <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
+                        {miner.createdAt?.toDate
+                          ? miner.createdAt.toDate().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+                          : '—'}
+                      </td>
+
+                      {/* Acciones */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => setEditingMiner(miner)}
+                            className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 transition-colors"
+                            title="Editar">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button onClick={() => setDeleteTarget(miner.id)}
+                            className="p-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors"
+                            title="Eliminar">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── PAGINATION ── */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-4 border-t border-white/5 bg-[#0a0d12]">
+            <p className="text-xs text-gray-500">
+              Mostrando {(currentPage - 1) * MINERS_PER_PAGE + 1}–{Math.min(currentPage * MINERS_PER_PAGE, filtered.length)} de {filtered.length}
+            </p>
+            <div className="flex gap-2">
+              <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}
+                className="px-3 py-1.5 rounded-lg bg-[#131824] border border-white/5 text-gray-400 hover:text-white
+                           disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-semibold">
+                ← Anterior
               </button>
-              <button
-                onClick={handleSaveChanges}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Guardar Cambios
+              <span className="px-3 py-1.5 text-xs text-gray-400">{currentPage} / {totalPages}</span>
+              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}
+                className="px-3 py-1.5 rounded-lg bg-[#131824] border border-white/5 text-gray-400 hover:text-white
+                           disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-semibold">
+                Siguiente →
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      {/* footer note */}
+      <p className="mt-4 text-xs text-gray-700 text-center">
+        {filtered.length} minero{filtered.length !== 1 ? 's' : ''} registrado{filtered.length !== 1 ? 's' : ''} en total
+      </p>
     </div>
   );
 };
