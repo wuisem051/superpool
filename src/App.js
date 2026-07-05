@@ -8,6 +8,7 @@ import './App.css';
 import { db } from './services/firebase'; // Importar db desde firebase.js
 import { doc, getDoc } from 'firebase/firestore';
 import { ThemeContext } from './context/ThemeContext'; // Importar ThemeContext
+import PageLoader from './common/components/PageLoader'; // Loader de página
 
 // Carga perezosa de componentes de página
 const Home = lazy(() => import('./user/pages/Home')); // Mantener el Home original por ahora, pero no se usará en la ruta principal
@@ -17,8 +18,9 @@ const Signup = lazy(() => import('./user/pages/Signup'));
 const UserPanel = lazy(() => import('./user/pages/UserPanel'));
 const AdminPanel = lazy(() => import('./admin/pages/AdminPanel'));
 const AdminLogin = lazy(() => import('./admin/pages/AdminLogin'));
-const AllNewsPage = lazy(() => import('./user/pages/AllNewsPage')); // Nueva página para todas las noticias
-const ProfitabilityCalculatorPage = lazy(() => import('./user/pages/ProfitabilityCalculatorPage')); // Página de la calculadora de rentabilidad
+const ProfitabilityCalculatorPage = lazy(() => import('./user/pages/ProfitabilityCalculatorPage'));
+const AllNewsPage = lazy(() => import('./user/pages/AllNewsPage'));
+const PoolStatsPage = lazy(() => import('./user/pages/PoolStatsPage'));
 
 // Componente interno que puede usar useLocation (debe estar dentro del Router)
 function AppContent() {
@@ -71,7 +73,7 @@ function AppContent() {
       <Header />
       <main className="flex-grow">
         <AuthProvider>
-          <Suspense fallback={<div>Cargando...</div>}>
+          <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<FuturisticHome />} />
               <Route path="/login" element={<Login />} />
@@ -99,6 +101,7 @@ function AppContent() {
               <Route path="/admin-login" element={<AdminLogin />} />
               <Route path="/news" element={<AllNewsPage />} />
               <Route path="/calculator" element={<ProfitabilityCalculatorPage />} />
+              <Route path="/pool-stats" element={<PoolStatsPage />} />
             </Routes>
           </Suspense>
         </AuthProvider>

@@ -1,23 +1,20 @@
-import React, { useState, useEffect, useContext } from 'react'; // Importar useContext
-import { db } from '../../services/firebase'; // Importar Firebase Firestore
-import { doc, getDoc } from 'firebase/firestore'; // Importar doc y getDoc
-import { ThemeContext } from '../../context/ThemeContext'; // Importar ThemeContext
+import React, { useState, useEffect, useContext } from 'react';
+import { db } from '../../services/firebase';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore'; // Importar onSnapshot
+import { ThemeContext } from '../../context/ThemeContext';
 
 const ProfitabilityCalculator = () => {
   const [hashrate, setHashrate] = useState(10);
-  // const [consumption, setConsumption] = useState(3000); // Eliminado
-  // const [costPerKWH, setCostPerKWH] = useState(0.12); // Eliminado
 
-  // Valores de configuración obtenidos del administrador (ahora de Firebase)
+  // Valores de configuración obtenidos del administrador (ahora de Firebase real-time)
   const [fixedRatePerTHs, setFixedRatePerTHs] = useState(0.06);
   const [fixedPoolCommission, setFixedPoolCommission] = useState(1);
   const [useFixedRate, setUseFixedRate] = useState(false);
 
-  // Valores dinámicos de BTC y dificultad (si no se usa tasa fija)
+  // Valores dinámicos de BTC y dificultad
   const [btcPrice, setBtcPrice] = useState(121692);
   const [difficulty, setDifficulty] = useState(73197634206448);
 
-  // const [dailyElectricCost, setDailyElectricCost] = useState(0); // Eliminado
   const [dailyBtcGain, setDailyBtcGain] = useState(0);
   const [dailyUsdGain, setDailyUsdGain] = useState(0);
   const [weeklyBtcGain, setWeeklyBtcGain] = useState(0);
@@ -28,30 +25,51 @@ const ProfitabilityCalculator = () => {
   const [annualUsdGain, setAnnualUsdGain] = useState(0);
   const [netDailyGain, setNetDailyGain] = useState(0);
 
-  // Función para obtener el precio de BTC y la dificultad de una API externa
   const fetchDynamicData = async () => {
     try {
-      // Aquí iría la llamada a una API real para obtener el precio de BTC y la dificultad
-      // Por ahora, usaremos valores estáticos para la simulación
-      // const response = await fetch('API_URL_PARA_BTC_Y_DIFICULTAD');
-      // const data = await response.json();
-      // setBtcPrice(data.btcPrice);
-      // setDifficulty(data.difficulty);
+      // Mock API call
     } catch (error) {
       console.error('Error al obtener datos dinámicos:', error);
     }
   };
 
-  // Calcular vista previa para mostrar los valores de configuración
   const preview1THs = fixedRatePerTHs;
   const preview10THs = fixedRatePerTHs * 10;
   const previewCommission = fixedPoolCommission;
 
-  const calculateProfitability = () => {
-    // const dailyConsumptionKWH = (consumption * 24) / 1000; // Eliminado
-    // const calculatedDailyElectricCost = dailyConsumptionKWH * costPerKWH; // Eliminado
-    // setDailyElectricCost(calculatedDailyElectricCost); // Eliminado
+  // 1. Escuchar la configuración en tiempo real (separado de los cálculos para evitar re-fetches infinitos)
+  useEffect(() => {
+    const docRef = doc(db, 'settings', 'profitability');
 
+    // Usamos onSnapshot para leer datos con sincronización real-time como en el resto de paneles.
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        // Usamos ?? en lugar de || por si es 0
+        setFixedRatePerTHs(data.fixedRatePerTHs ?? 0.06);
+        setFixedPoolCommission(data.fixedPoolCommission ?? 1);
+        setUseFixedRate(data.useFixedRate ?? false);
+      } else {
+        setFixedRatePerTHs(0.06);
+        setFixedPoolCommission(1);
+        setUseFixedRate(false);
+      }
+    }, (err) => {
+      console.error("Error fetching profitability settings from Firebase:", err);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // 2. Fetch de la data dinámica (si no se usa la tasa fija)
+  useEffect(() => {
+    if (!useFixedRate) {
+      fetchDynamicData();
+    }
+  }, [useFixedRate]);
+
+  // 3. Reactivo: Recalcular la rentabilidad sólo cuando cambian las variables de cálculo, NO refetching config.
+  useEffect(() => {
     let calculatedDailyBtcGain = 0;
     let calculatedDailyUsdGain = 0;
 
@@ -74,41 +92,14 @@ const ProfitabilityCalculator = () => {
     setAnnualBtcGain(calculatedDailyBtcGain * 365);
     setAnnualUsdGain(calculatedDailyUsdGain * 365);
 
-    // const calculatedNetDailyGain = calculatedDailyUsdGain - calculatedDailyElectricCost; // Modificado
-    const calculatedNetDailyGain = calculatedDailyUsdGain; // Modificado
-    setNetDailyGain(calculatedNetDailyGain);
-  };
-
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const docRef = doc(db, 'settings', 'profitability'); // Referencia al documento profitability
-        const docSnap = await getDoc(docRef); // Obtener el documento
-
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setFixedRatePerTHs(data.fixedRatePerTHs || 0.06);
-          setFixedPoolCommission(data.fixedPoolCommission || 1);
-          setUseFixedRate(data.useFixedRate || false);
-        } else {
-          // Si no existe, establecer valores por defecto
-          setFixedRatePerTHs(0.06);
-          setFixedPoolCommission(1);
-          setUseFixedRate(false);
-        }
-      } catch (err) {
-        console.error("Error fetching profitability settings from Firebase:", err);
-      }
-    };
-
-    fetchSettings();
-    // Si no se usa tasa fija, también obtenemos datos dinámicos
-    if (!useFixedRate) {
-      fetchDynamicData();
-    }
-
-    calculateProfitability();
+    setNetDailyGain(calculatedDailyUsdGain);
   }, [hashrate, fixedPoolCommission, fixedRatePerTHs, useFixedRate, btcPrice, difficulty]);
+
+  // Función wrapper para el botón "Recalcular"
+  const calculateProfitability = () => {
+    // Debido a los hooks, el recálculo se hace automáticamente al cambiar hashrate,
+    // pero mantenemos la función para el botón.
+  };
 
   const { theme } = useContext(ThemeContext); // Usar ThemeContext
 

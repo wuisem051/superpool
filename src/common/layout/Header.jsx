@@ -75,8 +75,8 @@ const Header = () => {
                 <Link
                   to="/admin"
                   className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname.startsWith('/admin')
-                      ? 'bg-red-600 text-white' // Color distintivo para admin dev
-                      : `text-red-400 hover:bg-red-800 hover:text-white`
+                    ? 'bg-red-600 text-white' // Color distintivo para admin dev
+                    : `text-red-400 hover:bg-red-800 hover:text-white`
                     }`}
                 >
                   Admin (Dev)
@@ -84,8 +84,8 @@ const Header = () => {
                 <Link
                   to="/user/dashboard"
                   className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname.startsWith('/user')
-                      ? 'bg-blue-600 text-white' // Color distintivo para user dev
-                      : `text-blue-400 hover:bg-blue-800 hover:text-white`
+                    ? 'bg-blue-600 text-white' // Color distintivo para user dev
+                    : `text-blue-400 hover:bg-blue-800 hover:text-white`
                     }`}
                 >
                   Usuario (Dev)
@@ -95,8 +95,8 @@ const Header = () => {
             <Link
               to="/"
               className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname === '/' && location.hash === ''
-                  ? 'bg-accent text-white'
-                  : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                ? 'bg-accent text-white'
+                : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                 }`}
             >
               Inicio
@@ -104,19 +104,28 @@ const Header = () => {
             <Link
               to="/calculator"
               className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname === '/calculator'
-                  ? 'bg-accent text-white'
-                  : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                ? 'bg-accent text-white'
+                : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                 }`}
             >
               Calculadora
+            </Link>
+            <Link
+              to="/pool-stats"
+              className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname === '/pool-stats'
+                ? 'bg-accent text-white'
+                : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                }`}
+            >
+              Red Global
             </Link>
             {currentUser ? (
               <>
                 <Link
                   to="/user/dashboard"
                   className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname.startsWith('/user')
-                      ? 'bg-accent text-white'
-                      : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                    ? 'bg-accent text-white'
+                    : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                     }`}
                 >
                   Panel de Usuario
@@ -134,8 +143,8 @@ const Header = () => {
                 <Link
                   to="/signup"
                   className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname === '/signup'
-                      ? 'bg-accent text-white'
-                      : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                    ? 'bg-accent text-white'
+                    : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                     }`}
                 >
                   Registrarse
@@ -143,8 +152,8 @@ const Header = () => {
                 <Link
                   to="/login"
                   className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname === '/login'
-                      ? 'bg-accent text-white'
-                      : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                    ? 'bg-accent text-white'
+                    : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                     }`}
                 >
                   Iniciar Sesión
@@ -187,8 +196,8 @@ const Header = () => {
                 <Link
                   to="/admin"
                   className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname.startsWith('/admin')
-                      ? 'bg-red-600 text-white'
-                      : `text-red-400 hover:bg-red-800 hover:text-white`
+                    ? 'bg-red-600 text-white'
+                    : `text-red-400 hover:bg-red-800 hover:text-white`
                     }`}
                 >
                   Admin (Dev)
@@ -196,8 +205,8 @@ const Header = () => {
                 <Link
                   to="/user/dashboard"
                   className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname.startsWith('/user')
-                      ? 'bg-blue-600 text-white'
-                      : `text-blue-400 hover:bg-blue-800 hover:text-white`
+                    ? 'bg-blue-600 text-white'
+                    : `text-blue-400 hover:bg-blue-800 hover:text-white`
                     }`}
                 >
                   Usuario (Dev)
@@ -207,8 +216,8 @@ const Header = () => {
             <Link
               to="/"
               className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname === '/' && location.hash === ''
-                  ? 'bg-accent text-white'
-                  : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                ? 'bg-accent text-white'
+                : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                 }`}
             >
               Inicio
@@ -216,19 +225,28 @@ const Header = () => {
             <Link
               to="/calculator"
               className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname === '/calculator'
+                ? 'bg-accent text-white'
+                : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                }`}
+            >
+              Calculadora
+            </Link>
+            <Link
+              to="/pool-stats"
+              className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname === '/pool-stats'
                   ? 'bg-accent text-white'
                   : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                 }`}
             >
-              Calculadora
+              Red Global
             </Link>
             {currentUser ? (
               <>
                 <Link
                   to="/user/dashboard"
                   className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname.startsWith('/user')
-                      ? 'bg-accent text-white'
-                      : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                    ? 'bg-accent text-white'
+                    : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                     }`}
                 >
                   Panel de Usuario
@@ -246,8 +264,8 @@ const Header = () => {
                 <Link
                   to="/signup"
                   className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname === '/signup'
-                      ? 'bg-accent text-white'
-                      : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                    ? 'bg-accent text-white'
+                    : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                     }`}
                 >
                   Registrarse
@@ -255,8 +273,8 @@ const Header = () => {
                 <Link
                   to="/login"
                   className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname === '/login'
-                      ? 'bg-accent text-white'
-                      : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                    ? 'bg-accent text-white'
+                    : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                     }`}
                 >
                   Iniciar Sesión
