@@ -950,6 +950,8 @@ const ContactSupportContent = ({ onUnreadCountChange, styles }) => {
     }
 
     try {
+      const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve('timeout'), 2500));
+
       if (selectedTicket) {
         const newConversation = [...selectedTicket.conversation, {
           sender: 'user',
@@ -957,19 +959,23 @@ const ContactSupportContent = ({ onUnreadCountChange, styles }) => {
           timestamp: new Date().toISOString(),
         }];
         const ticketRef = doc(db, 'contactRequests', selectedTicket.id);
-        await updateDoc(ticketRef, {
+
+        const operation = updateDoc(ticketRef, {
           conversation: newConversation,
           status: 'Pendiente',
           updatedAt: new Date(),
         });
-        showSuccess('Tu respuesta ha sido enviada.');
+
+        const result = await Promise.race([operation, timeoutPromise]);
+        showSuccess(result === 'timeout' ? 'Respuesta guardada (sincronizando en segundo plano)' : 'Tu respuesta ha sido enviada.');
       } else {
         if (!subject.trim()) {
           showError('Por favor, introduce un asunto para tu nueva consulta.');
           setIsLoading(false);
           return;
         }
-        await addDoc(collection(db, 'contactRequests'), {
+
+        const operation = addDoc(collection(db, 'contactRequests'), {
           userId: currentUser.uid,
           userEmail: currentUser.email,
           subject: subject,
@@ -982,7 +988,9 @@ const ContactSupportContent = ({ onUnreadCountChange, styles }) => {
             timestamp: new Date().toISOString(),
           }],
         });
-        showSuccess('Tu nueva consulta ha sido enviada. Te responderemos a la brevedad.');
+
+        const result = await Promise.race([operation, timeoutPromise]);
+        showSuccess(result === 'timeout' ? 'Consulta guardada (sincronizando en segundo plano)' : 'Tu nueva consulta ha sido enviada. Te responderemos a la brevedad.');
         setSubject('');
       }
       setMessageContent('');
