@@ -74,86 +74,78 @@ const Header = () => {
               <>
                 <Link
                   to="/admin"
-                  className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
-                    location.pathname.startsWith('/admin')
+                  className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname.startsWith('/admin')
                       ? 'bg-red-600 text-white' // Color distintivo para admin dev
                       : `text-red-400 hover:bg-red-800 hover:text-white`
-                  }`}
+                    }`}
                 >
                   Admin (Dev)
                 </Link>
                 <Link
                   to="/user/dashboard"
-                  className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
-                    location.pathname.startsWith('/user')
+                  className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname.startsWith('/user')
                       ? 'bg-blue-600 text-white' // Color distintivo para user dev
                       : `text-blue-400 hover:bg-blue-800 hover:text-white`
-                  }`}
+                    }`}
                 >
                   Usuario (Dev)
                 </Link>
               </>
             )}
-            <Link 
-              to="/" 
-              className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
-                location.pathname === '/' && location.hash === '' 
-                  ? 'bg-accent text-white' 
+            <Link
+              to="/"
+              className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname === '/' && location.hash === ''
+                  ? 'bg-accent text-white'
                   : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
-              }`}
+                }`}
             >
-              Estadísticas
+              Inicio
             </Link>
-            <Link 
-              to="/calculator" 
-              className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
-                location.pathname === '/calculator' 
-                  ? 'bg-accent text-white' 
+            <Link
+              to="/calculator"
+              className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname === '/calculator'
+                  ? 'bg-accent text-white'
                   : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
-              }`}
+                }`}
             >
               Calculadora
             </Link>
             {currentUser ? (
               <>
-                <Link 
-                  to="/user/dashboard" 
-                  className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
-                    location.pathname.startsWith('/user') 
-                      ? 'bg-accent text-white' 
+                <Link
+                  to="/user/dashboard"
+                  className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname.startsWith('/user')
+                      ? 'bg-accent text-white'
                       : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
-                  }`}
+                    }`}
                 >
                   Panel de Usuario
                 </Link>
-                <button 
-                  onClick={handleLogout} 
-                  className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
-                    `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
-                  }`}
+                <button
+                  onClick={handleLogout}
+                  className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${`${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                    }`}
                 >
                   Cerrar Sesión
                 </button>
               </>
             ) : (
               <>
-                <Link 
-                  to="/signup" 
-                  className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
-                    location.pathname === '/signup' 
-                      ? 'bg-accent text-white' 
+                <Link
+                  to="/signup"
+                  className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname === '/signup'
+                      ? 'bg-accent text-white'
                       : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
-                  }`}
+                    }`}
                 >
                   Registrarse
                 </Link>
-                <Link 
-                  to="/login" 
-                  className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
-                    location.pathname === '/login' 
-                      ? 'bg-accent text-white' 
+                <Link
+                  to="/login"
+                  className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname === '/login'
+                      ? 'bg-accent text-white'
                       : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
-                  }`}
+                    }`}
                 >
                   Iniciar Sesión
                 </Link>
@@ -166,9 +158,8 @@ const Header = () => {
             <button
               onClick={() => setIsOpen(!isOpen)}
               type="button"
-              className={`inline-flex items-center justify-center p-2 rounded-md transition-colors duration-200 ${
-                `${theme.textSoft} hover:${theme.backgroundAlt} focus:ring-${theme.text}`
-              }`}
+              className={`inline-flex items-center justify-center p-2 rounded-md transition-colors duration-200 ${`${theme.textSoft} hover:${theme.backgroundAlt} focus:ring-${theme.text}`
+                }`}
               aria-controls="mobile-menu"
               aria-expanded="false"
             >
@@ -195,86 +186,78 @@ const Header = () => {
               <>
                 <Link
                   to="/admin"
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
-                    location.pathname.startsWith('/admin')
+                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname.startsWith('/admin')
                       ? 'bg-red-600 text-white'
                       : `text-red-400 hover:bg-red-800 hover:text-white`
-                  }`}
+                    }`}
                 >
                   Admin (Dev)
                 </Link>
                 <Link
                   to="/user/dashboard"
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
-                    location.pathname.startsWith('/user')
+                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname.startsWith('/user')
                       ? 'bg-blue-600 text-white'
                       : `text-blue-400 hover:bg-blue-800 hover:text-white`
-                  }`}
+                    }`}
                 >
                   Usuario (Dev)
                 </Link>
               </>
             )}
-            <Link 
-              to="/" 
-              className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
-                location.pathname === '/' && location.hash === '' 
-                  ? 'bg-accent text-white' 
+            <Link
+              to="/"
+              className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname === '/' && location.hash === ''
+                  ? 'bg-accent text-white'
                   : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
-              }`}
+                }`}
             >
-              Estadísticas
+              Inicio
             </Link>
-            <Link 
-              to="/calculator" 
-              className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
-                location.pathname === '/calculator' 
-                  ? 'bg-accent text-white' 
+            <Link
+              to="/calculator"
+              className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname === '/calculator'
+                  ? 'bg-accent text-white'
                   : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
-              }`}
+                }`}
             >
               Calculadora
             </Link>
             {currentUser ? (
               <>
-                <Link 
-                  to="/user/dashboard" 
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
-                    location.pathname.startsWith('/user') 
-                      ? 'bg-accent text-white' 
+                <Link
+                  to="/user/dashboard"
+                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname.startsWith('/user')
+                      ? 'bg-accent text-white'
                       : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
-                  }`}
+                    }`}
                 >
                   Panel de Usuario
                 </Link>
-                <button 
-                  onClick={handleLogout} 
-                  className={`block px-3 py-2 rounded-md text-base font-medium w-full text-left transition-colors duration-200 ${
-                    `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
-                  }`}
+                <button
+                  onClick={handleLogout}
+                  className={`block px-3 py-2 rounded-md text-base font-medium w-full text-left transition-colors duration-200 ${`${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                    }`}
                 >
                   Cerrar Sesión
                 </button>
               </>
             ) : (
               <>
-                <Link 
-                  to="/signup" 
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
-                    location.pathname === '/signup' 
-                      ? 'bg-accent text-white' 
+                <Link
+                  to="/signup"
+                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname === '/signup'
+                      ? 'bg-accent text-white'
                       : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
-                  }`}
+                    }`}
                 >
                   Registrarse
                 </Link>
-                <Link 
-                  to="/login" 
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
-                    location.pathname === '/login' 
-                      ? 'bg-accent text-white' 
+                <Link
+                  to="/login"
+                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname === '/login'
+                      ? 'bg-accent text-white'
                       : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
-                  }`}
+                    }`}
                 >
                   Iniciar Sesión
                 </Link>

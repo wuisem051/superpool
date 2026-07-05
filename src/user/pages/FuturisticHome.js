@@ -46,53 +46,88 @@ const FuturisticHome = () => {
   }, []);
 
   return (
-    <div className={`min-h-screen ${theme.background} ${theme.text} flex flex-col items-center justify-center p-4`}>
-      <div className="text-center max-w-4xl">
-        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight animate-fade-in-up">
-          <span className="text-accent">{siteConfig.siteName.charAt(0)}</span>{siteConfig.siteName.substring(1)}
+    <div className="relative min-h-screen bg-[#0b0e14] flex flex-col items-center justify-center p-4 overflow-hidden z-0 pt-24">
+
+      {/* Elementos decorativos de fondo */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-orange-500/10 blur-[120px] rounded-full mix-blend-screen animate-pulse-slow"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/10 blur-[150px] rounded-full mix-blend-screen"></div>
+        {/* Malla decorativa opcional */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiLz48L3N2Zz4=')] opacity-50 z-0"></div>
+      </div>
+
+      <div className="text-center max-w-4xl relative z-10">
+        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-300">
+            {siteConfig.siteName}
+          </span>
         </h1>
-        <p className="text-xl md:text-2xl mb-8 opacity-0 animate-fade-in-delay-1">
+        <p className="text-xl md:text-2xl mb-6 text-gray-300 font-medium max-w-3xl mx-auto">
           {siteConfig.heroTitle}
         </p>
-        <p className="text-lg md:text-xl mb-12 opacity-0 animate-fade-in-delay-2">
+        <p className="text-lg md:text-xl mb-12 text-gray-500 max-w-2xl mx-auto">
           {siteConfig.homeText}
         </p>
-        <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6 opacity-0 animate-fade-in-delay-3">
+
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
           <Link
             to="/signup"
-            className="bg-accent hover:bg-accent-dark text-white font-bold py-3 px-8 rounded-full transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
+            className="group relative px-8 py-4 bg-gradient-to-r from-orange-600 to-yellow-500 rounded-full font-bold text-white shadow-[0_0_40px_rgba(249,115,22,0.4)] hover:shadow-[0_0_60px_rgba(249,115,22,0.6)] transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
           >
-            Comenzar a Minar
+            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+            <span className="relative flex items-center gap-2">
+              Comenzar a Minar
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+            </span>
           </Link>
           <Link
             to="/news"
-            className={`border-2 ${theme.border} ${theme.text} hover:${theme.backgroundAlt} hover:${theme.text} font-bold py-3 px-8 rounded-full transition duration-300 ease-in-out transform hover:scale-105 shadow-lg`}
+            className="group px-8 py-4 bg-[#131824]/80 backdrop-blur-md border border-[#1e2330] hover:border-gray-500/50 rounded-full font-bold text-gray-300 hover:text-white transition-all duration-300 transform hover:-translate-y-1"
           >
             Últimas Noticias
           </Link>
         </div>
       </div>
 
-      {/* Sección de características futuristas (ejemplo) */}
-      <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl w-full">
-        <div className={`p-6 rounded-lg shadow-xl ${theme.backgroundAlt} opacity-0 animate-fade-in-delay-4`}>
-          <h3 className="text-2xl font-bold mb-4 text-accent">Tecnología Avanzada</h3>
-          <p className={`${theme.textSoft}`}>
-            Utilizamos algoritmos de minería de última generación para maximizar tu rentabilidad.
+      {/* Sección de características futuristas */}
+      <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full relative z-10 pb-20">
+
+        {/* Card 1 */}
+        <div className="group relative bg-[#131824]/60 backdrop-blur-xl p-8 rounded-3xl border border-[#1e2330] hover:border-orange-500/30 transition-all duration-300 hover:-translate-y-2 overflow-hidden shadow-2xl">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none group-hover:bg-orange-500/20 transition-colors"></div>
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500/20 to-yellow-500/10 flex items-center justify-center mb-6 border border-orange-500/20 shadow-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          </div>
+          <h3 className="text-xl font-bold mb-3 text-white">Tecnología Avanzada</h3>
+          <p className="text-gray-400 leading-relaxed text-sm">
+            Utilizamos algoritmos optimizados constantemente en minería de última generación para maximizar tu rentabilidad diaria.
           </p>
         </div>
-        <div className={`p-6 rounded-lg shadow-xl ${theme.backgroundAlt} opacity-0 animate-fade-in-delay-5`}>
-          <h3 className="text-2xl font-bold mb-4 text-accent">Seguridad Cuántica</h3>
-          <p className={`${theme.textSoft}`}>
-            Tus activos están protegidos con los más altos estándares de seguridad cibernética.
+
+        {/* Card 2 */}
+        <div className="group relative bg-[#131824]/60 backdrop-blur-xl p-8 rounded-3xl border border-[#1e2330] hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-2 overflow-hidden shadow-2xl">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none group-hover:bg-blue-500/20 transition-colors"></div>
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 flex items-center justify-center mb-6 border border-blue-500/20 shadow-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+          </div>
+          <h3 className="text-xl font-bold mb-3 text-white">Seguridad Encriptada</h3>
+          <p className="text-gray-400 leading-relaxed text-sm">
+            Tus activos están protegidos en billeteras frías con los más altos estándares y protocolos de seguridad cibernética.
           </p>
         </div>
-        <div className={`p-6 rounded-lg shadow-xl ${theme.backgroundAlt} opacity-0 animate-fade-in-delay-6`}>
-          <h3 className="text-2xl font-bold mb-4 text-accent">Interfaz Intuitiva</h3>
-          <p className={`${theme.textSoft}`}>
-            Gestiona tus operaciones de minería con una experiencia de usuario sin precedentes.
+
+        {/* Card 3 */}
+        <div className="group relative bg-[#131824]/60 backdrop-blur-xl p-8 rounded-3xl border border-[#1e2330] hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-2 overflow-hidden shadow-2xl">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none group-hover:bg-purple-500/20 transition-colors"></div>
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/10 flex items-center justify-center mb-6 border border-purple-500/20 shadow-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+          </div>
+          <h3 className="text-xl font-bold mb-3 text-white">Interfaz Intuitiva</h3>
+          <p className="text-gray-400 leading-relaxed text-sm">
+            Gestiona tus operaciones de minería de forma clara y precisa con una experiencia de control sin precedentes.
           </p>
         </div>
+
       </div>
     </div>
   );

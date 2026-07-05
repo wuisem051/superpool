@@ -58,8 +58,8 @@ const StatusBadge = ({ status }) => {
   const isActive = status === 'activo';
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${isActive
-        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-        : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+      : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
       }`}>
       <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
       {status}
@@ -100,8 +100,17 @@ const MiningPortfolioContent = () => {
       (snap) => {
         if (snap.exists()) {
           const d = snap.data();
-          setPaymentRate(d.obsoletePrice || 0);
           setBtcToUsdRate(d.btcToUsdRate || 0);
+        }
+      },
+      (err) => { console.error(err); }
+    );
+
+    const unsubProfitability = onSnapshot(
+      doc(db, 'settings', 'profitability'),
+      (snap) => {
+        if (snap.exists()) {
+          setPaymentRate(snap.data().fixedRatePerTHs || 0);
         }
       },
       (err) => { console.error(err); }
@@ -116,7 +125,7 @@ const MiningPortfolioContent = () => {
       (err) => { console.error(err); setLoading(false); }
     );
 
-    return () => { unsubMiners(); unsubPool(); unsubAll(); };
+    return () => { unsubMiners(); unsubPool(); unsubProfitability(); unsubAll(); };
   }, [currentUser]);
 
   const totalUserHashrate = useMemo(() =>
