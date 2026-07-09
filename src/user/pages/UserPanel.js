@@ -688,8 +688,6 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { label: 'USD (Fiat)', value: `$${(userPortfolio?.fiatBalanceUSD || 0).toFixed(2)}`, color: 'from-green-400 to-emerald-300', bg: 'bg-green-500/10', icon: '💵' },
-              { label: 'VES (Fiat)', value: `Bs.${(userPortfolio?.fiatBalanceVES || 0).toFixed(2)}`, color: 'from-purple-400 to-violet-300', bg: 'bg-purple-500/10', icon: '🇻🇪' },
-              { label: 'USD Virtual', value: `$${(userPortfolio?.virtualBalanceUSD || 0).toFixed(2)}`, color: 'from-blue-400 to-cyan-300', bg: 'bg-blue-500/10', icon: '🔵' },
             ].map(({ label, value, color, bg, icon }) => (
               <div key={label} className="relative overflow-hidden bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform duration-300">
                 <div className={`absolute top-0 right-0 w-32 h-32 ${bg} rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none`}></div>
@@ -764,7 +762,6 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                   <option value="DOGE">Dogecoin (DOGE)</option>
                   <option value="LTC">Litecoin (LTC)</option>
                   <option value="USD">USD</option>
-                  <option value="VES">Bolívar (VES)</option>
                 </select>
               </div>
               <div className="md:col-span-2">

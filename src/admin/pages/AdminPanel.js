@@ -62,7 +62,7 @@ const AdminPanel = () => {
                   }`}
                 onClick={handleClearMinerNotification} // Limpiar notificación al hacer clic
               >
-                Gestión de Mineros (Usuario y Tienda)
+                Gestión de Mineros
                 {unreadMinersCount > 0 && (
                   <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                     {unreadMinersCount}
@@ -74,8 +74,8 @@ const AdminPanel = () => {
               <Link
                 to="/admin/miner-approval"
                 className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${location.pathname === '/admin/miner-approval'
-                    ? 'bg-accent text-white'
-                    : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
+                  ? 'bg-accent text-white'
+                  : (darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700')
                   }`}
               >
                 Aprobación de Mineros
