@@ -113,6 +113,7 @@ const Sidebar = ({ unreadTicketsCount, displayUser }) => {
       {/* Navegación y Enlaces */}
       <nav className="flex-1 px-4 py-6">
         <ul className="space-y-1">
+          <SidebarItem to="/" icon={Icons.home} label="Volver al Inicio" isActive={false} />
           <SidebarItem to={`${basePath}/dashboard`} icon={Icons.dashboard} label="Dashboard" isActive={activePaths.dashboard} />
 
           <h3 className="text-[11px] font-bold uppercase text-gray-500 tracking-wider mt-8 mb-4 px-4">Centro de Ganancias</h3>

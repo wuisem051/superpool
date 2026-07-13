@@ -53,6 +53,15 @@ const AdminPanel = () => {
         <div className={`text-xl font-bold text-yellow-500 mb-6 ${darkMode ? 'text-accent' : 'text-yellow-500'}`}>Admin Dashboard (Actualizado)</div> {/* Título actualizado */}
         <nav>
           <ul>
+            <li className="mb-2 border-b border-gray-700/50 pb-2">
+              <Link
+                to="/"
+                className={`flex items-center py-1.5 rounded-lg text-sm font-medium ${darkMode ? 'text-light_text hover:bg-dark_border' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+              >
+                Volver al Inicio
+              </Link>
+            </li>
             <li className="mb-0.5">
               <Link
                 to="/admin/miners"
@@ -257,7 +266,7 @@ const AdminPanel = () => {
           } />
         </Routes>
       </main>
-    </div>
+    </div >
   );
 };
 

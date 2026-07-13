@@ -27,8 +27,8 @@ function AppContent() {
   const { darkMode, theme } = useContext(ThemeContext);
   const location = useLocation();
 
-  // El footer NO aparece dentro del panel de usuario
-  const hideFooter = location.pathname.startsWith('/user') ||
+  // El header y footer NO aparecen dentro del panel de usuario o administrador
+  const hideHeaderAndFooter = location.pathname.startsWith('/user') ||
     location.pathname.startsWith('/test-user-settings') ||
     location.pathname.startsWith('/admin');
 
@@ -70,7 +70,7 @@ function AppContent() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
+      {!hideHeaderAndFooter && <Header />}
       <main className="flex-grow">
         <AuthProvider>
           <Suspense fallback={<PageLoader />}>
@@ -106,7 +106,7 @@ function AppContent() {
           </Suspense>
         </AuthProvider>
       </main>
-      {!hideFooter && <Footer />}
+      {!hideHeaderAndFooter && <Footer />}
     </div>
   );
 }
