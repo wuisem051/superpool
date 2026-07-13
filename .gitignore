@@ -17,6 +17,8 @@ lerna-debug.log*
 .pnp.js
 .cache
 .env
+.env.development
+.env.production
 .env.local
 .env.development.local
 .env.test.local
