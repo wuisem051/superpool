@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../services/firebase'; // Importar la instancia de Firebase Firestore
+import { db } from '../../services/firebase';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useTheme } from '../../context/ThemeContext';
-import { useError } from '../../context/ErrorContext'; // Importar useError
+import { useError } from '../../context/ErrorContext';
 
 const SiteSettingsContent = () => {
   const [siteName, setSiteName] = useState('');
@@ -11,23 +11,18 @@ const SiteSettingsContent = () => {
   const [heroTitle, setHeroTitle] = useState('');
   const [siteDomain, setSiteDomain] = useState('');
   const [faviconUrl, setFaviconUrl] = useState('');
-  const [faviconFile, setFaviconFile] = useState(null); // Mantener para la UI, pero no se usará para subir directamente
+  const [faviconFile, setFaviconFile] = useState(null);
   const [footerText, setFooterText] = useState('');
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
-
-  const { showError, showSuccess, error } = useError(); // Usar el contexto de errores
+  const { showError, showSuccess } = useError();
   const storage = getStorage();
 
   useEffect(() => {
     const fetchSettings = async () => {
       setLoading(true);
-      showError(null); // Limpiar errores al iniciar la carga
-      setMessage('');
       try {
         const docRef = doc(db, 'settings', 'siteConfig');
         const docSnap = await getDoc(docRef);
-
         if (docSnap.exists()) {
           const data = docSnap.data();
           setSiteName(data.siteName || '');
@@ -37,30 +32,23 @@ const SiteSettingsContent = () => {
           setFaviconUrl(data.faviconUrl || '');
           setFooterText(data.footerText || '');
         } else {
-          // Si no existe, crear con valores por defecto
-          try {
-            await setDoc(docRef, {
-              siteName: 'BitcoinPool',
-              homeText: 'Minando el futuro, un bloque a la vez.',
-              heroTitle: 'Bienvenido a nuestra Pool de Minería Bitcoin',
-              performanceStatsResetDate: null,
-              siteDomain: '',
-              faviconUrl: '',
-              footerText: `© ${new Date().getFullYear()} BitcoinPool. Todos los derechos reservados. Versión del proyecto 1.0 Beta`,
-            });
-            setSiteName('BitcoinPool');
-            setHomeText('Minando el futuro, un bloque a la vez.');
-            setHeroTitle('Bienvenido a nuestra Pool de Minería Bitcoin');
-            setSiteDomain('');
-            setFaviconUrl('');
-            setFooterText(`© ${new Date().getFullYear()} BitcoinPool. Todos los derechos reservados. Versión del proyecto 1.0 Beta`);
-          } catch (createError) {
-            console.error("Error creating default site settings in Firebase:", createError);
-            showError('Error al crear la configuración por defecto del sitio.');
-          }
+          const defaults = {
+            siteName: 'BitcoinPool',
+            homeText: 'Minando el futuro, un bloque a la vez.',
+            heroTitle: 'Bienvenido a nuestra Pool de Minería Bitcoin',
+            performanceStatsResetDate: null,
+            siteDomain: '',
+            faviconUrl: '',
+            footerText: `© ${new Date().getFullYear()} BitcoinPool. Todos los derechos reservados.`,
+          };
+          await setDoc(docRef, defaults);
+          setSiteName(defaults.siteName);
+          setHomeText(defaults.homeText);
+          setHeroTitle(defaults.heroTitle);
+          setFooterText(defaults.footerText);
         }
       } catch (err) {
-        console.error("Error fetching site settings from Firebase:", err);
+        console.error(err);
         showError('Error al cargar la configuración del sitio.');
       } finally {
         setLoading(false);
@@ -69,17 +57,8 @@ const SiteSettingsContent = () => {
     fetchSettings();
   }, [showError]);
 
-  const handleFileChange = (e) => {
-    if (e.target.files[0]) {
-      setFaviconFile(e.target.files[0]);
-      showError(null); // Limpiar errores al seleccionar un archivo
-    }
-  };
-
   const handleSaveSettings = async (e) => {
     e.preventDefault();
-    showError(null); // Limpiar errores al intentar guardar
-    setMessage('');
     setLoading(true);
     try {
       let updatedFaviconUrl = faviconUrl;
@@ -88,162 +67,120 @@ const SiteSettingsContent = () => {
         await uploadBytes(faviconRef, faviconFile);
         updatedFaviconUrl = await getDownloadURL(faviconRef);
       }
-
-      const dataToUpdate = {
-        siteName: siteName,
-        homeText: homeText,
-        heroTitle: heroTitle,
-        siteDomain: siteDomain,
-        faviconUrl: updatedFaviconUrl,
-        footerText: footerText,
-      };
-
-      const docRef = doc(db, 'settings', 'siteConfig');
-      await updateDoc(docRef, dataToUpdate);
-
-      setFaviconUrl(updatedFaviconUrl); // Actualizar el estado con la nueva URL
+      await updateDoc(doc(db, 'settings', 'siteConfig'), { siteName, homeText, heroTitle, siteDomain, faviconUrl: updatedFaviconUrl, footerText });
+      setFaviconUrl(updatedFaviconUrl);
       showSuccess('Configuración del sitio guardada exitosamente!');
     } catch (err) {
-      console.error("Error saving site settings:", err);
-      showError(`Fallo al guardar la configuración: ${err.message}`);
+      console.error(err);
+      showError(`Error al guardar: ${err.message}`);
     } finally {
       setLoading(false);
-      setFaviconFile(null); // Limpiar el archivo seleccionado en la UI
+      setFaviconFile(null);
     }
   };
 
   const handleResetPerformanceStats = async () => {
-    if (!window.confirm('¿Estás seguro de que quieres reiniciar las estadísticas de rendimiento? Esto borrará los datos históricos para el cálculo del gráfico.')) {
-      return;
-    }
-    showError(null); // Limpiar errores al intentar reiniciar
-    setMessage('');
+    if (!window.confirm('¿Reiniciar las estadísticas de rendimiento? Se borrarán los datos históricos.')) return;
     setLoading(true);
     try {
-      const docRef = doc(db, 'settings', 'siteConfig');
-      await updateDoc(docRef, {
-        performanceStatsResetDate: new Date(),
-      });
-      showSuccess('Estadísticas de rendimiento reiniciadas exitosamente!');
+      await updateDoc(doc(db, 'settings', 'siteConfig'), { performanceStatsResetDate: new Date() });
+      showSuccess('Estadísticas de rendimiento reiniciadas!');
     } catch (err) {
-      console.error("Error resetting performance stats:", err);
-      showError(`Fallo al reiniciar estadísticas: ${err.message}`);
+      showError(`Error: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const { theme } = useTheme();
+  const inputClass = `w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 transition-colors text-sm`;
+  const labelClass = `block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5`;
 
   return (
-    <div className={`${theme.background} ${theme.text} p-6 rounded-lg shadow-md`}>
-      <h2 className="text-2xl font-bold mb-6">Configuración del Sitio</h2>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-white">⚙️ Configuración del Sitio</h2>
+        <p className="text-xs text-gray-500 mt-1">Personaliza el nombre, textos y aspecto del sitio público.</p>
+      </div>
 
-      {loading && <p className={`${theme.textSoft} mb-4`}>Cargando configuración...</p>}
-      {error && <div className="bg-red-500 text-white p-3 rounded mb-4">{error}</div>}
-      {message && <div className="bg-green-500 text-white p-3 rounded mb-4">{message}</div>}
+      {loading && (
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="w-4 h-4 border-2 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin" />
+          Cargando configuración...
+        </div>
+      )}
 
-      <form onSubmit={handleSaveSettings} className="space-y-6">
-        <div>
-          <label htmlFor="siteName" className={`block ${theme.textSoft} text-sm font-medium mb-2`}>Nombre del Sitio</label>
-          <input
-            type="text"
-            id="siteName"
-            value={siteName}
-            onChange={(e) => setSiteName(e.target.value)}
-            className={`w-full p-3 ${theme.inputBackground} ${theme.borderColor} rounded-md ${theme.text} text-base focus:outline-none focus:border-yellow-500`}
-            placeholder="Ej: Mi Plataforma de Minería"
-            required
-          />
+      <form onSubmit={handleSaveSettings} className="space-y-5">
+        <div className={`rounded-2xl p-6 border bg-[#0b0e14] border-[#1e2330] shadow-xl space-y-4`}>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-[#1e2330] pb-3">🌐 Información General</h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="siteName" className={labelClass}>Nombre del Sitio</label>
+              <input type="text" id="siteName" value={siteName} onChange={(e) => setSiteName(e.target.value)} className={inputClass} placeholder="BitcoinPool" required />
+            </div>
+            <div>
+              <label htmlFor="siteDomain" className={labelClass}>Dominio Web</label>
+              <input type="text" id="siteDomain" value={siteDomain} onChange={(e) => setSiteDomain(e.target.value)} className={inputClass} placeholder="www.tusitio.com" />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="heroTitle" className={labelClass}>Título Principal (Hero)</label>
+            <input type="text" id="heroTitle" value={heroTitle} onChange={(e) => setHeroTitle(e.target.value)} className={inputClass} placeholder="Bienvenido a nuestra Pool de Minería Bitcoin" required />
+          </div>
+
+          <div>
+            <label htmlFor="homeText" className={labelClass}>Texto Descriptivo (Home)</label>
+            <textarea id="homeText" rows="3" value={homeText} onChange={(e) => setHomeText(e.target.value)}
+              className={`${inputClass} resize-none`} placeholder="Minando el futuro, un bloque a la vez." required />
+          </div>
+
+          <div>
+            <label htmlFor="footerText" className={labelClass}>Texto del Footer</label>
+            <textarea id="footerText" rows="2" value={footerText} onChange={(e) => setFooterText(e.target.value)}
+              className={`${inputClass} resize-none`} placeholder="© 2024 BitcoinPool. Todos los derechos reservados." required />
+          </div>
         </div>
-        <div>
-          <label htmlFor="heroTitle" className={`block ${theme.textSoft} text-sm font-medium mb-2`}>Título Principal (Hero)</label>
-          <input
-            type="text"
-            id="heroTitle"
-            value={heroTitle}
-            onChange={(e) => setHeroTitle(e.target.value)}
-            className={`w-full p-3 ${theme.inputBackground} ${theme.borderColor} rounded-md ${theme.text} text-base focus:outline-none focus:border-yellow-500`}
-            placeholder="Ej: Bienvenido a nuestra Pool de Minería Bitcoin"
-            required
-          />
+
+        <div className={`rounded-2xl p-6 border bg-[#0b0e14] border-[#1e2330] shadow-xl space-y-4`}>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-[#1e2330] pb-3">🖼️ Favicon</h3>
+
+          <div>
+            <label htmlFor="faviconUrl" className={labelClass}>URL del Favicon</label>
+            <div className="flex gap-3 items-center">
+              <input type="text" id="faviconUrl" value={faviconUrl} onChange={(e) => setFaviconUrl(e.target.value)}
+                className={inputClass} placeholder="https://tusitio.com/favicon.ico" />
+              {faviconUrl && (
+                <img src={faviconUrl} alt="Favicon" className="w-8 h-8 rounded border border-[#1e2330] bg-[#131824] object-contain shrink-0"
+                  onError={(e) => e.target.style.display = 'none'} />
+              )}
+            </div>
+          </div>
+
+          <div className="p-3 bg-yellow-500/5 border border-yellow-500/15 rounded-xl text-xs text-yellow-400/70">
+            💡 Introduce la URL pública del favicon. La subida directa de archivos está deshabilitada en esta versión.
+          </div>
         </div>
-        <div>
-          <label htmlFor="homeText" className={`block ${theme.textSoft} text-sm font-medium mb-2`}>Texto de la Página de Inicio (Home)</label>
-          <textarea
-            id="homeText"
-            rows="4"
-            value={homeText}
-            onChange={(e) => setHomeText(e.target.value)}
-            className={`w-full p-3 ${theme.inputBackground} ${theme.borderColor} rounded-md ${theme.text} text-base focus:outline-none focus:border-yellow-500`}
-            placeholder="Ej: Minando el futuro, un bloque a la vez."
-            required
-          ></textarea>
-        </div>
-        <div>
-          <label htmlFor="siteDomain" className={`block ${theme.textSoft} text-sm font-medium mb-2`}>Dominio del Sitio Web</label>
-          <input
-            type="text"
-            id="siteDomain"
-            value={siteDomain}
-            onChange={(e) => setSiteDomain(e.target.value)}
-            className={`w-full p-3 ${theme.inputBackground} ${theme.borderColor} rounded-md ${theme.text} text-base focus:outline-none focus:border-yellow-500`}
-            placeholder="Ej: www.tusitio.com"
-          />
-        </div>
-        <div>
-          <label htmlFor="faviconUrl" className={`block ${theme.textSoft} text-sm font-medium mb-2`}>URL del Favicon</label>
-          <input
-            type="text"
-            id="faviconUrl"
-            value={faviconUrl}
-            onChange={(e) => setFaviconUrl(e.target.value)}
-            className={`w-full p-3 ${theme.inputBackground} ${theme.borderColor} rounded-md ${theme.text} text-base focus:outline-none focus:border-yellow-500`}
-            placeholder="Ej: https://tusitio.com/favicon.ico"
-          />
-          {faviconUrl && (
-            <p className={`${theme.textSoft} text-sm mt-2`}>Favicon actual: <a href={faviconUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Ver Favicon</a></p>
-          )}
-          <label htmlFor="faviconUpload" className={`block ${theme.textSoft} text-sm font-medium mb-2 mt-4`}>Subir Favicon (.ico, .png) - (Funcionalidad de subida directa no disponible en esta migración)</label>
-          <input
-            type="file"
-            id="faviconUpload"
-            accept=".ico,.png"
-            onChange={handleFileChange}
-            className={`w-full p-3 ${theme.inputBackground} ${theme.borderColor} rounded-md ${theme.text} text-base focus:outline-none focus:border-yellow-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100`}
-            disabled // Deshabilitar la subida directa de archivos
-          />
-        </div>
-        <div>
-          <label htmlFor="footerText" className={`block ${theme.textSoft} text-sm font-medium mb-2`}>Texto del Pie de Página (Footer)</label>
-          <textarea
-            id="footerText"
-            rows="3"
-            value={footerText}
-            onChange={(e) => setFooterText(e.target.value)}
-            className={`w-full p-3 ${theme.inputBackground} ${theme.borderColor} rounded-md ${theme.text} text-base focus:outline-none focus:border-yellow-500`}
-            placeholder="Ej: © 2023 Mi Sitio. Todos los derechos reservados."
-            required
-          ></textarea>
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200"
-          disabled={loading}
-        >
-          {loading ? 'Guardando...' : 'Guardar Configuración'}
+
+        <button type="submit" disabled={loading}
+          className="w-full py-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-gray-950 font-bold rounded-xl shadow-lg transition-all text-sm disabled:opacity-50">
+          {loading ? 'Guardando...' : '💾 Guardar Configuración del Sitio'}
         </button>
       </form>
 
-      <div className={`mt-8 pt-6 border-t ${theme.borderColor}`}>
-        <h3 className="text-xl font-bold mb-4">Herramientas de Administración</h3>
-        <button
-          onClick={handleResetPerformanceStats}
-          className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200"
-          disabled={loading}
-        >
-          Reiniciar Estadísticas de Rendimiento
-        </button>
+      {/* Zona de peligro */}
+      <div className="rounded-2xl p-6 border bg-[#0b0e14] border-red-500/10 shadow-xl">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-red-400 border-b border-red-500/10 pb-3 mb-4">⚠️ Zona de Peligro</h3>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-red-500/5 border border-red-500/10 rounded-xl">
+          <div>
+            <p className="text-sm font-bold text-white">Reiniciar Estadísticas de Rendimiento</p>
+            <p className="text-xs text-gray-500 mt-1">Borra los datos históricos del gráfico de rendimiento. No se puede deshacer.</p>
+          </div>
+          <button onClick={handleResetPerformanceStats} disabled={loading}
+            className="shrink-0 px-5 py-2.5 bg-red-600/10 border border-red-500/20 text-red-400 hover:bg-red-600/20 hover:text-red-300 font-bold rounded-xl text-xs transition-all disabled:opacity-40">
+            Reiniciar Estadísticas
+          </button>
+        </div>
       </div>
     </div>
   );

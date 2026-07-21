@@ -88,69 +88,109 @@ const WithdrawalRequestsManagement = ({ onUnreadCountChange }) => { // Aceptar p
   };
 
   return (
-    <div className={`${darkMode ? 'bg-dark_card text-light_text' : 'bg-white text-gray-900'} p-6 rounded-lg shadow-md`}>
-      <h2 className={`text-2xl font-semibold mb-4 ${darkMode ? 'text-light_text' : 'text-gray-800'}`}>Gestión de Solicitudes de Retiro</h2>
-      {/* Los mensajes de error y éxito ahora se manejan globalmente */}
+    <div className={`${darkMode ? 'bg-[#0b0e14] border border-[#1e2330]' : 'bg-white border border-gray-200'} rounded-2xl p-6 shadow-xl`}>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} flex items-center gap-2.5`}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V3a1 1 0 00-1-1H4a1 1 0 00-1 1v18a1 1 0 001 1h12a1 1 0 001-1v-5m-1-10v4m-4 0h4" />
+            </svg>
+            Gestión de Solicitudes de Retiro
+          </h2>
+          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+            Revisa, aprueba o rechaza los retiros solicitados por los usuarios de la plataforma.
+          </p>
+        </div>
+        <span className={`self-start sm:self-center px-3 py-1 rounded-full text-xs font-semibold ${darkMode ? 'bg-white/5 text-gray-300 border border-white/5' : 'bg-gray-100 text-gray-700'}`}>
+          {withdrawalRequests.length} Solicitudes
+        </span>
+      </div>
 
       {withdrawalRequests.length === 0 ? (
-        <p className={`${darkMode ? 'text-light_text' : 'text-gray-600'} text-center py-8`}>No hay solicitudes de retiro pendientes.</p>
+        <div className={`flex flex-col items-center justify-center py-12 px-4 rounded-xl border-2 border-dashed ${darkMode ? 'border-white/5 text-gray-500' : 'border-gray-200 text-gray-400'}`}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <p className="text-sm font-medium">No hay solicitudes de retiro registradas.</p>
+        </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className={`min-w-full divide-y ${darkMode ? 'divide-dark_border' : 'divide-gray-200'}`}>
-            <thead className={`${darkMode ? 'bg-dark_bg' : 'bg-gray-50'}`}>
+        <div className={`overflow-x-auto rounded-xl border ${darkMode ? 'border-[#1e2330] bg-[#0b0e14]' : 'border-gray-200 bg-white'}`}>
+          <table className="min-w-full divide-y divide-[#1e2330] text-sm">
+            <thead className={darkMode ? 'bg-[#131824]' : 'bg-gray-50'}>
               <tr>
-                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-500'}`}>Fecha</th>
-                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-500'}`}>Usuario (Email)</th>
-                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-500'}`}>Cantidad</th>
-                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-500'}`}>Moneda</th>
-                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-500'}`}>Método</th>
-                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-500'}`}>Dirección/ID</th>
-                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-500'}`}>Estado</th>
-                <th className={`px-6 py-3 text-right text-xs font-medium uppercase tracking-wider ${darkMode ? 'text-light_text' : 'text-gray-500'}`}>Acciones</th>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Fecha</th>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Usuario (Email)</th>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Cantidad</th>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Moneda</th>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Método</th>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Dirección / ID</th>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Estado</th>
+                <th className={`px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Acciones</th>
               </tr>
             </thead>
-            <tbody className={`${darkMode ? 'bg-dark_card divide-dark_border' : 'bg-white divide-gray-200'} divide-y`}>
+            <tbody className={`divide-y ${darkMode ? 'divide-[#1e2330]' : 'divide-gray-200'}`}>
               {withdrawalRequests.map((request) => (
-                <tr key={request.id}>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-900'}`}>
+                <tr key={request.id} className={`transition-colors ${darkMode ? 'hover:bg-white/[0.01]' : 'hover:bg-gray-50'}`}>
+                  <td className={`px-4 py-3 whitespace-nowrap font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     {request.createdAt.toLocaleDateString()}
                   </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-900'}`}>
+                  <td className={`px-4 py-3 whitespace-nowrap font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                     {request.userEmail}
                   </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-900'}`}>
-                    {request.amount.toFixed(8)}
+                  <td className={`px-4 py-3 whitespace-nowrap font-mono font-bold ${darkMode ? 'text-indigo-300' : 'text-indigo-600'}`}>
+                    {request.amount.toFixed(request.currency === 'USDT' || request.currency === 'USD' ? 2 : 8)}
                   </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-900'}`}>
+                  <td className={`px-4 py-3 whitespace-nowrap font-bold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     {request.currency}
                   </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-900'}`}>
-                    {request.method}
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                      request.method === 'Binance Pay'
+                        ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
+                        : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                    }`}>
+                      {request.method}
+                    </span>
                   </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-900'}`}>
+                  <td className={`px-4 py-3 whitespace-nowrap font-mono text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     {request.addressOrId}
                   </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-light_text' : 'text-gray-900'}`}>
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(request.status)}`}>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                      request.status === 'Completado'
+                        ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                        : request.status === 'Pendiente'
+                        ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
+                        : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                    }`}>
                       {request.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    {request.status === 'Pendiente' && (
-                      <>
+                  <td className="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
+                    {request.status === 'Pendiente' ? (
+                      <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleUpdateStatus(request, 'Completado')}
-                          className="text-green-600 hover:text-green-800 mr-3"
+                          className="flex items-center gap-1 px-2.5 py-1 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg shadow-md transition-colors"
                         >
-                          Completar
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                          Aprobar
                         </button>
                         <button
                           onClick={() => handleUpdateStatus(request, 'Rechazado')}
-                          className="text-red-600 hover:text-red-800"
+                          className="flex items-center gap-1 px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-semibold rounded-lg shadow-md transition-colors"
                         >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
                           Rechazar
                         </button>
-                      </>
+                      </div>
+                    ) : (
+                      <span className="text-gray-500 italic text-[11px]">Procesado</span>
                     )}
                   </td>
                 </tr>

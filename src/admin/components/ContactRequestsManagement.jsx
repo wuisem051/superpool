@@ -1,19 +1,35 @@
-import React, { useState, useEffect, useContext } from 'react'; // Importar useContext
+import React, { useState, useEffect, useContext } from 'react';
 import { db } from '../../services/firebase';
 import { collection, getDocs, onSnapshot, doc, updateDoc, query, orderBy, where, deleteDoc } from 'firebase/firestore';
-import { ThemeContext } from '../../context/ThemeContext'; // Importar ThemeContext
-import { useError } from '../../context/ErrorContext'; // Importar useError
+import { ThemeContext } from '../../context/ThemeContext';
+import { useError } from '../../context/ErrorContext';
+
+const statusConfig = {
+  'Abierto':    { dot: 'bg-blue-400 animate-pulse',   text: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/20' },
+  'Pendiente':  { dot: 'bg-yellow-400',                text: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20' },
+  'Respondido': { dot: 'bg-purple-400',                text: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
+  'Cerrado':    { dot: 'bg-gray-500',                  text: 'text-gray-500',   bg: 'bg-gray-500/10 border-gray-500/20' },
+};
+
+const StatusBadge = ({ status }) => {
+  const s = statusConfig[status] || statusConfig['Abierto'];
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${s.bg} ${s.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+      {status}
+    </span>
+  );
+};
 
 const ContactRequestsManagement = ({ onUnreadCountChange }) => {
-  const { darkMode } = useContext(ThemeContext); // Usar ThemeContext
-  const { showError, showSuccess } = useError(); // Usar el contexto de errores
+  const { darkMode } = useContext(ThemeContext);
+  const { showError, showSuccess } = useError();
   const [requests, setRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [adminReply, setAdminReply] = useState('');
 
   useEffect(() => {
     const q = query(collection(db, 'contactRequests'), orderBy('createdAt', 'desc'));
-
     const safeToDate = (val) => {
       if (!val) return new Date();
       if (val.toDate && typeof val.toDate === 'function') return val.toDate();
@@ -22,208 +38,162 @@ const ContactRequestsManagement = ({ onUnreadCountChange }) => {
     };
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      console.log("ContactRequestsManagement: Firebase suscripción - Evento recibido.");
-      const fetchedRequests = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
+      const fetched = snapshot.docs.map(doc => ({
+        id: doc.id, ...doc.data(),
         createdAt: safeToDate(doc.data().createdAt),
         updatedAt: safeToDate(doc.data().updatedAt),
       }));
-      setRequests(fetchedRequests);
-
-      const unreadCount = fetchedRequests.filter(req => req.status === 'Abierto' || req.status === 'Pendiente').length;
-      if (onUnreadCountChange) {
-        onUnreadCountChange(unreadCount);
-      }
-
+      setRequests(fetched);
+      const unreadCount = fetched.filter(r => r.status === 'Abierto' || r.status === 'Pendiente').length;
+      if (onUnreadCountChange) onUnreadCountChange(unreadCount);
       if (selectedRequest) {
-        const updatedSelected = fetchedRequests.find(req => req.id === selectedRequest.id);
-        setSelectedRequest(updatedSelected || null);
+        setSelectedRequest(fetched.find(r => r.id === selectedRequest.id) || null);
       }
     }, (error) => {
-      console.error("Error fetching contact requests from Firebase:", error);
-      showError('Error al cargar las solicitudes de contacto.');
+      console.error(error);
+      showError('Error al cargar las solicitudes.');
     });
-
-    return () => {
-      unsubscribe(); // Desuscribirse de los cambios de Firebase
-    };
+    return () => unsubscribe();
   }, [selectedRequest, onUnreadCountChange, showError]);
 
-  const handleSelectRequest = (request) => {
-    setSelectedRequest(request);
-    setAdminReply(''); // Limpiar la respuesta al seleccionar una nueva solicitud
-    showError(null); // Limpiar errores previos
-    showSuccess(null); // Limpiar mensajes de éxito previos
-  };
-
   const handleSendReply = async () => {
-    if (!adminReply.trim() || !selectedRequest) {
-      showError('El mensaje no puede estar vacío.');
-      return;
-    }
-
+    if (!adminReply.trim() || !selectedRequest) { showError('El mensaje no puede estar vacío.'); return; }
     try {
-      const newConversation = [...selectedRequest.conversation, {
-        sender: 'admin',
-        text: adminReply,
-        timestamp: new Date().toISOString(),
-      }];
-      const requestRef = doc(db, 'contactRequests', selectedRequest.id);
-      await updateDoc(requestRef, {
-        conversation: newConversation,
-        status: 'Respondido',
-        updatedAt: new Date(), // Usar un objeto Date para Firebase Timestamp
-      });
+      const newConversation = [...selectedRequest.conversation, { sender: 'admin', text: adminReply, timestamp: new Date().toISOString() }];
+      await updateDoc(doc(db, 'contactRequests', selectedRequest.id), { conversation: newConversation, status: 'Respondido', updatedAt: new Date() });
       setAdminReply('');
-      showSuccess('Respuesta enviada exitosamente.');
-    } catch (error) {
-      console.error("Error al enviar respuesta:", error);
-      showError(`Error al enviar respuesta: ${error.message}`);
-    }
+      showSuccess('Respuesta enviada.');
+    } catch (error) { showError(`Error: ${error.message}`); }
   };
 
   const handleCloseRequest = async () => {
     if (!selectedRequest) return;
     try {
-      const requestRef = doc(db, 'contactRequests', selectedRequest.id);
-      await updateDoc(requestRef, {
-        status: 'Cerrado',
-        updatedAt: new Date(), // Usar un objeto Date para Firebase Timestamp
-      });
-      showSuccess('Solicitud cerrada exitosamente.');
-    } catch (error) {
-      console.error("Error al cerrar solicitud:", error);
-      showError(`Error al cerrar solicitud: ${error.message}`);
-    }
+      await updateDoc(doc(db, 'contactRequests', selectedRequest.id), { status: 'Cerrado', updatedAt: new Date() });
+      showSuccess('Solicitud cerrada.');
+    } catch (error) { showError(`Error: ${error.message}`); }
   };
 
-  const handleDeleteClosedRequests = async () => {
-    if (!window.confirm('¿Estás seguro de que quieres eliminar TODAS las solicitudes de contacto cerradas? Esta acción no se puede deshacer.')) {
-      return;
-    }
-
+  const handleDeleteClosed = async () => {
+    if (!window.confirm('¿Eliminar TODAS las solicitudes cerradas?')) return;
     try {
-      const closedRequestsQuery = query(collection(db, 'contactRequests'), where('status', '==', 'Cerrado'));
-      const snapshot = await getDocs(closedRequestsQuery);
-
-      const deletePromises = snapshot.docs.map(docToDelete => deleteDoc(doc(db, 'contactRequests', docToDelete.id)));
-      await Promise.all(deletePromises);
-
-      // Actualizar el estado local para reflejar los cambios inmediatamente
-      setRequests(prevRequests => prevRequests.filter(req => req.status !== 'Cerrado'));
-      showSuccess('Todas las solicitudes cerradas han sido eliminadas exitosamente.');
-      setSelectedRequest(null); // Deseleccionar cualquier solicitud si fue eliminada
-    } catch (error) {
-      console.error("Error al eliminar solicitudes cerradas:", error);
-      showError(`Error al eliminar solicitudes cerradas: ${error.message}`);
-    }
+      const snapshot = await getDocs(query(collection(db, 'contactRequests'), where('status', '==', 'Cerrado')));
+      await Promise.all(snapshot.docs.map(d => deleteDoc(doc(db, 'contactRequests', d.id))));
+      setRequests(prev => prev.filter(r => r.status !== 'Cerrado'));
+      showSuccess('Solicitudes cerradas eliminadas.');
+      setSelectedRequest(null);
+    } catch (error) { showError(`Error: ${error.message}`); }
   };
 
   return (
-    <div className={`flex h-full ${darkMode ? 'bg-dark_bg text-light_text' : 'bg-gray-100 text-gray-900'}`}>
-      {/* Lista de Solicitudes */}
-      <div className={`w-1/3 p-4 border-r overflow-y-auto ${darkMode ? 'bg-dark_card border-dark_border' : 'bg-white border-gray-200'}`}>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className={`text-xl font-bold ${darkMode ? 'text-light_text' : 'text-gray-900'}`}>Solicitudes de Contacto</h2>
-          <button
-            onClick={handleDeleteClosedRequests}
-            className="bg-red-500 hover:bg-red-600 text-white font-bold py-1.5 px-3 rounded-md text-sm"
-          >
-            Eliminar Cerrados
-          </button>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+        <div>
+          <h2 className="text-xl font-bold text-white">💬 Solicitudes de Contacto</h2>
+          <p className="text-xs text-gray-500 mt-1">{requests.filter(r => r.status !== 'Cerrado').length} solicitudes activas</p>
         </div>
-        {requests.length === 0 ? (
-          <p className={`${darkMode ? 'text-light_text' : 'text-gray-600'}`}>No hay solicitudes de contacto.</p>
-        ) : (
-          <ul>
-            {requests.map(req => (
-              <li
-                key={req.id}
-                className={`p-3 mb-2 rounded-lg cursor-pointer ${selectedRequest && selectedRequest.id === req.id
-                    ? (darkMode ? 'bg-accent text-white' : 'bg-yellow-200')
-                    : (darkMode ? 'bg-dark_bg hover:bg-dark_border' : 'bg-gray-100 hover:bg-gray-200')
-                  }`}
-                onClick={() => handleSelectRequest(req)}
-              >
-                <p className={`font-semibold ${darkMode ? 'text-light_text' : 'text-gray-800'}`}>{req.subject}</p>
-                <p className={`text-sm truncate ${darkMode ? 'text-light_text' : 'text-gray-600'}`}>{req.conversation[req.conversation.length - 1]?.text}</p>
-                <div className={`flex justify-between items-center text-xs mt-1 ${darkMode ? 'text-light_text' : 'text-gray-500'}`}>
-                  <span>{req.userEmail}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xxs font-semibold ${req.status === 'Abierto' ? 'bg-blue-100 text-blue-800' :
-                      req.status === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' :
-                        req.status === 'Respondido' ? 'bg-purple-100 text-purple-800' :
-                          'bg-green-100 text-green-800'
-                    }`}>
-                    {req.status}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        <button onClick={handleDeleteClosed}
+          className="px-4 py-2 text-xs font-bold bg-red-600/10 border border-red-500/20 text-red-400 hover:bg-red-600/20 hover:text-red-300 rounded-xl transition-all">
+          Eliminar Cerradas
+        </button>
       </div>
 
-      {/* Detalles de la Solicitud y Conversación */}
-      <div className="flex-1 p-4 overflow-y-auto">
-        {selectedRequest ? (
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className={`text-2xl font-bold ${darkMode ? 'text-light_text' : 'text-gray-800'}`}>{selectedRequest.subject}</h2>
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${selectedRequest.status === 'Abierto' ? 'bg-blue-100 text-blue-800' :
-                  selectedRequest.status === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' :
-                    selectedRequest.status === 'Respondido' ? 'bg-purple-100 text-purple-800' :
-                      'bg-green-100 text-green-800'
-                }`}>
-                {selectedRequest.status}
-              </span>
-            </div>
-            <p className={`text-sm mb-2 ${darkMode ? 'text-light_text' : 'text-gray-600'}`}>De: {selectedRequest.userEmail} - Fecha: {selectedRequest.createdAt.toLocaleDateString()}</p>
-
-            {/* Historial de Conversación */}
-            <div className={`${darkMode ? 'bg-dark_bg border-dark_border' : 'bg-gray-50'} p-4 rounded-lg shadow-inner mb-4 h-64 overflow-y-auto border`}>
-              {selectedRequest.conversation.map((msg, index) => (
-                <div key={index} className={`mb-3 ${msg.sender === 'admin' ? 'text-right' : 'text-left'}`}>
-                  <span className={`inline-block p-2 rounded-lg text-sm ${msg.sender === 'admin' ? 'bg-blue-100 text-blue-800' : (darkMode ? 'bg-dark_border text-light_text' : 'bg-gray-200 text-gray-800')
-                    }`}>
-                    {msg.text}
-                  </span>
-                  <p className={`text-xxs mt-1 ${darkMode ? 'text-light_text' : 'text-gray-500'}`}>{(() => { try { const t = msg.timestamp; if (!t) return ''; if (t.toDate && typeof t.toDate === 'function') return t.toDate().toLocaleString(); return new Date(t).toLocaleString(); } catch { return ''; } })()}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Área de Respuesta del Administrador */}
-            <div className={`${darkMode ? 'bg-dark_card border-dark_border' : 'bg-white'} p-4 rounded-lg shadow-md border`}>
-              <h3 className={`text-lg font-semibold mb-3 ${darkMode ? 'text-light_text' : 'text-gray-800'}`}>Responder</h3>
-              <textarea
-                rows="3"
-                className={`w-full p-2 rounded-md text-sm focus:outline-none focus:border-yellow-500 mb-3 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
-                placeholder="Escribe tu respuesta aquí..."
-                value={adminReply}
-                onChange={(e) => setAdminReply(e.target.value)}
-              ></textarea>
-              <div className="flex justify-end space-x-2">
-                <button
-                  onClick={handleSendReply}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-md"
-                >
-                  Enviar Respuesta
-                </button>
-                <button
-                  onClick={handleCloseRequest}
-                  className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md"
-                >
-                  Cerrar Solicitud
-                </button>
+      <div className={`flex h-[640px] rounded-2xl border ${darkMode ? 'bg-[#0b0e14] border-[#1e2330]' : 'bg-white border-gray-200'} shadow-xl overflow-hidden`}>
+        {/* Lista */}
+        <div className={`w-80 shrink-0 border-r border-[#1e2330] flex flex-col ${darkMode ? 'bg-[#06080c]' : 'bg-gray-50'}`}>
+          <div className="p-4 border-b border-[#1e2330]">
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Bandeja de entrada</p>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {requests.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+                <div className="text-3xl mb-2">📭</div>
+                <p className="text-xs text-gray-500">No hay solicitudes de contacto.</p>
               </div>
+            ) : (
+              requests.map(req => (
+                <button
+                  key={req.id}
+                  onClick={() => { setSelectedRequest(req); setAdminReply(''); }}
+                  className={`w-full text-left p-4 border-b border-[#1e2330] transition-all ${
+                    selectedRequest?.id === req.id ? 'bg-yellow-500/10 border-l-2 border-l-yellow-500' : 'hover:bg-white/[0.02]'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <p className={`text-sm font-bold truncate flex-1 ${req.status === 'Cerrado' ? 'text-gray-500' : 'text-white'}`}>{req.subject}</p>
+                    <StatusBadge status={req.status} />
+                  </div>
+                  <p className="text-xs text-gray-500 truncate mb-1">{req.userEmail}</p>
+                  <p className="text-[11px] text-gray-600 line-clamp-1">{req.conversation?.[req.conversation.length - 1]?.text}</p>
+                  <p className="text-[10px] text-gray-700 mt-1">{req.createdAt?.toLocaleDateString('es-ES')}</p>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Detalle */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {selectedRequest ? (
+            <>
+              {/* Header */}
+              <div className="p-5 border-b border-[#1e2330] flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-bold text-white">{selectedRequest.subject}</h3>
+                  <p className="text-xs text-gray-400 mt-1">De: <span className="text-gray-300">{selectedRequest.userEmail}</span> — {selectedRequest.createdAt?.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                </div>
+                <StatusBadge status={selectedRequest.status} />
+              </div>
+
+              {/* Conversación */}
+              <div className="flex-1 overflow-y-auto p-5 space-y-3">
+                {selectedRequest.conversation?.map((msg, idx) => (
+                  <div key={idx} className={`flex ${msg.sender === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+                      msg.sender === 'admin'
+                        ? 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-100'
+                        : 'bg-[#131824] border border-[#1e2330] text-gray-200'
+                    }`}>
+                      <p>{msg.text}</p>
+                      <p className={`text-[10px] mt-1.5 ${msg.sender === 'admin' ? 'text-yellow-500/50' : 'text-gray-600'}`}>
+                        {(() => { try { const t = msg.timestamp; if (!t) return ''; if (t.toDate) return t.toDate().toLocaleString('es-ES'); return new Date(t).toLocaleString('es-ES'); } catch { return ''; } })()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Reply Box */}
+              {selectedRequest.status !== 'Cerrado' && (
+                <div className="p-4 border-t border-[#1e2330] bg-[#06080c] space-y-3">
+                  <textarea
+                    rows="3"
+                    value={adminReply}
+                    onChange={(e) => setAdminReply(e.target.value)}
+                    placeholder="Escribe tu respuesta..."
+                    className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-yellow-500/40 resize-none transition-colors"
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={handleCloseRequest}
+                      className="px-4 py-2 bg-green-600/10 border border-green-500/20 text-green-400 hover:bg-green-600/20 text-xs font-bold rounded-xl transition-all">
+                      ✓ Cerrar Solicitud
+                    </button>
+                    <button onClick={handleSendReply}
+                      className="px-5 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold rounded-xl text-xs transition-all shadow-md shadow-yellow-500/10">
+                      Enviar Respuesta
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+              <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center text-3xl mb-4">💬</div>
+              <h4 className="text-white font-semibold mb-1">Selecciona una conversación</h4>
+              <p className="text-xs text-gray-500">Elige una solicitud de la lista para ver los detalles y responder.</p>
             </div>
-          </div>
-        ) : (
-          <div className={`flex items-center justify-center h-full text-lg ${darkMode ? 'text-light_text' : 'text-gray-600'}`}>
-            Selecciona una solicitud para ver los detalles.
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

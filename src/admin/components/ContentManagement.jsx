@@ -1,16 +1,25 @@
-import React, { useState, useEffect, useContext } from 'react'; // Importar useContext
+import React, { useState, useEffect, useContext } from 'react';
 import { db } from '../../services/firebase';
 import { doc, getDocs, setDoc, query, collection, where } from 'firebase/firestore';
-import { ThemeContext } from '../../context/ThemeContext'; // Importar ThemeContext
-import { useError } from '../../context/ErrorContext'; // Importar useError
+import { ThemeContext } from '../../context/ThemeContext';
+import { useError } from '../../context/ErrorContext';
+
+const sections = [
+  { key: 'about', label: '🏢 Acerca de', placeholder: 'Escribe aquí el contenido de la sección "Acerca de"...' },
+  { key: 'terms', label: '📋 Términos y Condiciones', placeholder: 'Escribe los términos y condiciones del servicio...' },
+  { key: 'privacy', label: '🔒 Política de Privacidad', placeholder: 'Escribe la política de privacidad...' },
+];
 
 const ContentManagement = () => {
-  const { darkMode } = useContext(ThemeContext); // Usar ThemeContext
-  const { showError, showSuccess, error } = useError(); // Usar el contexto de errores
+  const { darkMode } = useContext(ThemeContext);
+  const { showError, showSuccess } = useError();
   const [aboutContent, setAboutContent] = useState('');
   const [termsContent, setTermsContent] = useState('');
   const [privacyContent, setPrivacyContent] = useState('');
-  const [message, setMessage] = useState(''); // Declarar el estado message
+  const [activeTab, setActiveTab] = useState('about');
+
+  const values = { about: aboutContent, terms: termsContent, privacy: privacyContent };
+  const setters = { about: setAboutContent, terms: setTermsContent, privacy: setPrivacyContent };
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -24,7 +33,7 @@ const ContentManagement = () => {
           setPrivacyContent(record.privacy || '');
         }
       } catch (err) {
-        console.error("Error fetching content from Firebase:", err);
+        console.error(err);
         showError('Error al cargar el contenido.');
       }
     };
@@ -32,93 +41,74 @@ const ContentManagement = () => {
   }, [showError]);
 
   const handleSaveContent = async () => {
-    setMessage('');
-    showError(null); // Limpiar errores
     try {
-      const contentData = {
+      const q = query(collection(db, 'settings'), where('key', '==', 'content'));
+      const querySnapshot = await getDocs(q);
+      const docId = !querySnapshot.empty ? querySnapshot.docs[0].id : 'content_settings';
+      await setDoc(doc(db, 'settings', docId), {
         key: 'content',
         about: aboutContent,
         terms: termsContent,
         privacy: privacyContent,
         updatedAt: new Date(),
-      };
-
-      const q = query(collection(db, 'settings'), where('key', '==', 'content'));
-      const querySnapshot = await getDocs(q);
-      let docId;
-
-      if (!querySnapshot.empty) {
-        docId = querySnapshot.docs[0].id;
-      } else {
-        // Si no existe, Firebase creará un ID automáticamente con setDoc si no se especifica
-        // Para mantener la consistencia, podemos usar un ID fijo o dejar que Firebase lo genere.
-        // Aquí, asumimos que 'content' es un documento único y podemos usar un ID fijo si lo deseamos,
-        // o simplemente dejar que setDoc lo cree si no existe.
-        // Para este caso, buscaremos el documento y si no existe, lo crearemos con un ID específico 'content_settings'
-        // o simplemente lo actualizaremos si ya existe.
-        // Usaremos 'content_settings' como ID fijo para el documento de configuración de contenido.
-        docId = 'content_settings'; 
-      }
-      
-      await setDoc(doc(db, 'settings', docId), contentData, { merge: true });
+      }, { merge: true });
       showSuccess('Contenido guardado exitosamente.');
     } catch (err) {
-      console.error("Error saving content to Firebase:", err);
+      console.error(err);
       showError(`Error al guardar el contenido: ${err.message}`);
     }
   };
 
+  const activeSection = sections.find(s => s.key === activeTab);
+  const wordCount = values[activeTab]?.trim().split(/\s+/).filter(Boolean).length || 0;
+
   return (
-    <div className={`p-6 min-h-screen ${darkMode ? 'bg-dark_bg text-light_text' : 'bg-gray-900 text-white'}`}>
-      <h1 className={`text-3xl font-bold mb-6 ${darkMode ? 'text-light_text' : 'text-white'}`}>Gestión de Contenido</h1>
-      {message && <div className="bg-green-500 text-white p-3 rounded mb-4">{message}</div>}
-      {error && <div className="bg-red-500 text-white p-3 rounded mb-4">{error}</div>}
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-white">📝 Gestión de Contenido</h2>
+        <p className="text-xs text-gray-500 mt-1">Edita el contenido de las páginas informativas del sitio.</p>
+      </div>
 
-      <div className={`${darkMode ? 'bg-dark_card border-dark_border' : 'bg-gray-800'} p-6 rounded-lg shadow-md border`}>
-        <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-light_text' : 'text-white'}`}>Gestión de Contenido</h2>
-        
-        <div className="mb-6">
-          <label htmlFor="aboutContent" className={`block text-sm font-medium mb-1 ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Sección "Acerca de"</label>
-          <textarea
-            id="aboutContent"
-            rows="6"
-            className={`w-full p-2 rounded-md text-sm focus:outline-none focus:border-yellow-500 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-            value={aboutContent}
-            onChange={(e) => setAboutContent(e.target.value)}
-            placeholder="Escribe aquí el contenido de la sección 'Acerca de'..."
-          ></textarea>
+      <div className={`rounded-2xl border ${darkMode ? 'bg-[#0b0e14] border-[#1e2330]' : 'bg-white border-gray-200'} shadow-xl overflow-hidden`}>
+        {/* Tab Bar */}
+        <div className="flex border-b border-[#1e2330] bg-[#06080c]">
+          {sections.map(section => (
+            <button
+              key={section.key}
+              onClick={() => setActiveTab(section.key)}
+              className={`flex-1 px-4 py-3.5 text-xs font-bold uppercase tracking-wider transition-all ${
+                activeTab === section.key
+                  ? 'text-yellow-400 border-b-2 border-yellow-500 bg-yellow-500/5'
+                  : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.02]'
+              }`}
+            >
+              {section.label}
+            </button>
+          ))}
         </div>
 
-        <div className="mb-6">
-          <label htmlFor="termsContent" className={`block text-sm font-medium mb-1 ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Términos y Condiciones</label>
-          <textarea
-            id="termsContent"
-            rows="6"
-            className={`w-full p-2 rounded-md text-sm focus:outline-none focus:border-yellow-500 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-            value={termsContent}
-            onChange={(e) => setTermsContent(e.target.value)}
-            placeholder="Términos y condiciones del servicio..."
-          ></textarea>
-        </div>
+        {/* Editor */}
+        <div className="p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-white">{activeSection.label}</h3>
+            <span className="text-xs text-gray-500 font-mono">{wordCount} palabras</span>
+          </div>
 
-        <div className="mb-6">
-          <label htmlFor="privacyContent" className={`block text-sm font-medium mb-1 ${darkMode ? 'text-light_text' : 'text-gray-300'}`}>Política de Privacidad</label>
           <textarea
-            id="privacyContent"
-            rows="6"
-            className={`w-full p-2 rounded-md text-sm focus:outline-none focus:border-yellow-500 ${darkMode ? 'bg-dark_bg border-dark_border text-light_text' : 'bg-gray-700 border-gray-600 text-white'}`}
-            value={privacyContent}
-            onChange={(e) => setPrivacyContent(e.target.value)}
-            placeholder="Política de privacidad..."
-          ></textarea>
-        </div>
+            rows="14"
+            value={values[activeTab]}
+            onChange={(e) => setters[activeTab](e.target.value)}
+            placeholder={activeSection.placeholder}
+            className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white text-sm placeholder-gray-700 focus:outline-none focus:border-yellow-500/40 transition-colors resize-none leading-relaxed"
+          />
 
-        <button
-          onClick={handleSaveContent}
-          className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-md w-full"
-        >
-          Guardar Contenido
-        </button>
+          <div className="flex justify-end">
+            <button onClick={handleSaveContent}
+              className="px-8 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-gray-950 font-bold rounded-xl shadow-lg transition-all text-sm">
+              Guardar Todo el Contenido
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
