@@ -152,46 +152,6 @@ const WalletDisplay = ({ currentUser }) => {
     <div className={`p-6 rounded-lg shadow-xl max-w-4xl mx-auto my-8 ${theme.backgroundAlt} ${theme.text}`}>
       <h2 className="text-3xl font-bold text-center mb-6">Mi Billetera</h2>
 
-      {/* Sección de Saldos Fiat */}
-      <div className="mb-8 p-4 rounded-md border border-gray-300 dark:border-gray-600">
-        <h3 className="text-2xl font-semibold mb-4 text-center">Saldos Fiat</h3>
-        <div className="flex flex-col md:flex-row justify-around items-center gap-4">
-          <div className="text-center">
-            <p className="text-xl">USD (Fiat):</p>
-            <p className="text-4xl font-extrabold text-green-500 mt-2">
-              ${userPortfolio.fiatBalanceUSD ? userPortfolio.fiatBalanceUSD.toFixed(2) : '0.00'}
-            </p>
-          </div>
-        </div>
-        {/* Aquí se podrían añadir otras monedas fiat si el esquema de datos lo permite */}
-
-        {/* Sección de Intercambio USD a USDT */}
-        <div className={`mt-8 p-4 rounded-md border ${darkMode ? 'border-dark_border bg-dark_bg' : 'border-gray-300 bg-gray-50'}`}>
-          <h3 className={`text-xl font-semibold mb-4 text-center ${darkMode ? 'text-light_text' : 'text-gray-900'}`}>Intercambiar USD a USDT (1:1)</h3>
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-            <input
-              type="number"
-              value={usdToUsdtAmount}
-              onChange={(e) => setUsdToUsdtAmount(e.target.value)}
-              placeholder="Cantidad de USD"
-              className={`p-2 border rounded-md ${darkMode ? 'bg-dark_card border-dark_border text-light_text' : 'bg-white border-gray-300 text-gray-900'}`}
-              step="0.01"
-              min="0"
-              disabled={exchangeLoading}
-            />
-            <button
-              onClick={handleExchange}
-              className={`px-4 py-2 rounded-md font-bold transition-colors duration-200 ${exchangeLoading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
-              disabled={exchangeLoading}
-            >
-              {exchangeLoading ? 'Cambiando...' : 'Cambiar USD a USDT'}
-            </button>
-          </div>
-          {error && <p className="text-red-500 text-center mt-2">{error}</p>}
-        </div>
-      </div>
-
       {/* Sección de Saldos de Criptomonedas */}
       <div className="p-4 rounded-md border border-gray-300 dark:border-gray-600">
         <h3 className="text-2xl font-semibold mb-4 text-center">Saldos de Criptomonedas</h3>

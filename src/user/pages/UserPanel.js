@@ -559,12 +559,12 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
 
   // --- Estado de Retiros (de WithdrawalsContent) ---
   const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState('BTC');
+  const [currency, setCurrency] = useState('USDT');
   const [walletAddress, setWalletAddress] = useState('');
   const [binanceId, setBinanceId] = useState('');
   const [useBinancePay, setUseBinancePay] = useState(false);
   const [availableBalance, setAvailableBalance] = useState(0);
-  const [userBalances, setUserBalances] = useState({ balanceUSD: 0, balanceBTC: 0, balanceLTC: 0, balanceDOGE: 0, balanceVES: 0 });
+  const [userBalances, setUserBalances] = useState({ balanceUSD: 0, balanceBTC: 0, balanceLTC: 0, balanceDOGE: 0, balanceUSDT: 0, balanceVES: 0 });
   const [withdrawalsHistory, setWithdrawalsHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState('new');
@@ -583,7 +583,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
           virtualBalanceUSD: d.virtualBalanceUSD || 0,
           holdings: { BTC: d.balanceBTC || 0, LTC: d.balanceLTC || 0, DOGE: d.balanceDOGE || 0, USDT: d.balanceUSDT || 0 },
         });
-        setUserBalances({ balanceUSD: d.balanceUSD || 0, balanceBTC: d.balanceBTC || 0, balanceLTC: d.balanceLTC || 0, balanceDOGE: d.balanceDOGE || 0, balanceVES: d.balanceVES || 0 });
+        setUserBalances({ balanceUSD: d.balanceUSD || 0, balanceBTC: d.balanceBTC || 0, balanceLTC: d.balanceLTC || 0, balanceDOGE: d.balanceDOGE || 0, balanceUSDT: d.balanceUSDT || 0, balanceVES: d.balanceVES || 0 });
       } else {
         setUserPortfolio({
           fiatBalanceUSD: 0,
@@ -591,7 +591,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
           virtualBalanceUSD: 0,
           holdings: { BTC: 0, LTC: 0, DOGE: 0, USDT: 0 },
         });
-        setUserBalances({ balanceUSD: 0, balanceBTC: 0, balanceLTC: 0, balanceDOGE: 0, balanceVES: 0 });
+        setUserBalances({ balanceUSD: 0, balanceBTC: 0, balanceLTC: 0, balanceDOGE: 0, balanceUSDT: 0, balanceVES: 0 });
       }
       setWalletLoading(false);
     }, (err) => { console.error(err); setWalletLoading(false); });
@@ -612,7 +612,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
   useEffect(() => {
     setAvailableBalance(userBalances[`balance${currency}`] || 0);
     const saved = userPaymentAddresses[currency];
-    if (!saved) { setSelectedAddress('new'); setWalletAddress(''); setBinanceId(''); setUseBinancePay(currency === 'USD'); }
+    if (!saved) { setSelectedAddress('new'); setWalletAddress(''); setBinanceId(''); setUseBinancePay(currency === 'USDT'); }
     else { setSelectedAddress(saved); }
   }, [currency, userBalances, userPaymentAddresses]);
 
@@ -636,13 +636,13 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
     const withdrawalAmount = parseFloat(amount);
     if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) { showError('Cantidad inválida.'); setIsLoading(false); return; }
     const threshold = minPaymentThresholds[currency] || 0;
-    if (withdrawalAmount < threshold) { showError(`Mínimo: ${threshold.toFixed(currency === 'USD' ? 2 : 8)} ${currency}.`); setIsLoading(false); return; }
+    if (withdrawalAmount < threshold) { showError(`Mínimo: ${threshold.toFixed(currency === 'USDT' ? 2 : 8)} ${currency}.`); setIsLoading(false); return; }
     const currentBal = userBalances[`balance${currency}`] || 0;
     if (withdrawalAmount > currentBal) { showError('Fondos insuficientes.'); setIsLoading(false); return; }
     let method = 'Wallet', addressOrId = '';
     if (selectedAddress && selectedAddress !== 'new') {
       addressOrId = selectedAddress;
-      method = (currency === 'USD' && useBinancePay) ? 'Binance Pay' : 'Wallet';
+      method = (currency === 'USDT' && useBinancePay) ? 'Binance Pay' : 'Wallet';
     } else if (useBinancePay) {
       if (!binanceId.trim()) { showError('Introduce tu ID de Binance.'); setIsLoading(false); return; }
       method = 'Binance Pay'; addressOrId = binanceId.trim();
@@ -684,20 +684,6 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
         </div>
       ) : (
         <>
-          {/* --- Balances Fiat --- */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { label: 'USD (Fiat)', value: `$${(userPortfolio?.fiatBalanceUSD || 0).toFixed(2)}`, color: 'from-green-400 to-emerald-300', bg: 'bg-green-500/10', icon: '💵' },
-            ].map(({ label, value, color, bg, icon }) => (
-              <div key={label} className="relative overflow-hidden bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform duration-300">
-                <div className={`absolute top-0 right-0 w-32 h-32 ${bg} rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none`}></div>
-                <p className="text-gray-400 text-sm font-semibold mb-2">{label}</p>
-                <p className={`text-3xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r ${color}`}>{value}</p>
-                <div className={`absolute top-6 right-6 text-2xl ${bg} w-12 h-12 flex items-center justify-center rounded-2xl`}>{icon}</div>
-              </div>
-            ))}
-          </div>
-
           {/* --- Balances Cripto --- */}
           <div className="bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl">
             <h3 className="text-white font-bold text-lg mb-5 flex items-center gap-2">
@@ -717,28 +703,6 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                 </div>
               ))}
             </div>
-
-            {/* Intercambio USD -> USDT */}
-            <div className="mt-6 pt-5 border-t border-[#1e2330]">
-              <h4 className="text-gray-300 font-semibold text-sm mb-3 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-                Intercambiar USD → USDT (1:1)
-              </h4>
-              <div className="flex gap-3">
-                <input
-                  type="number" step="0.01" min="0"
-                  value={usdToUsdtAmount}
-                  onChange={(e) => setUsdToUsdtAmount(e.target.value)}
-                  placeholder="Cantidad en USD"
-                  disabled={exchangeLoading}
-                  className="flex-1 bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 transition-colors font-mono text-sm"
-                />
-                <button onClick={handleExchange} disabled={exchangeLoading}
-                  className="px-5 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50 whitespace-nowrap">
-                  {exchangeLoading ? 'Cambiando...' : 'Cambiar'}
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* --- Solicitar Retiro --- */}
@@ -746,9 +710,15 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
             <h3 className="text-white font-bold text-lg mb-5 flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
               Solicitar Retiro
-              <span className="ml-auto text-xs text-gray-500">Balance: <span className="text-white font-mono font-bold">{availableBalance.toFixed(currency === 'USD' ? 2 : 8)} {currency}</span></span>
+              <span className="ml-auto text-xs text-gray-500">Balance: <span className="text-white font-mono font-bold">{availableBalance.toFixed(currency === 'USDT' ? 2 : 8)} {currency}</span></span>
             </h3>
             <form onSubmit={handleSubmitWithdrawal} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2 p-3.5 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-xs text-yellow-500/90 leading-relaxed flex items-start gap-2">
+                <span className="text-sm select-none">⚠️</span>
+                <span>
+                  <strong>Nota:</strong> Los pagos en BTC serán enviados por cualquier otra moneda que esté en la lista por su alta tasa de fee.
+                </span>
+              </div>
               <div>
                 <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Cantidad</label>
                 <input type="number" step="any" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" required
@@ -758,10 +728,9 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                 <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Moneda</label>
                 <select value={currency} onChange={(e) => setCurrency(e.target.value)}
                   className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500/50 transition-colors">
-                  <option value="BTC">Bitcoin (BTC)</option>
                   <option value="DOGE">Dogecoin (DOGE)</option>
                   <option value="LTC">Litecoin (LTC)</option>
-                  <option value="USD">USD</option>
+                  <option value="USDT">Tether (USDT)</option>
                 </select>
               </div>
               <div className="md:col-span-2">
@@ -778,7 +747,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                     <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Dirección Wallet</label>
                     <input type="text" value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} disabled={isLoading || useBinancePay}
                       required={!useBinancePay}
-                      placeholder={currency === 'BTC' ? 'bc1q...' : currency === 'LTC' ? 'ltc1q...' : 'D...'}
+                      placeholder={currency === 'BTC' ? 'bc1q...' : currency === 'LTC' ? 'ltc1q...' : currency === 'USDT' ? 'Dirección TRC20 / ERC20' : 'D...'}
                       className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-colors font-mono disabled:opacity-50" />
                   </div>
                   <div>
@@ -796,7 +765,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                       <div className="w-11 h-6 bg-[#1e2330] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
                     </label>
                     <span className="text-gray-400 text-sm">Usar Binance Pay</span>
-                    <span className="ml-auto text-xs text-gray-600">Mín: {(minPaymentThresholds[currency] || 0).toFixed(currency === 'USD' ? 2 : 8)} {currency}</span>
+                    <span className="ml-auto text-xs text-gray-600">Mín: {(minPaymentThresholds[currency] || 0).toFixed(currency === 'USDT' ? 2 : 8)} {currency}</span>
                   </div>
                 </>
               )}
@@ -840,7 +809,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                     {withdrawalsHistory.map((w) => (
                       <tr key={w.id} className="hover:bg-white/[0.02] transition-colors">
                         <td className="py-3 px-2 text-gray-400">{w.createdAt.toLocaleDateString()}</td>
-                        <td className="py-3 px-2 font-mono text-white">{w.amount.toFixed(w.currency === 'USD' ? 2 : 8)} {w.currency}</td>
+                        <td className="py-3 px-2 font-mono text-white">{w.amount.toFixed(w.currency === 'USDT' ? 2 : 8)} {w.currency}</td>
                         <td className="py-3 px-2 text-gray-400">{w.method}</td>
                         <td className="py-3 px-2">
                           <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${statusStyle(w.status)}`}>{w.status}</span>
@@ -1249,11 +1218,10 @@ const SettingsContent = ({ styles }) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [paymentAddresses, setPaymentAddresses] = useState({
-    BTC: '',
+    USDT: '',
     DOGE: '',
     LTC: '',
-    USD: '', // Añadir USD si se permite guardar direcciones para USD
-    VES: '', // Añadir VES
+    USD: '',
   });
   const [receivePaymentNotifications, setReceivePaymentNotifications] = useState(false);
   const [receiveLoginAlerts, setReceiveLoginAlerts] = useState(false);
@@ -1268,7 +1236,7 @@ const SettingsContent = ({ styles }) => {
           const docSnap = await getDoc(userDocRef);
           if (docSnap.exists()) {
             const userData = docSnap.data();
-            setPaymentAddresses(userData.paymentAddresses || { BTC: '', DOGE: '', LTC: '', USD: '', VES: '' });
+            setPaymentAddresses(userData.paymentAddresses || { USDT: '', DOGE: '', LTC: '', USD: '' });
             setReceivePaymentNotifications(userData.receivePaymentNotifications || false);
             setReceiveLoginAlerts(userData.receiveLoginAlerts || false);
             setTwoFactorAuthEnabled(userData.twoFactorAuthEnabled || false);
@@ -1497,8 +1465,8 @@ const SettingsContent = ({ styles }) => {
           <div className="space-y-4 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="bitcoin-address" className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Bitcoin (BTC)</label>
-                <input type="text" id="bitcoin-address" value={paymentAddresses.BTC} onChange={(e) => handlePaymentAddressChange('BTC', e.target.value)} disabled={isLoading} placeholder="bc1q..."
+                <label htmlFor="usdt-address" className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">USDT (Red TRC20 / TRX)</label>
+                <input type="text" id="usdt-address" value={paymentAddresses.USDT || ''} onChange={(e) => handlePaymentAddressChange('USDT', e.target.value)} disabled={isLoading} placeholder="T..."
                   className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500/50 transition-colors font-mono" />
               </div>
               <div>
@@ -1516,11 +1484,6 @@ const SettingsContent = ({ styles }) => {
                 <input type="text" id="usd-address" value={paymentAddresses.USD} onChange={(e) => handlePaymentAddressChange('USD', e.target.value)} disabled={isLoading} placeholder="Email / ID"
                   className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500/50 transition-colors font-mono" />
               </div>
-            </div>
-            <div>
-              <label htmlFor="ves-address" className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Bolívar (VES) (Binance Pay / Pago Móvil)</label>
-              <input type="text" id="ves-address" value={paymentAddresses.VES} onChange={(e) => handlePaymentAddressChange('VES', e.target.value)} disabled={isLoading} placeholder="Datos para VES"
-                className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500/50 transition-colors font-mono" />
             </div>
             <button onClick={handleSaveAddresses} disabled={isLoading}
               className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 transition-all disabled:opacity-50 mt-2">
@@ -1570,6 +1533,7 @@ const UserPanel = () => {
     balanceBTC: 0,
     balanceLTC: 0,
     balanceDOGE: 0,
+    balanceUSDT: 0,
     balanceVES: 0, // Añadir balanceVES
   });
   const [profitabilitySettings, setProfitabilitySettings] = useState({
@@ -1578,12 +1542,11 @@ const UserPanel = () => {
     useFixedRate: false
   });
   const [btcToUsdRate, setBtcToUsdRate] = useState(20000); // Nuevo estado para la tasa de BTC a USD, valor por defecto
-  const [minPaymentThresholds, setMinPaymentThresholds] = useState({ // Nuevo estado para los umbrales mínimos de retiro por moneda
-    BTC: 0.001,
+  const [minPaymentThresholds, setMinPaymentThresholds] = useState({ // Umbrales mínimos de retiro por moneda
     DOGE: 100,
     LTC: 0.01,
     USD: 10,
-    VES: 1, // Añadir umbral para VES
+    USDT: 10,
   });
   const [totalHashratePool, setTotalHashratePool] = useState(0); // Nuevo estado para el hashrate total de la pool
   const [activeMinersAllUsers, setActiveMinersAllUsers] = useState(0); // Nuevo estado para mineros activos de la pool
@@ -1708,6 +1671,7 @@ const UserPanel = () => {
           balanceBTC: userData.balanceBTC || 0,
           balanceLTC: userData.balanceLTC || 0,
           balanceDOGE: userData.balanceDOGE || 0,
+          balanceUSDT: userData.balanceUSDT || 0,
           balanceVES: userData.balanceVES || 0, // Añadir balanceVES
         });
         setUserPaymentAddresses(userData.paymentAddresses || {}); // Actualizar direcciones de pago
@@ -1720,6 +1684,7 @@ const UserPanel = () => {
             balanceBTC: 0,
             balanceLTC: 0,
             balanceDOGE: 0,
+            balanceUSDT: 0,
             balanceVES: 0, // Añadir balanceVES
             role: 'user',
             email: currentUser.email,
@@ -1732,6 +1697,7 @@ const UserPanel = () => {
             balanceBTC: 0,
             balanceLTC: 0,
             balanceDOGE: 0,
+            balanceUSDT: 0,
             balanceVES: 0, // Añadir balanceVES
           });
           setUserPaymentAddresses({});
@@ -1784,11 +1750,10 @@ const UserPanel = () => {
     const unsubscribe = onSnapshot(paymentConfigQuery, (snapshot) => {
       const settingsData = snapshot.docs.length > 0 ? snapshot.docs[0].data() : {};
       setMinPaymentThresholds({
-        BTC: settingsData.minPaymentThresholdBTC || 0.00000001,
         DOGE: settingsData.minPaymentThresholdDOGE || 100,
         LTC: settingsData.minPaymentThresholdLTC || 0.01,
         USD: settingsData.minPaymentThresholdUSD || 10,
-        VES: settingsData.minPaymentThresholdVES || 1, // Añadir VES
+        USDT: settingsData.minPaymentThresholdUSDT || settingsData.minPaymentThresholdUSD || 10,
       });
     }, (error) => {
       console.error("UserPanel: Error en la suscripción de paymentConfig:", error);
