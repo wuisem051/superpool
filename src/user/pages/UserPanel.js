@@ -733,42 +733,196 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                   <option value="USDT">Tether (USDT)</option>
                 </select>
               </div>
-              <div className="md:col-span-2">
-                <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Dirección Guardada</label>
-                <select value={selectedAddress} onChange={(e) => setSelectedAddress(e.target.value)} disabled={isLoading}
-                  className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500/50 transition-colors">
-                  {userPaymentAddresses[currency] && <option value={userPaymentAddresses[currency]}>{userPaymentAddresses[currency]} (Guardada)</option>}
-                  <option value="new">Ingresar nueva dirección</option>
-                </select>
+              {/* Selección de Método de Pago / Dirección (Rediseño visual) */}
+              <div className="md:col-span-2 space-y-4">
+                <label className="block text-xs text-gray-400 uppercase tracking-wider font-bold">Método y Dirección de Retiro</label>
+                
+                {currency === 'USDT' ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Tarjeta Binance Pay */}
+                    <div
+                      onClick={() => { if (!isLoading) setUseBinancePay(true); }}
+                      className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between h-28
+                        ${useBinancePay 
+                          ? 'bg-[#181d2a] border-yellow-500/60 shadow-lg shadow-yellow-500/5' 
+                          : 'bg-[#131824] border-[#1e2330] hover:border-gray-700'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">🟡</span>
+                          <span className="font-bold text-white text-sm">Binance Pay</span>
+                        </div>
+                        {useBinancePay && <span className="w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center text-xs text-black font-bold">✓</span>}
+                      </div>
+                      <p className="text-[11px] text-gray-400 mt-1 leading-tight">Sin comisiones de red. Directo a tu cuenta de Binance.</p>
+                      <div className="mt-2 text-[10px] font-semibold text-gray-500">
+                        {userPaymentAddresses?.USD ? (
+                          <span className="text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full font-mono">
+                            Guardado: {userPaymentAddresses.USD.length > 20 ? `${userPaymentAddresses.USD.slice(0, 18)}...` : userPaymentAddresses.USD}
+                          </span>
+                        ) : (
+                          <span className="text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">No configurado</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Tarjeta USDT TRC20 */}
+                    <div
+                      onClick={() => { if (!isLoading) setUseBinancePay(false); }}
+                      className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between h-28
+                        ${!useBinancePay 
+                          ? 'bg-[#181d2a] border-green-500/60 shadow-lg shadow-green-500/5' 
+                          : 'bg-[#131824] border-[#1e2330] hover:border-gray-700'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">🟢</span>
+                          <span className="font-bold text-white text-sm">USDT (Red TRC20)</span>
+                        </div>
+                        {!useBinancePay && <span className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-xs text-white font-bold">✓</span>}
+                      </div>
+                      <p className="text-[11px] text-gray-400 mt-1 leading-tight">Retiro estándar a billeteras externas de red Tron.</p>
+                      <div className="mt-2 text-[10px] font-semibold text-gray-500">
+                        {userPaymentAddresses?.USDT ? (
+                          <span className="text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full font-mono">
+                            Guardado: {userPaymentAddresses.USDT.slice(0, 8)}...{userPaymentAddresses.USDT.slice(-6)}
+                          </span>
+                        ) : (
+                          <span className="text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">No configurado</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* Para otras monedas LTC / DOGE */
+                  <div className="p-4 rounded-xl bg-[#131824] border border-[#1e2330] flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{coinIcons[currency]}</span>
+                      <div>
+                        <p className="font-bold text-white text-sm">Billetera Directa {currency}</p>
+                        <p className="text-xs text-gray-400">Retiro estándar a red de {currency}.</p>
+                      </div>
+                    </div>
+                    <div className="text-[10px] font-semibold">
+                      {userPaymentAddresses?.[currency] ? (
+                        <span className="text-green-400 bg-green-500/10 px-2.5 py-1 rounded-full font-mono">
+                          Guardado: {userPaymentAddresses[currency].slice(0, 10)}...{userPaymentAddresses[currency].slice(-8)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-500 bg-white/5 px-2.5 py-1 rounded-full">No configurado</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Caja de selección de dirección guardada o nueva */}
+                {((useBinancePay && userPaymentAddresses?.USD) || (!useBinancePay && userPaymentAddresses?.[currency === 'USDT' ? 'USDT' : currency])) ? (
+                  <div className="bg-[#131824] border border-[#1e2330] rounded-xl p-4 space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                      <span className="text-xs text-gray-400 font-semibold">Destinatario del Retiro</span>
+                      <span className="text-[10px] text-gray-500 flex items-center gap-1 font-semibold">
+                        🔒 Tus datos están guardados
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col gap-2.5">
+                      {/* Opción 1: Usar dirección guardada */}
+                      <label className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all
+                        ${selectedAddress !== 'new' 
+                          ? 'bg-[#181d2a] border-indigo-500/50' 
+                          : 'bg-transparent border-transparent hover:bg-white/5'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="addressSelection"
+                          checked={selectedAddress !== 'new'}
+                          onChange={() => {
+                            const saved = useBinancePay ? userPaymentAddresses.USD : (currency === 'USDT' ? userPaymentAddresses.USDT : userPaymentAddresses[currency]);
+                            setSelectedAddress(saved);
+                          }}
+                          className="mt-1 text-indigo-500 focus:ring-indigo-500"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-white font-bold">Usar dirección guardada</p>
+                          <p className="text-sm font-mono text-indigo-300 break-all mt-0.5 bg-[#0b0e14] px-2.5 py-1 rounded border border-[#1e2330]">
+                            {useBinancePay ? userPaymentAddresses.USD : (currency === 'USDT' ? userPaymentAddresses.USDT : userPaymentAddresses[currency])}
+                          </p>
+                        </div>
+                      </label>
+
+                      {/* Opción 2: Nueva dirección */}
+                      <label className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all
+                        ${selectedAddress === 'new' 
+                          ? 'bg-[#181d2a] border-indigo-500/50' 
+                          : 'bg-transparent border-transparent hover:bg-white/5'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="addressSelection"
+                          checked={selectedAddress === 'new'}
+                          onChange={() => setSelectedAddress('new')}
+                          className="mt-1 text-indigo-500 focus:ring-indigo-500"
+                        />
+                        <div className="flex-grow">
+                          <p className="text-xs text-white font-bold">Ingresar dirección diferente / nueva</p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Campos de Entrada de Texto para direcciones si está en modo "new" o si no hay dirección guardada */}
+                {((selectedAddress === 'new') || !((useBinancePay && userPaymentAddresses?.USD) || (!useBinancePay && userPaymentAddresses?.[currency === 'USDT' ? 'USDT' : currency]))) && (
+                  <div className="grid grid-cols-1 gap-3 p-4 bg-[#131824]/50 border border-[#1e2330] rounded-xl">
+                    {useBinancePay ? (
+                      <div>
+                        <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Email / ID Binance Pay</label>
+                        <input 
+                          type="text" 
+                          value={binanceId} 
+                          onChange={(e) => setBinanceId(e.target.value)} 
+                          disabled={isLoading}
+                          required
+                          placeholder="Introduce tu Binance ID o Email"
+                          className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-colors" 
+                        />
+                        <p className="text-[10px] text-gray-500 mt-1">⚠️ Recuerda que no podemos validar externamente IDs incorrectos.</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Dirección Wallet ({currency === 'USDT' ? 'TRC20' : currency})</label>
+                        <input 
+                          type="text" 
+                          value={walletAddress} 
+                          onChange={(e) => setWalletAddress(e.target.value)} 
+                          disabled={isLoading}
+                          required
+                          placeholder={currency === 'LTC' ? 'ltc1q...' : currency === 'USDT' ? 'T...' : 'D...'}
+                          className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-colors font-mono" 
+                        />
+                        <p className="text-[10px] text-gray-500 mt-1">⚠️ Envía únicamente a direcciones de la red de {currency === 'USDT' ? 'TRON (TRC20)' : currency}.</p>
+                      </div>
+                    )}
+                    
+                    {/* Tip amigable si no tienen nada configurado */}
+                    {!((useBinancePay && userPaymentAddresses?.USD) || (!useBinancePay && userPaymentAddresses?.[currency === 'USDT' ? 'USDT' : currency])) && (
+                      <p className="text-[11px] text-indigo-400 bg-indigo-500/5 p-2 rounded-lg border border-indigo-500/10">
+                        💡 <strong>Consejo:</strong> Puedes guardar tus direcciones en la pestaña de <strong>Configuración</strong> para no tener que escribirlas en cada retiro.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Mostrar umbral mínimo y aviso rápido */}
+                <div className="flex items-center justify-between text-xs text-gray-500 px-1 pt-1">
+                  <span>Mínimo requerido:</span>
+                  <span className="text-white font-mono font-bold">{(minPaymentThresholds[currency] || 0).toFixed(currency === 'USDT' ? 2 : 8)} {currency}</span>
+                </div>
               </div>
-              {selectedAddress === 'new' && (
-                <>
-                  <div>
-                    <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Dirección Wallet</label>
-                    <input type="text" value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} disabled={isLoading || useBinancePay}
-                      required={!useBinancePay}
-                      placeholder={currency === 'BTC' ? 'bc1q...' : currency === 'LTC' ? 'ltc1q...' : currency === 'USDT' ? 'Dirección TRC20 / ERC20' : 'D...'}
-                      className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-colors font-mono disabled:opacity-50" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Email / ID Binance</label>
-                    <input type="text" value={binanceId} onChange={(e) => setBinanceId(e.target.value)} disabled={isLoading || !useBinancePay}
-                      required={useBinancePay}
-                      placeholder="ejemplo@binance.com"
-                      className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-colors disabled:opacity-50" />
-                  </div>
-                  <div className="md:col-span-2 flex items-center gap-3">
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" checked={useBinancePay} disabled={isLoading}
-                        onChange={(e) => { setUseBinancePay(e.target.checked); if (e.target.checked) setWalletAddress(''); else setBinanceId(''); }}
-                        className="sr-only peer" />
-                      <div className="w-11 h-6 bg-[#1e2330] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                    </label>
-                    <span className="text-gray-400 text-sm">Usar Binance Pay</span>
-                    <span className="ml-auto text-xs text-gray-600">Mín: {(minPaymentThresholds[currency] || 0).toFixed(currency === 'USDT' ? 2 : 8)} {currency}</span>
-                  </div>
-                </>
-              )}
               <div className="md:col-span-2">
                 <button type="submit" disabled={isLoading}
                   className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white font-bold rounded-xl shadow-lg shadow-red-500/20 transition-all disabled:opacity-50">
