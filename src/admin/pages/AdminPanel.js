@@ -167,8 +167,8 @@ const AdminPanel = () => {
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')
                 }`}
               >
-                <div className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5 mr-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center gap-2.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     {item.icon}
                   </svg>
                   <span>{item.label}</span>
