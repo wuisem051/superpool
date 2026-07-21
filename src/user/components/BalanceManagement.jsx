@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../services/firebase'; // Importar Firebase Firestore
+import { db } from '../../services/firebase';
 import { collection, getDocs, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { useTheme } from '../../context/ThemeContext';
-import { useError } from '../../context/ErrorContext'; // Importar useError
+import { useError } from '../../context/ErrorContext';
 
 const CURRENCIES = ['USDT', 'LTC', 'DOGE', 'BTC'];
+
+const currencyConfig = {
+  USDT: { icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', decimals: 2 },
+  LTC:  { icon: 'Ł', color: 'text-blue-400',    bg: 'bg-blue-500/10 border-blue-500/20',    decimals: 8 },
+  DOGE: { icon: 'Ð', color: 'text-yellow-400',  bg: 'bg-yellow-500/10 border-yellow-500/20', decimals: 8 },
+  BTC:  { icon: '₿', color: 'text-orange-400',  bg: 'bg-orange-500/10 border-orange-500/20', decimals: 8 },
+};
 
 const BalanceManagement = () => {
   const { theme } = useTheme();
@@ -17,305 +24,304 @@ const BalanceManagement = () => {
   const [massAmount, setMassAmount] = useState('');
   const [massCurrency, setMassCurrency] = useState('USDT');
   const [massOperation, setMassOperation] = useState('add');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'users'));
-        const records = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setUsers(records);
+        setUsers(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       } catch (error) {
-        console.error("Error fetching users from Firebase:", error);
         showError('Error al cargar la lista de usuarios.');
       }
     };
-
     fetchUsers();
 
     const unsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
-      const updatedUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setUsers(updatedUsers);
+      setUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     }, (error) => {
-      console.error("Error subscribing to users collection:", error);
       showError('Error al suscribirse a los cambios de usuarios.');
     });
-
-    return () => { unsubscribe(); };
+    return () => unsubscribe();
   }, [showError]);
 
-  const handleSelectUser = (userId) => {
-    setSelectedUserIds(prev =>
-      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
-    );
-  };
+  const handleSelectUser = (userId) =>
+    setSelectedUserIds(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]);
 
-  const handleSelectAllUsers = (e) => {
-    setSelectedUserIds(e.target.checked ? users.map(u => u.id) : []);
-  };
+  const handleSelectAllUsers = (e) =>
+    setSelectedUserIds(e.target.checked ? filteredUsers.map(u => u.id) : []);
 
-  const getStep = (currency) => (currency === 'USDT' || currency === 'USD') ? '0.01' : '0.00000001';
-  const getPlaceholder = (currency) => (currency === 'USDT' || currency === 'USD') ? '100.00' : '0.001';
-  const getDecimals = (currency) => (currency === 'USDT' || currency === 'USD') ? 2 : 8;
+  const getStep = (c) => (c === 'USDT') ? '0.01' : '0.00000001';
+  const getDecimals = (c) => currencyConfig[c]?.decimals || 2;
 
   const handleAddBalance = async (e) => {
     e.preventDefault();
-    showSuccess(null);
-    showError(null);
-
-    if (!selectedUserId) { showError('Por favor, selecciona un usuario.'); return; }
+    if (!selectedUserId) { showError('Selecciona un usuario.'); return; }
     const amount = parseFloat(amountToAdd);
-    if (isNaN(amount) || amount <= 0) { showError('Por favor, introduce una cantidad válida y positiva.'); return; }
-
+    if (isNaN(amount) || amount <= 0) { showError('Introduce una cantidad válida y positiva.'); return; }
     try {
-      const selectedUser = users.find(u => u.id === selectedUserId);
-      if (!selectedUser) { showError('Usuario no encontrado.'); return; }
-
+      const user = users.find(u => u.id === selectedUserId);
+      if (!user) { showError('Usuario no encontrado.'); return; }
       const field = `balance${selectedCurrency}`;
-      const currentBalance = selectedUser[field] || 0;
-      const newBalance = currentBalance + amount;
-
+      const newBalance = (user[field] || 0) + amount;
       await updateDoc(doc(db, 'users', selectedUserId), { [field]: newBalance });
-      showSuccess(`Se han añadido ${amount.toFixed(getDecimals(selectedCurrency))} ${selectedCurrency} a ${selectedUser.email}. Nuevo balance: ${newBalance.toFixed(getDecimals(selectedCurrency))} ${selectedCurrency}`);
+      showSuccess(`+${amount.toFixed(getDecimals(selectedCurrency))} ${selectedCurrency} añadidos a ${user.email}`);
       setAmountToAdd('');
-    } catch (err) {
-      console.error("Error adding balance:", err);
-      showError(`Fallo al añadir balance: ${err.message}`);
-    }
+    } catch (err) { showError(`Error: ${err.message}`); }
   };
 
   const handleSubtractBalance = async (e) => {
     e.preventDefault();
-    showSuccess(null);
-    showError(null);
-
-    if (!selectedUserId) { showError('Por favor, selecciona un usuario.'); return; }
+    if (!selectedUserId) { showError('Selecciona un usuario.'); return; }
     const amount = parseFloat(amountToAdd);
-    if (isNaN(amount) || amount <= 0) { showError('Por favor, introduce una cantidad válida y positiva.'); return; }
-
+    if (isNaN(amount) || amount <= 0) { showError('Introduce una cantidad válida y positiva.'); return; }
     try {
-      const selectedUser = users.find(u => u.id === selectedUserId);
-      if (!selectedUser) { showError('Usuario no encontrado.'); return; }
-
+      const user = users.find(u => u.id === selectedUserId);
+      if (!user) { showError('Usuario no encontrado.'); return; }
       const field = `balance${selectedCurrency}`;
-      const currentBalance = selectedUser[field] || 0;
+      const currentBalance = user[field] || 0;
       if (currentBalance < amount) { showError(`Balance insuficiente en ${selectedCurrency}.`); return; }
       const newBalance = currentBalance - amount;
-
       await updateDoc(doc(db, 'users', selectedUserId), { [field]: newBalance });
-      showSuccess(`Se han restado ${amount.toFixed(getDecimals(selectedCurrency))} ${selectedCurrency} de ${selectedUser.email}. Nuevo balance: ${newBalance.toFixed(getDecimals(selectedCurrency))} ${selectedCurrency}`);
+      showSuccess(`-${amount.toFixed(getDecimals(selectedCurrency))} ${selectedCurrency} restados de ${user.email}`);
       setAmountToAdd('');
-    } catch (err) {
-      console.error("Error subtracting balance:", err);
-      showError(`Fallo al restar balance: ${err.message}`);
-    }
+    } catch (err) { showError(`Error: ${err.message}`); }
   };
 
   const handleMassBalanceUpdate = async () => {
-    showSuccess(null);
-    showError(null);
-
-    if (selectedUserIds.length === 0) { showError('Por favor, selecciona al menos un usuario.'); return; }
+    if (selectedUserIds.length === 0) { showError('Selecciona al menos un usuario.'); return; }
     const amount = parseFloat(massAmount);
-    if (massOperation !== 'reset' && (isNaN(amount) || amount <= 0)) { showError('Por favor, introduce una cantidad válida.'); return; }
-
+    if (massOperation !== 'reset' && (isNaN(amount) || amount <= 0)) { showError('Introduce una cantidad válida.'); return; }
     try {
-      let successfulUpdates = 0;
-      let failedUpdates = 0;
       const field = `balance${massCurrency}`;
-
+      let ok = 0, fail = 0;
       for (const userId of selectedUserIds) {
-        const userDoc = users.find(u => u.id === userId);
-        if (!userDoc) { failedUpdates++; continue; }
-
+        const user = users.find(u => u.id === userId);
+        if (!user) { fail++; continue; }
         let newBalance = 0;
-        if (massOperation === 'reset') {
-          newBalance = 0;
-        } else {
-          const currentBalance = userDoc[field] || 0;
-          if (massOperation === 'add') {
-            newBalance = currentBalance + amount;
-          } else if (massOperation === 'subtract') {
-            if (currentBalance < amount) { failedUpdates++; continue; }
-            newBalance = currentBalance - amount;
-          }
-        }
-
+        if (massOperation === 'add') newBalance = (user[field] || 0) + amount;
+        else if (massOperation === 'subtract') {
+          const cur = user[field] || 0;
+          if (cur < amount) { fail++; continue; }
+          newBalance = cur - amount;
+        } else { newBalance = 0; }
         try {
           await updateDoc(doc(db, 'users', userId), { [field]: newBalance });
-          successfulUpdates++;
-        } catch (err) {
-          console.error(`Error updating user ${userId}:`, err);
-          failedUpdates++;
-        }
+          ok++;
+        } catch { fail++; }
       }
-
-      showSuccess(`Operación masiva completada: ${successfulUpdates} usuarios actualizados, ${failedUpdates} fallidos.`);
+      showSuccess(`Operación masiva: ${ok} actualizados, ${fail} fallidos.`);
       setSelectedUserIds([]);
       setMassAmount('');
-    } catch (err) {
-      console.error("Error mass update:", err);
-      showError(`Fallo al realizar la operación masiva: ${err.message}`);
-    }
+    } catch (err) { showError(`Error: ${err.message}`); }
   };
 
-  const selectClass = `${theme.inputBackground} ${theme.text} border-gray-600 rounded-md shadow-sm sm:text-sm p-2 w-full`;
-  const inputClass = `${theme.inputBackground} ${theme.text} border-gray-600 rounded-md shadow-sm sm:text-sm p-2 w-full`;
-  const thClass = `px-6 py-3 text-left text-xs font-medium ${theme.textSoft} uppercase tracking-wider`;
+  const selectedUser = users.find(u => u.id === selectedUserId);
+  const filteredUsers = searchTerm
+    ? users.filter(u => u.email?.toLowerCase().includes(searchTerm.toLowerCase()))
+    : users;
+
+  const inputClass = `w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 transition-colors text-sm`;
+  const labelClass = `block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5`;
 
   return (
-    <div className={`${theme.background} ${theme.text} p-6 rounded-lg shadow-md`}>
-      <h2 className="text-2xl font-semibold mb-4">Gestión de Balance de Usuarios</h2>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-white">💰 Gestión de Balance</h2>
+        <p className="text-xs text-gray-500 mt-1">Añade o resta saldo a los usuarios de la plataforma.</p>
+      </div>
 
-      {/* --- Añadir Balance --- */}
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-3">Añadir Balance</h3>
-        <form onSubmit={handleAddBalance} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+      {/* Quick Balance Editor */}
+      <div className="rounded-2xl border bg-[#0b0e14] border-[#1e2330] shadow-xl p-6 space-y-5">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-[#1e2330] pb-3">
+          ⚡ Ajuste Rápido de Balance
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div>
-            <label htmlFor="userSelectAdd" className="block text-sm font-medium mb-1">Seleccionar Usuario:</label>
-            <select id="userSelectAdd" value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)} className={selectClass}>
-              <option value="">Selecciona un usuario</option>
+            <label htmlFor="userSelectAdd" className={labelClass}>Usuario</label>
+            <select id="userSelectAdd" value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)} className={inputClass}>
+              <option value="">Selecciona un usuario...</option>
               {users.map(user => (
                 <option key={user.id} value={user.id}>{user.email}</option>
               ))}
             </select>
           </div>
           <div>
-            <label htmlFor="currencySelectAdd" className="block text-sm font-medium mb-1">Moneda:</label>
-            <select id="currencySelectAdd" value={selectedCurrency} onChange={(e) => setSelectedCurrency(e.target.value)} className={selectClass}>
-              {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <label htmlFor="currencySelectAdd" className={labelClass}>Moneda</label>
+            <div className="flex gap-2">
+              {CURRENCIES.map(c => {
+                const cfg = currencyConfig[c];
+                return (
+                  <button key={c} type="button" onClick={() => setSelectedCurrency(c)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      selectedCurrency === c ? `${cfg.bg} ${cfg.color}` : 'bg-white/[0.02] border-white/5 text-gray-500 hover:text-gray-300'
+                    }`}>
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
           </div>
           <div>
-            <label htmlFor="amountToAdd" className="block text-sm font-medium mb-1">Cantidad a Añadir ({selectedCurrency}):</label>
+            <label htmlFor="amountToAdd" className={labelClass}>Cantidad ({selectedCurrency})</label>
             <input type="number" id="amountToAdd" value={amountToAdd} onChange={(e) => setAmountToAdd(e.target.value)}
-              step={getStep(selectedCurrency)} className={inputClass} placeholder={`Ej: ${getPlaceholder(selectedCurrency)}`} required />
+              step={getStep(selectedCurrency)} className={inputClass} placeholder="0.00" />
           </div>
-          <div className="md:col-span-3">
-            <button type="submit" className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-semibold">
-              Añadir Balance
-            </button>
+        </div>
+
+        {/* Preview balance card */}
+        {selectedUser && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {CURRENCIES.map(c => {
+              const cfg = currencyConfig[c];
+              const bal = selectedUser[`balance${c}`] || 0;
+              return (
+                <div key={c} className={`rounded-xl p-3 border ${selectedCurrency === c ? cfg.bg : 'bg-white/[0.02] border-white/5'}`}>
+                  <p className={`text-[10px] font-bold uppercase tracking-wider ${selectedCurrency === c ? cfg.color : 'text-gray-600'}`}>{c}</p>
+                  <p className={`text-sm font-black font-mono mt-1 ${selectedCurrency === c ? cfg.color : 'text-gray-400'}`}>
+                    {bal.toFixed(cfg.decimals)}
+                  </p>
+                </div>
+              );
+            })}
           </div>
-        </form>
+        )}
+
+        <div className="flex gap-3 pt-1">
+          <button onClick={handleAddBalance}
+            className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm shadow-md shadow-emerald-500/10 transition-all flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Añadir Balance
+          </button>
+          <button onClick={handleSubtractBalance}
+            className="flex-1 py-2.5 bg-red-600/10 border border-red-500/20 hover:bg-red-600/20 text-red-400 hover:text-red-300 font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
+            </svg>
+            Restar Balance
+          </button>
+        </div>
       </div>
 
-      {/* --- Restar Balance --- */}
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-3">Restar Balance</h3>
-        <form onSubmit={handleSubtractBalance} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <div>
-            <label htmlFor="userSelectSubtract" className="block text-sm font-medium mb-1">Seleccionar Usuario:</label>
-            <select id="userSelectSubtract" value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)} className={selectClass}>
-              <option value="">Selecciona un usuario</option>
-              {users.map(user => (
-                <option key={user.id} value={user.id}>{user.email}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="currencySelectSubtract" className="block text-sm font-medium mb-1">Moneda:</label>
-            <select id="currencySelectSubtract" value={selectedCurrency} onChange={(e) => setSelectedCurrency(e.target.value)} className={selectClass}>
-              {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="amountToSubtract" className="block text-sm font-medium mb-1">Cantidad a Restar ({selectedCurrency}):</label>
-            <input type="number" id="amountToSubtract" value={amountToAdd} onChange={(e) => setAmountToAdd(e.target.value)}
-              step={getStep(selectedCurrency)} className={inputClass} placeholder={`Ej: ${getPlaceholder(selectedCurrency)}`} required />
-          </div>
-          <div className="md:col-span-3">
-            <button type="submit" className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-semibold">
-              Restar Balance
-            </button>
-          </div>
-        </form>
-      </div>
+      {/* Bulk Operations */}
+      <div className="rounded-2xl border bg-[#0b0e14] border-[#1e2330] shadow-xl p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-[#1e2330] pb-3">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-white">🔁 Operaciones Masivas</h3>
+          {selectedUserIds.length > 0 && (
+            <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-yellow-500/10 border border-yellow-500/20 text-yellow-400">
+              {selectedUserIds.length} usuario{selectedUserIds.length > 1 ? 's' : ''} seleccionado{selectedUserIds.length > 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
 
-      {/* --- Operaciones Masivas --- */}
-      <div className={`mb-6 p-4 ${theme.backgroundAlt} rounded-lg shadow-inner`}>
-        <h3 className="text-xl font-semibold mb-3">Operaciones Masivas de Balance</h3>
-        <p className={`${theme.textSoft} text-sm mb-4`}>Aplica cambios de balance a los usuarios seleccionados en la tabla de abajo.</p>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
           <div>
-            <label htmlFor="massOperation" className="block text-sm font-medium mb-1">Operación:</label>
-            <select id="massOperation" value={massOperation} onChange={(e) => setMassOperation(e.target.value)} className={selectClass}>
+            <label htmlFor="massOperation" className={labelClass}>Operación</label>
+            <select id="massOperation" value={massOperation} onChange={(e) => setMassOperation(e.target.value)} className={inputClass}>
               <option value="add">Añadir</option>
               <option value="subtract">Restar</option>
               <option value="reset">Resetear a 0</option>
             </select>
           </div>
           <div>
-            <label htmlFor="massCurrency" className="block text-sm font-medium mb-1">Moneda:</label>
-            <select id="massCurrency" value={massCurrency} onChange={(e) => setMassCurrency(e.target.value)} className={selectClass} disabled={massOperation === 'reset'}>
+            <label htmlFor="massCurrency" className={labelClass}>Moneda</label>
+            <select id="massCurrency" value={massCurrency} onChange={(e) => setMassCurrency(e.target.value)} className={inputClass} disabled={massOperation === 'reset'}>
               {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label htmlFor="massAmount" className="block text-sm font-medium mb-1">Cantidad ({massCurrency}):</label>
+            <label htmlFor="massAmount" className={labelClass}>Cantidad</label>
             <input type="number" id="massAmount" value={massAmount} onChange={(e) => setMassAmount(e.target.value)}
-              step={getStep(massCurrency)} className={inputClass} placeholder={`Ej: ${getPlaceholder(massCurrency)}`}
-              disabled={massOperation === 'reset'} required={massOperation !== 'reset'} />
+              step={getStep(massCurrency)} className={inputClass} placeholder="0.00" disabled={massOperation === 'reset'} />
           </div>
-          <div>
-            <button onClick={handleMassBalanceUpdate}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed font-semibold"
-              disabled={selectedUserIds.length === 0}>
-              Aplicar a {selectedUserIds.length} Usuarios
-            </button>
-          </div>
+          <button onClick={handleMassBalanceUpdate} disabled={selectedUserIds.length === 0}
+            className="w-full py-2.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-gray-950 font-bold rounded-xl text-sm shadow-md disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+            Aplicar a {selectedUserIds.length} Usuarios
+          </button>
         </div>
-        {selectedUserIds.length > 0 && (
-          <p className={`${theme.textSoft} text-sm mt-3`}>Usuarios seleccionados: {selectedUserIds.length}</p>
-        )}
       </div>
 
-      {/* --- Tabla de Balances --- */}
-      <h3 className="text-xl font-semibold mb-3">Balances Actuales de Usuarios</h3>
-      {users.length === 0 ? (
-        <p className={`${theme.textSoft} text-center py-8`}>No hay usuarios registrados.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className={`min-w-full divide-y ${theme.borderColor}`}>
-            <thead className={`${theme.tableHeaderBackground}`}>
-              <tr>
-                <th className={thClass}>
-                  <input type="checkbox" className={`form-checkbox h-4 w-4 text-yellow-500 ${theme.inputBackground} ${theme.borderColor} rounded`}
-                    onChange={handleSelectAllUsers} checked={selectedUserIds.length === users.length && users.length > 0} />
-                </th>
-                <th className={thClass}>Email</th>
-                <th className={thClass}>UID</th>
-                <th className={thClass}>USDT</th>
-                <th className={thClass}>LTC</th>
-                <th className={thClass}>DOGE</th>
-                <th className={thClass}>BTC</th>
-              </tr>
-            </thead>
-            <tbody className={`${theme.background} divide-y ${theme.borderColor}`}>
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme.textSoft}`}>
-                    <input type="checkbox" className={`form-checkbox h-4 w-4 text-yellow-500 ${theme.inputBackground} ${theme.borderColor} rounded`}
-                      checked={selectedUserIds.includes(user.id)} onChange={() => handleSelectUser(user.id)} />
-                  </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme.textSoft}`}>{user.email}</td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme.textSoft} font-mono text-xs`}>{user.id}</td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme.textSoft}`}>
-                    {(user.balanceUSDT || 0).toFixed(2)} USDT
-                  </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme.textSoft}`}>
-                    {(user.balanceLTC || 0).toFixed(8)} LTC
-                  </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme.textSoft}`}>
-                    {(user.balanceDOGE || 0).toFixed(8)} DOGE
-                  </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${theme.textSoft}`}>
-                    {(user.balanceBTC || 0).toFixed(8)} BTC
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Users Table */}
+      <div className="rounded-2xl border bg-[#0b0e14] border-[#1e2330] shadow-xl p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-[#1e2330] pb-3">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-white">
+            👥 Balances Actuales ({users.length} usuarios)
+          </h3>
+          <div className="relative">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por email..."
+              className="pl-9 pr-4 py-2 bg-[#131824] border border-[#1e2330] rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 transition-colors text-xs w-56" />
+          </div>
         </div>
-      )}
+
+        {users.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="text-3xl mb-2">👥</div>
+            <p className="text-sm text-gray-500">No hay usuarios registrados.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-[#1e2330] bg-[#06080c]">
+            <table className="min-w-full divide-y divide-[#1e2330] text-sm">
+              <thead className="bg-[#131824]">
+                <tr>
+                  <th className="px-4 py-3 text-left w-10">
+                    <input type="checkbox" className="form-checkbox h-4 w-4 text-yellow-500 rounded bg-[#131824] border-[#1e2330]"
+                      onChange={handleSelectAllUsers}
+                      checked={selectedUserIds.length === filteredUsers.length && filteredUsers.length > 0} />
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-400">Email</th>
+                  {CURRENCIES.map(c => {
+                    const cfg = currencyConfig[c];
+                    return (
+                      <th key={c} className={`px-4 py-3 text-right text-xs font-bold uppercase tracking-wider ${cfg.color}`}>
+                        {cfg.icon} {c}
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#1e2330]">
+                {filteredUsers.map((user) => (
+                  <tr key={user.id}
+                    className={`transition-all ${
+                      selectedUserIds.includes(user.id)
+                        ? 'bg-yellow-500/[0.04] border-l-2 border-l-yellow-500'
+                        : 'hover:bg-white/[0.01]'
+                    }`}>
+                    <td className="px-4 py-3">
+                      <input type="checkbox" className="form-checkbox h-4 w-4 text-yellow-500 rounded bg-[#131824] border-[#1e2330]"
+                        checked={selectedUserIds.includes(user.id)} onChange={() => handleSelectUser(user.id)} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div>
+                        <p className="font-semibold text-white text-sm">{user.email}</p>
+                        <p className="text-[10px] font-mono text-gray-600">{user.id}</p>
+                      </div>
+                    </td>
+                    {CURRENCIES.map(c => {
+                      const cfg = currencyConfig[c];
+                      const bal = user[`balance${c}`] || 0;
+                      return (
+                        <td key={c} className="px-4 py-3 text-right">
+                          <span className={`font-mono text-xs font-bold ${bal > 0 ? cfg.color : 'text-gray-600'}`}>
+                            {bal.toFixed(cfg.decimals)}
+                          </span>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

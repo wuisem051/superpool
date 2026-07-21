@@ -1,46 +1,59 @@
-import React, { useState, useEffect, useContext } from 'react'; // Importar useContext
-import { db } from '../../services/firebase'; // Importar la instancia de Firebase Firestore
+import React, { useState, useEffect, useContext } from 'react';
+import { db } from '../../services/firebase';
 import { collection, query, orderBy, onSnapshot, doc, getDoc, updateDoc } from 'firebase/firestore';
-import { ThemeContext } from '../../context/ThemeContext'; // Importar ThemeContext
-import { useError } from '../../context/ErrorContext'; // Importar useError
+import { ThemeContext } from '../../context/ThemeContext';
+import { useError } from '../../context/ErrorContext';
 
-const WithdrawalRequestsManagement = ({ onUnreadCountChange }) => { // Aceptar prop
-  const { darkMode } = useContext(ThemeContext); // Usar ThemeContext
-  const { showError, showSuccess } = useError(); // Usar el contexto de errores
+const statusMap = {
+  Pendiente:  { dot: 'bg-yellow-400 animate-pulse', text: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20', icon: '⏳' },
+  Completado: { dot: 'bg-emerald-400',              text: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', icon: '✓' },
+  Rechazado:  { dot: 'bg-red-400',                  text: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/20', icon: '✕' },
+};
+
+const methodMap = {
+  'Binance Pay': { color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20', icon: '₿' },
+  'USDT TRC20':  { color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', icon: '₮' },
+};
+
+const StatusBadge = ({ status }) => {
+  const s = statusMap[status] || statusMap.Pendiente;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${s.bg} ${s.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+      {status}
+    </span>
+  );
+};
+
+const WithdrawalRequestsManagement = ({ onUnreadCountChange }) => {
+  const { darkMode } = useContext(ThemeContext);
+  const { showError, showSuccess } = useError();
   const [withdrawalRequests, setWithdrawalRequests] = useState([]);
-
+  const [filter, setFilter] = useState('all');
+  const [expandedId, setExpandedId] = useState(null);
 
   useEffect(() => {
     const q = query(collection(db, 'withdrawals'), orderBy('createdAt', 'desc'));
-
     const unsubscribe = onSnapshot(q, (snapshot) => {
       try {
         const requests = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-          createdAt: doc.data().createdAt.toDate(), // Convertir Timestamp a Date
+          createdAt: doc.data().createdAt.toDate(),
         }));
         setWithdrawalRequests(requests);
-
-        const pendingRequestsCount = requests.filter(req => req.status === 'Pendiente').length;
-        if (onUnreadCountChange) {
-          onUnreadCountChange(pendingRequestsCount);
-        }
+        const pendingCount = requests.filter(r => r.status === 'Pendiente').length;
+        if (onUnreadCountChange) onUnreadCountChange(pendingCount);
       } catch (fetchError) {
-        console.error("Error fetching withdrawal requests from Firebase:", fetchError);
+        console.error(fetchError);
         showError('Error al cargar las solicitudes de retiro.');
-        if (onUnreadCountChange) {
-          onUnreadCountChange(0);
-        }
+        if (onUnreadCountChange) onUnreadCountChange(0);
       }
     }, (error) => {
-      console.error("Error subscribing to withdrawal requests:", error);
+      console.error(error);
       showError('Error al suscribirse a las solicitudes de retiro.');
     });
-
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [onUnreadCountChange, showError]);
 
   const handleUpdateStatus = async (request, newStatus) => {
@@ -53,150 +66,171 @@ const WithdrawalRequestsManagement = ({ onUnreadCountChange }) => { // Aceptar p
       if (newStatus === 'Completado') {
         const userRef = doc(db, 'users', request.userId);
         const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-          showError(`Error: No se pudo obtener el balance del usuario ${request.userId}.`);
-          return;
-        }
-
+        if (!userSnap.exists()) { showError(`No se pudo obtener el balance del usuario.`); return; }
         const userData = userSnap.data();
         const balanceKey = `balance${request.currency}`;
         const currentBalance = userData[balanceKey] || 0;
         const newBalance = currentBalance - request.amount;
-
-        await updateDoc(userRef, {
-          [balanceKey]: newBalance >= 0 ? newBalance : 0,
-        });
-
-        showSuccess(`Estado de la solicitud ${request.id} actualizado a ${newStatus} y balance del usuario reducido.`);
+        await updateDoc(userRef, { [balanceKey]: newBalance >= 0 ? newBalance : 0 });
+        showSuccess(`Solicitud aprobada y balance del usuario actualizado.`);
       } else {
-        showSuccess(`Estado de la solicitud ${request.id} actualizado a ${newStatus}.`);
+        showSuccess(`Solicitud marcada como ${newStatus}.`);
       }
     } catch (err) {
-      console.error("Error updating withdrawal status or user balance:", err);
-      showError(`Fallo al actualizar el estado o el balance: ${err.message}`);
+      showError(`Error: ${err.message}`);
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Pendiente': return 'bg-yellow-100 text-yellow-800';
-      case 'Completado': return 'bg-green-100 text-green-800';
-      case 'Rechazado': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const filtered = filter === 'all' ? withdrawalRequests : withdrawalRequests.filter(r => r.status === filter);
+  const pendingCount = withdrawalRequests.filter(r => r.status === 'Pendiente').length;
+  const completedCount = withdrawalRequests.filter(r => r.status === 'Completado').length;
 
   return (
-    <div className={`${darkMode ? 'bg-[#0b0e14] border border-[#1e2330]' : 'bg-white border border-gray-200'} rounded-2xl p-6 shadow-xl`}>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
         <div>
-          <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} flex items-center gap-2.5`}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V3a1 1 0 00-1-1H4a1 1 0 00-1 1v18a1 1 0 001 1h12a1 1 0 001-1v-5m-1-10v4m-4 0h4" />
-            </svg>
-            Gestión de Solicitudes de Retiro
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            💸 Solicitudes de Pago
           </h2>
-          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
-            Revisa, aprueba o rechaza los retiros solicitados por los usuarios de la plataforma.
-          </p>
+          <p className="text-xs text-gray-500 mt-1">Revisa y gestiona los retiros solicitados por los usuarios.</p>
         </div>
-        <span className={`self-start sm:self-center px-3 py-1 rounded-full text-xs font-semibold ${darkMode ? 'bg-white/5 text-gray-300 border border-white/5' : 'bg-gray-100 text-gray-700'}`}>
-          {withdrawalRequests.length} Solicitudes
-        </span>
+
+        {/* Stats strip */}
+        <div className="flex gap-3 shrink-0">
+          {[
+            { label: 'Total', value: withdrawalRequests.length, color: 'text-gray-300' },
+            { label: 'Pendientes', value: pendingCount, color: 'text-yellow-400' },
+            { label: 'Completados', value: completedCount, color: 'text-emerald-400' },
+          ].map(stat => (
+            <div key={stat.label} className="text-center px-4 py-2 bg-white/[0.03] border border-white/5 rounded-xl">
+              <p className={`text-lg font-black font-mono ${stat.color}`}>{stat.value}</p>
+              <p className="text-[10px] text-gray-600 uppercase tracking-wider">{stat.label}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {withdrawalRequests.length === 0 ? (
-        <div className={`flex flex-col items-center justify-center py-12 px-4 rounded-xl border-2 border-dashed ${darkMode ? 'border-white/5 text-gray-500' : 'border-gray-200 text-gray-400'}`}>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-          <p className="text-sm font-medium">No hay solicitudes de retiro registradas.</p>
+      {/* Filter tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {['all', 'Pendiente', 'Completado', 'Rechazado'].map(f => (
+          <button key={f}
+            onClick={() => setFilter(f)}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              filter === f
+                ? 'bg-yellow-500 text-gray-950 shadow-md shadow-yellow-500/10'
+                : 'bg-white/[0.04] text-gray-400 border border-white/5 hover:bg-white/[0.07]'
+            }`}>
+            {f === 'all' ? 'Todos' : f}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border border-dashed border-white/5">
+          <div className="text-4xl mb-3">📋</div>
+          <p className="text-sm font-semibold text-gray-400">No hay solicitudes {filter !== 'all' ? `con estado "${filter}"` : 'registradas'}.</p>
         </div>
       ) : (
-        <div className={`overflow-x-auto rounded-xl border ${darkMode ? 'border-[#1e2330] bg-[#0b0e14]' : 'border-gray-200 bg-white'}`}>
-          <table className="min-w-full divide-y divide-[#1e2330] text-sm">
-            <thead className={darkMode ? 'bg-[#131824]' : 'bg-gray-50'}>
-              <tr>
-                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Fecha</th>
-                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Usuario (Email)</th>
-                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Cantidad</th>
-                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Moneda</th>
-                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Método</th>
-                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Dirección / ID</th>
-                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Estado</th>
-                <th className={`px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody className={`divide-y ${darkMode ? 'divide-[#1e2330]' : 'divide-gray-200'}`}>
-              {withdrawalRequests.map((request) => (
-                <tr key={request.id} className={`transition-colors ${darkMode ? 'hover:bg-white/[0.01]' : 'hover:bg-gray-50'}`}>
-                  <td className={`px-4 py-3 whitespace-nowrap font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {request.createdAt.toLocaleDateString()}
-                  </td>
-                  <td className={`px-4 py-3 whitespace-nowrap font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {request.userEmail}
-                  </td>
-                  <td className={`px-4 py-3 whitespace-nowrap font-mono font-bold ${darkMode ? 'text-indigo-300' : 'text-indigo-600'}`}>
-                    {request.amount.toFixed(request.currency === 'USDT' || request.currency === 'USD' ? 2 : 8)}
-                  </td>
-                  <td className={`px-4 py-3 whitespace-nowrap font-bold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {request.currency}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                      request.method === 'Binance Pay'
-                        ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
-                        : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                    }`}>
-                      {request.method}
+        <div className="space-y-3">
+          {filtered.map((request) => {
+            const method = methodMap[request.method] || methodMap['USDT TRC20'];
+            const isExpanded = expandedId === request.id;
+            const isPending = request.status === 'Pendiente';
+
+            return (
+              <div key={request.id}
+                className={`rounded-2xl border transition-all overflow-hidden ${
+                  isPending
+                    ? 'bg-[#0b0e14] border-yellow-500/20 shadow-lg shadow-yellow-500/5'
+                    : 'bg-[#0b0e14] border-[#1e2330]'
+                }`}>
+
+                {/* Main row — clickable to expand */}
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : request.id)}
+                  className="w-full text-left px-5 py-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+
+                  {/* Status indicator */}
+                  <StatusBadge status={request.status} />
+
+                  {/* User */}
+                  <div className="flex-1 min-w-[140px]">
+                    <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Usuario</p>
+                    <p className="text-sm font-bold text-white truncate max-w-[200px]">{request.userEmail}</p>
+                  </div>
+
+                  {/* Amount */}
+                  <div className="min-w-[90px]">
+                    <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Cantidad</p>
+                    <p className="text-sm font-black font-mono text-yellow-400">
+                      {request.amount?.toFixed(request.currency === 'USDT' ? 2 : 8)}
+                      <span className="text-xs ml-1 text-yellow-500/60">{request.currency}</span>
+                    </p>
+                  </div>
+
+                  {/* Method */}
+                  <div className="min-w-[100px]">
+                    <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Método</p>
+                    <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${method.color}`}>
+                      {method.icon} {request.method}
                     </span>
-                  </td>
-                  <td className={`px-4 py-3 whitespace-nowrap font-mono text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {request.addressOrId}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                      request.status === 'Completado'
-                        ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                        : request.status === 'Pendiente'
-                        ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
-                        : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                    }`}>
-                      {request.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
-                    {request.status === 'Pendiente' ? (
-                      <div className="flex items-center justify-end gap-2">
+                  </div>
+
+                  {/* Date */}
+                  <div className="min-w-[80px]">
+                    <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Fecha</p>
+                    <p className="text-xs text-gray-400">{request.createdAt.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                  </div>
+
+                  {/* Chevron */}
+                  <div className={`ml-auto text-gray-600 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+
+                {/* Expanded detail panel */}
+                {isExpanded && (
+                  <div className="px-5 pb-5 border-t border-white/5 pt-4 space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="bg-[#131824] border border-[#1e2330] rounded-xl p-4 space-y-1">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Dirección / ID de Pago</p>
+                        <p className="text-sm font-mono text-white break-all">{request.addressOrId || '—'}</p>
+                      </div>
+                      <div className="bg-[#131824] border border-[#1e2330] rounded-xl p-4 space-y-1">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">ID de Solicitud</p>
+                        <p className="text-xs font-mono text-gray-400 break-all">{request.id}</p>
+                      </div>
+                    </div>
+
+                    {isPending && (
+                      <div className="flex gap-3 pt-1">
                         <button
                           onClick={() => handleUpdateStatus(request, 'Completado')}
-                          className="flex items-center gap-1 px-2.5 py-1 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg shadow-md transition-colors"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                          className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-emerald-500/10">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           </svg>
-                          Aprobar
+                          Aprobar Retiro
                         </button>
                         <button
                           onClick={() => handleUpdateStatus(request, 'Rechazado')}
-                          className="flex items-center gap-1 px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-semibold rounded-lg shadow-md transition-colors"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                          className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-600/10 border border-red-500/20 hover:bg-red-600/20 text-red-400 hover:text-red-300 font-bold rounded-xl text-sm transition-all">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                           </svg>
                           Rechazar
                         </button>
                       </div>
-                    ) : (
-                      <span className="text-gray-500 italic text-[11px]">Procesado</span>
                     )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
