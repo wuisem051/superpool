@@ -1368,6 +1368,7 @@ const SettingsContent = ({ styles }) => {
   const { showError, showSuccess } = useError(); // Usar el contexto de errores
   const { currentUser } = useAuth();
   const [contactEmail, setContactEmail] = useState(currentUser?.email || '');
+  const [username, setUsername] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -1391,6 +1392,7 @@ const SettingsContent = ({ styles }) => {
           if (docSnap.exists()) {
             const userData = docSnap.data();
             setPaymentAddresses(userData.paymentAddresses || { USDT: '', DOGE: '', LTC: '', USD: '' });
+            setUsername(userData.username || '');
             setReceivePaymentNotifications(userData.receivePaymentNotifications || false);
             setReceiveLoginAlerts(userData.receiveLoginAlerts || false);
             setTwoFactorAuthEnabled(userData.twoFactorAuthEnabled || false);
@@ -1449,6 +1451,12 @@ const SettingsContent = ({ styles }) => {
 
       if (!newPassword && contactEmail === currentUser.email) {
         showSuccess('Configuración de cuenta actualizada exitosamente.');
+      }
+
+      // Guardar nombre de usuario en Firestore
+      if (currentUser?.uid) {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        await updateDoc(userDocRef, { username: username.trim() });
       }
 
     } catch (err) {
@@ -1558,6 +1566,26 @@ const SettingsContent = ({ styles }) => {
             Perfil de Usuario
           </h2>
           <form onSubmit={handleUpdateAccount} className="space-y-4">
+            {/* Nombre de usuario editable */}
+            <div>
+              <label htmlFor="username" className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">
+                Nombre de Usuario <span className="normal-case text-[10px] text-gray-600">(se muestra en tu perfil del panel)</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-400 font-bold text-sm select-none">@</span>
+                <input
+                  type="text"
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.replace(/\s/g, '_').slice(0, 24))}
+                  disabled={isLoading}
+                  placeholder="MiNombrePool"
+                  maxLength={24}
+                  className="w-full bg-[#131824] border border-[#1e2330] rounded-xl pl-8 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500/50 transition-colors font-medium"
+                />
+              </div>
+              <p className="text-[10px] text-gray-600 mt-1">Máx. 24 caracteres. Sin espacios. Si está vacío se genera uno genérico automáticamente.</p>
+            </div>
             <div>
               <label htmlFor="contact-email" className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Email de Contacto</label>
               <input type="email" id="contact-email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} disabled={isLoading}
@@ -1707,13 +1735,14 @@ const UserPanel = () => {
   const [paymentsHistory, setPaymentsHistory] = useState([]); // Estado para el historial de pagos
   const [withdrawalsHistory, setWithdrawalsHistory] = useState([]); // Estado para el historial de retiros
   const [userPaymentAddresses, setUserPaymentAddresses] = useState({}); // Nuevo estado para las direcciones de pago del usuario
+  const [userProfile, setUserProfile] = useState({ username: '', kycVerified: false }); // Perfil público del usuario
 
 
   const handleUnreadCountChange = (count) => {
     setUnreadTicketsCount(count);
   };
 
-  const demoUser = { email: 'demo@example.com' };
+  const demoUser = { email: 'demo@example.com', uid: '' };
   const displayUser = currentUser || demoUser;
 
   const paymentRate = useMemo(() => {
@@ -1765,6 +1794,24 @@ const UserPanel = () => {
       borderWidth: 1
     }]
   }), [totalHashrate, estimatedDailyUSD]);
+
+  // Suscripción para perfil público del usuario (username, kycVerified)
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setUserProfile({
+          username: data.username || '',
+          kycVerified: data.kycVerified || false,
+        });
+      }
+    }, (error) => {
+      console.error('UserPanel: Error en suscripción de perfil de usuario:', error);
+    });
+    return () => unsubscribe();
+  }, [currentUser?.uid]);
 
   // Suscripción para mineros del usuario
   useEffect(() => {
@@ -2002,6 +2049,7 @@ const UserPanel = () => {
       <Sidebar
         unreadTicketsCount={unreadTicketsCount}
         displayUser={displayUser}
+        userProfile={userProfile}
       />
       <MainContent>
         {showNavbar && <Navbar />} {/* Renderizar el Navbar condicionalmente */}
