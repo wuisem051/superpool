@@ -211,9 +211,9 @@ const Sidebar = ({ unreadTicketsCount, displayUser, userProfile }) => {
   };
 
   return (
-    <aside className="w-72 h-screen fixed top-0 left-0 flex flex-col bg-[#0b0e14] border-r border-[#1e2330] z-50 overflow-y-auto custom-scrollbar">
+    <aside className="w-72 h-screen fixed top-0 left-0 flex flex-col bg-[#0b0e14] border-r border-[#1e2330] z-50 overflow-visible">
       {/* Panel de usuario — solo ícono + indicador online */}
-      <div className="p-6 sticky top-0 bg-[#0b0e14]/95 backdrop-blur-md z-10 border-b border-[#1e2330]">
+      <div className="p-6 shrink-0 bg-[#0b0e14] border-b border-[#1e2330] relative z-20">
         <div className="flex items-center gap-3">
           {/* Avatar con tooltip al hover */}
           <div
@@ -254,7 +254,7 @@ const Sidebar = ({ unreadTicketsCount, displayUser, userProfile }) => {
       </div>
 
       {/* Navegación y Enlaces */}
-      <nav className="flex-1 px-4 py-6">
+      <nav className="flex-1 px-4 py-6 overflow-y-auto custom-scrollbar">
         <ul className="space-y-1">
           <SidebarItem to="/" icon={Icons.home} label="Volver al Inicio" isActive={false} />
           <SidebarItem to={`${basePath}/dashboard`} icon={Icons.dashboard} label="Dashboard" isActive={activePaths.dashboard} />
