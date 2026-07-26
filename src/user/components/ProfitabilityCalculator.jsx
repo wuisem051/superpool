@@ -4,7 +4,7 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore'; // Importar onSnap
 import { ThemeContext } from '../../context/ThemeContext';
 
 const ProfitabilityCalculator = () => {
-  const [hashrate, setHashrate] = useState(10);
+  const [hashrate, setHashrate] = useState('10');
 
   // Valores de configuración obtenidos del administrador (ahora de Firebase real-time)
   const [fixedRatePerTHs, setFixedRatePerTHs] = useState(0.06);
@@ -73,11 +73,13 @@ const ProfitabilityCalculator = () => {
     let calculatedDailyBtcGain = 0;
     let calculatedDailyUsdGain = 0;
 
+    const numHashrate = parseFloat(hashrate) || 0;
+
     if (useFixedRate) {
-      calculatedDailyUsdGain = hashrate * fixedRatePerTHs;
+      calculatedDailyUsdGain = numHashrate * fixedRatePerTHs;
       calculatedDailyBtcGain = calculatedDailyUsdGain / btcPrice;
     } else {
-      const btcPerTHsPerDay = (60 * 60 * 24 * hashrate * 10 ** 12) / (difficulty * 2 ** 32);
+      const btcPerTHsPerDay = (60 * 60 * 24 * numHashrate * 10 ** 12) / (difficulty * 2 ** 32);
       calculatedDailyBtcGain = btcPerTHsPerDay * (1 - fixedPoolCommission / 100);
       calculatedDailyUsdGain = calculatedDailyBtcGain * btcPrice;
     }
@@ -135,10 +137,12 @@ const ProfitabilityCalculator = () => {
                 type="number"
                 id="hashrate"
                 value={hashrate}
-                onChange={(e) => setHashrate(parseFloat(e.target.value) || 0)}
-                className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white font-mono text-lg placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => setHashrate(e.target.value)}
+                className="w-full bg-[#131824] border border-[#1e2330] rounded-xl pl-4 pr-16 py-3 text-white font-mono text-lg placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 min="0"
                 step="any"
+                placeholder="0"
               />
               <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
                 <span className="text-gray-500 font-semibold text-sm">TH/s</span>

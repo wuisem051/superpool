@@ -33,6 +33,17 @@ body.dark {
   color: var(--light-text);
 }
 
+/* Ocultar flechas/spinners en inputs de tipo number */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 /* Animaciones para el Home Futurista */
 @keyframes fadeInUp {
   from {
