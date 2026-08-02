@@ -172,6 +172,8 @@ const Sidebar = ({ unreadTicketsCount, displayUser, userProfile }) => {
   const { logout } = useAuth();
   const hoverTimerRef = useRef(null);
 
+  const displayName = userProfile?.username || generateGenericUsername(displayUser?.uid);
+
   const activePaths = {
     dashboard: useMatch(`${basePath}/dashboard`),
     miningInfo: useMatch(`${basePath}/mining-info`),
@@ -245,10 +247,14 @@ const Sidebar = ({ unreadTicketsCount, displayUser, userProfile }) => {
             )}
           </div>
 
-          {/* Texto mínimo: solo "En línea" */}
-          <div className="flex flex-col">
-            <span className="text-xs text-green-400 font-medium">En línea</span>
-            <span className="text-[10px] text-gray-600 mt-0.5">Pasa el cursor sobre el avatar</span>
+          {/* Información del usuario */}
+          <div className="flex flex-col min-w-0">
+            <span className="text-xs text-green-400 font-medium flex items-center gap-1">
+              En línea
+            </span>
+            <span className="text-[11px] text-gray-300 font-medium truncate max-w-[140px] mt-0.5" title={displayName}>
+              {displayName}
+            </span>
           </div>
         </div>
       </div>
