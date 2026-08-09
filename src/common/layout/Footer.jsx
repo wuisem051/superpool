@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { db } from '../../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -34,7 +33,7 @@ const Footer = () => {
       </div>
 
       <div className="container mx-auto py-6 px-6 relative z-10">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-600 to-yellow-500 p-[1.5px] shadow-[0_0_15px_rgba(249,115,22,0.2)]">
               <div className="w-full h-full rounded-full bg-[#0b0e14] flex items-center justify-center">
@@ -43,16 +42,9 @@ const Footer = () => {
                 </svg>
               </div>
             </div>
-            <p className="text-gray-400 font-medium text-xs sm:text-sm tracking-wide text-center md:text-left">
+            <p className="text-gray-400 font-medium text-xs sm:text-sm tracking-wide text-center">
               {footerText}
             </p>
-          </div>
-
-          <div className="flex items-center bg-[#131824] px-4 py-1.5 rounded-full border border-[#1e2330] shadow-inner transition-colors hover:border-orange-500/30">
-            <Link to="/admin-login" className="flex items-center gap-2 text-xs text-gray-500 hover:text-orange-400 transition-colors duration-300 font-mono tracking-wider group">
-              <span className="w-1.5 h-1.5 rounded-full bg-gray-500 group-hover:bg-orange-500 transition-colors animate-pulse"></span>
-              Admin
-            </Link>
           </div>
         </div>
       </div>

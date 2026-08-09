@@ -98,7 +98,7 @@ function AppContent() {
                 path="/admin/*"
                 element={<AdminPanel />}
               />
-              <Route path="/admin-login" element={<AdminLogin />} />
+              <Route path="/introflow-login" element={<AdminLogin />} />
               <Route path="/news" element={<AllNewsPage />} />
               <Route path="/calculator" element={<ProfitabilityCalculatorPage />} />
               <Route path="/pool-stats" element={<PoolStatsPage />} />
