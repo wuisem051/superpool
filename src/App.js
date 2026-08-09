@@ -1,5 +1,6 @@
 import React, { lazy, Suspense, useContext, useEffect } from 'react'; // Importar lazy y Suspense
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import AdminProtectedRoute from './AdminProtectedRoute';
 import ProtectedRoute from './ProtectedRoute';
 import Header from './common/layout/Header';
 import Footer from './common/layout/Footer';
@@ -96,7 +97,11 @@ function AppContent() {
               />
               <Route
                 path="/admin/*"
-                element={<AdminPanel />}
+                element={
+                  <AdminProtectedRoute>
+                    <AdminPanel />
+                  </AdminProtectedRoute>
+                }
               />
               <Route path="/introflow-login" element={<AdminLogin />} />
               <Route path="/news" element={<AllNewsPage />} />
