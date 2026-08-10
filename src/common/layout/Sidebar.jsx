@@ -2,6 +2,8 @@ import React, { useContext, useState, useRef } from 'react';
 import { Link, useMatch, useLocation } from 'react-router-dom';
 import { ThemeContext } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
+import LanguageToggle from '../components/LanguageToggle';
 
 const SidebarItem = ({ to, icon, label, isActive, hasBadge, badgeCount, onClick }) => (
   <li className="mb-2">
@@ -69,6 +71,7 @@ const CheckIcon = () => (
 /* ── Panel flotante estilo Binance ── */
 const UserTooltipCard = ({ uid, username, kycVerified }) => {
   const [copied, setCopied] = useState(false);
+  const { t } = useLanguage();
 
   // Mostrar los primeros 8 caracteres del UID como "ID numérico"
   const shortId = uid ? uid.slice(0, 8).toUpperCase() : '--------';
@@ -110,19 +113,19 @@ const UserTooltipCard = ({ uid, username, kycVerified }) => {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white font-bold text-sm truncate">{displayName}</p>
-            <p className="text-green-400 text-[11px] font-medium mt-0.5">● En línea</p>
+            <p className="text-green-400 text-[11px] font-medium mt-0.5">● {t('En línea', 'Online')}</p>
           </div>
         </div>
 
         {/* ID de usuario */}
         <div className="flex items-center justify-between bg-[#131824] border border-[#1e2330] rounded-xl px-3 py-2.5 mb-3">
           <div>
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-0.5">ID de Usuario</p>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-0.5">{t('ID de Usuario', 'User ID')}</p>
             <p className="text-white font-mono text-xs font-bold tracking-widest">{shortId}</p>
           </div>
           <button
             onClick={handleCopy}
-            title="Copiar ID"
+            title={t('Copiar ID', 'Copy ID')}
             className={`p-1.5 rounded-lg transition-all duration-200 ${
               copied
                 ? 'bg-green-500/20 text-green-400'
@@ -140,17 +143,17 @@ const UserTooltipCard = ({ uid, username, kycVerified }) => {
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              Verificado
+              {t('Verificado', 'Verified')}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-500/10 border border-gray-600/30 text-gray-400 text-xs font-bold">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              No verificado
+              {t('No verificado', 'Unverified')}
             </span>
           )}
-          <span className="text-[10px] text-gray-600 font-medium">Usuario habitual</span>
+          <span className="text-[10px] text-gray-600 font-medium">{t('Usuario habitual', 'Regular User')}</span>
         </div>
       </div>
 
@@ -170,6 +173,7 @@ const Sidebar = ({ unreadTicketsCount, displayUser, userProfile }) => {
   const [showWithdrawals, setShowWithdrawals] = useState(false);
   const [showUserCard, setShowUserCard] = useState(false);
   const { logout } = useAuth();
+  const { t } = useLanguage();
   const hoverTimerRef = useRef(null);
 
   const displayName = userProfile?.username || generateGenericUsername(displayUser?.uid);
@@ -214,8 +218,8 @@ const Sidebar = ({ unreadTicketsCount, displayUser, userProfile }) => {
 
   return (
     <aside className="w-72 h-screen fixed top-0 left-0 flex flex-col bg-[#0b0e14] border-r border-[#1e2330] z-50 overflow-visible">
-      {/* Panel de usuario — solo ícono + indicador online */}
-      <div className="p-6 shrink-0 bg-[#0b0e14] border-b border-[#1e2330] relative z-20">
+      {/* Panel de usuario — solo ícono + indicador online + Selector de Idioma */}
+      <div className="p-6 shrink-0 bg-[#0b0e14] border-b border-[#1e2330] relative z-20 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Avatar con tooltip al hover */}
           <div
@@ -250,36 +254,39 @@ const Sidebar = ({ unreadTicketsCount, displayUser, userProfile }) => {
           {/* Información del usuario */}
           <div className="flex flex-col min-w-0">
             <span className="text-xs text-green-400 font-medium flex items-center gap-1">
-              En línea
+              {t('En línea', 'Online')}
             </span>
-            <span className="text-[11px] text-gray-300 font-medium truncate max-w-[140px] mt-0.5" title={displayName}>
+            <span className="text-[11px] text-gray-300 font-medium truncate max-w-[110px] mt-0.5" title={displayName}>
               {displayName}
             </span>
           </div>
         </div>
+
+        {/* Botón de Idioma compacto en el Sidebar */}
+        <LanguageToggle compact={true} />
       </div>
 
       {/* Navegación y Enlaces */}
       <nav className="flex-1 px-4 py-6 overflow-y-auto custom-scrollbar">
         <ul className="space-y-1">
-          <SidebarItem to="/" icon={Icons.home} label="Volver al Inicio" isActive={false} />
-          <SidebarItem to={`${basePath}/dashboard`} icon={Icons.dashboard} label="Dashboard" isActive={activePaths.dashboard} />
+          <SidebarItem to="/" icon={Icons.home} label={t('Volver al Inicio', 'Back to Home')} isActive={false} />
+          <SidebarItem to={`${basePath}/dashboard`} icon={Icons.dashboard} label={t('Dashboard', 'Dashboard')} isActive={activePaths.dashboard} />
 
-          <h3 className="text-[11px] font-bold uppercase text-gray-500 tracking-wider mt-8 mb-4 px-4">Centro de Ganancias</h3>
-          <SidebarItem to={`${basePath}/mining-info`} icon={Icons.pool} label="Conectar Pool" isActive={activePaths.miningInfo} />
-          <SidebarItem to={`${basePath}/pool-arbitrage`} icon={Icons.arbitrage} label="Pools de Arbitraje" isActive={activePaths.poolArbitrage} />
+          <h3 className="text-[11px] font-bold uppercase text-gray-500 tracking-wider mt-8 mb-4 px-4">{t('Centro de Ganancias', 'Earnings Center')}</h3>
+          <SidebarItem to={`${basePath}/mining-info`} icon={Icons.pool} label={t('Conectar Pool', 'Connect Pool')} isActive={activePaths.miningInfo} />
+          <SidebarItem to={`${basePath}/pool-arbitrage`} icon={Icons.arbitrage} label={t('Pools de Arbitraje', 'Arbitrage Pools')} isActive={activePaths.poolArbitrage} />
 
-          <h3 className="text-[11px] font-bold uppercase text-gray-500 tracking-wider mt-8 mb-4 px-4">Finanzas</h3>
-          <SidebarItem to={`${basePath}/my-wallet`} icon={Icons.wallet} label="Mi Billetera" isActive={activePaths.myWallet} />
-          <SidebarItem to={`${basePath}/mining-portfolio`} icon={Icons.portfolio} label="Miner Pool" isActive={activePaths.portfolio} />
+          <h3 className="text-[11px] font-bold uppercase text-gray-500 tracking-wider mt-8 mb-4 px-4">{t('Finanzas', 'Finance')}</h3>
+          <SidebarItem to={`${basePath}/my-wallet`} icon={Icons.wallet} label={t('Mi Billetera', 'My Wallet')} isActive={activePaths.myWallet} />
+          <SidebarItem to={`${basePath}/mining-portfolio`} icon={Icons.portfolio} label={t('Miner Pool', 'Miner Pool')} isActive={activePaths.portfolio} />
 
-          <h3 className="text-[11px] font-bold uppercase text-gray-500 tracking-wider mt-8 mb-4 px-4">Sistema</h3>
-          <SidebarItem to={`${basePath}/referrals`} icon={Icons.users} label="Referidos" isActive={activePaths.referrals} />
-          <SidebarItem to={`${basePath}/settings`} icon={Icons.settings} label="Configuración" isActive={activePaths.settings} />
+          <h3 className="text-[11px] font-bold uppercase text-gray-500 tracking-wider mt-8 mb-4 px-4">{t('Sistema', 'System')}</h3>
+          <SidebarItem to={`${basePath}/referrals`} icon={Icons.users} label={t('Referidos', 'Referrals')} isActive={activePaths.referrals} />
+          <SidebarItem to={`${basePath}/settings`} icon={Icons.settings} label={t('Configuración', 'Settings')} isActive={activePaths.settings} />
           <SidebarItem
             to={`${basePath}/contact-support`}
             icon={Icons.support}
-            label="Soporte"
+            label={t('Soporte', 'Support')}
             isActive={activePaths.support}
             hasBadge={true}
             badgeCount={unreadTicketsCount}
@@ -294,7 +301,7 @@ const Sidebar = ({ unreadTicketsCount, displayUser, userProfile }) => {
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-gray-400 hover:text-white hover:bg-[#1e2330] transition-colors"
         >
           {Icons.logout}
-          Cerrar Sesión
+          {t('Cerrar Sesión', 'Logout')}
         </button>
       </div>
     </aside>

@@ -3,9 +3,12 @@ import { Link } from 'react-router-dom';
 import { db } from '../../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { ThemeContext } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
+import LanguageToggle from '../../common/components/LanguageToggle';
 
 const FuturisticHome = () => {
   const { theme } = useContext(ThemeContext);
+  const { t, language } = useLanguage();
   const [siteConfig, setSiteConfig] = useState({
     siteName: 'MaxiOS Pool',
     heroTitle: 'Bienvenido a nuestra Pool de Minería Bitcoin',
@@ -29,7 +32,7 @@ const FuturisticHome = () => {
           setSiteConfig({
             siteName: 'MaxiOS Pool',
             heroTitle: 'Bienvenido a nuestra Pool de Minería Bitcoin',
-            homeText: 'Minando el futuro, un un bloque a la vez.',
+            homeText: 'Minando el futuro, un bloque a la vez.',
           });
         }
       } catch (err) {
@@ -45,8 +48,22 @@ const FuturisticHome = () => {
     fetchSiteConfig();
   }, []);
 
+  // Title & Text translated dynamically
+  const displayHeroTitle = language === 'en'
+    ? 'Welcome to our Bitcoin Mining Pool'
+    : (siteConfig.heroTitle || 'Bienvenido a nuestra Pool de Minería Bitcoin');
+
+  const displayHomeText = language === 'en'
+    ? 'Mining the future, one block at a time.'
+    : (siteConfig.homeText || 'Minando el futuro, un bloque a la vez.');
+
   return (
     <div className="relative min-h-screen bg-[#0b0e14] flex flex-col items-center justify-center p-4 overflow-hidden z-0 pt-24">
+
+      {/* Botón flotante superior de cambio de idioma en Home */}
+      <div className="absolute top-6 right-6 z-30">
+        <LanguageToggle />
+      </div>
 
       {/* Elementos decorativos de fondo */}
       <div className="absolute inset-0 pointer-events-none z-0">
@@ -60,7 +77,7 @@ const FuturisticHome = () => {
         {/* Insignia del Bono de Bienvenida */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/40 text-emerald-300 mb-6 text-sm font-semibold shadow-[0_0_20px_rgba(16,185,129,0.2)]">
           <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-          🎁 ¡Bono de Bienvenida de $1.00 USD al registrarte!
+          {t('🎁 ¡Bono de Bienvenida de $1.00 USD al registrarte!', '🎁 $1.00 USD Welcome Bonus upon registration!')}
         </div>
 
         <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight">
@@ -69,10 +86,10 @@ const FuturisticHome = () => {
           </span>
         </h1>
         <p className="text-xl md:text-2xl mb-6 text-gray-300 font-medium max-w-3xl mx-auto">
-          {siteConfig.heroTitle}
+          {displayHeroTitle}
         </p>
         <p className="text-lg md:text-xl mb-12 text-gray-500 max-w-2xl mx-auto">
-          {siteConfig.homeText}
+          {displayHomeText}
         </p>
 
         <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
@@ -82,7 +99,7 @@ const FuturisticHome = () => {
           >
             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
             <span className="relative flex items-center gap-2">
-              Registrarme y Obtener $1 Gratis
+              {t('Registrarme y Obtener $1 Gratis', 'Register & Get $1 Free')}
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
             </span>
           </Link>
@@ -90,7 +107,7 @@ const FuturisticHome = () => {
             to="/news"
             className="group px-8 py-4 bg-[#131824]/80 backdrop-blur-md border border-[#1e2330] hover:border-gray-500/50 rounded-full font-bold text-gray-300 hover:text-white transition-all duration-300 transform hover:-translate-y-1"
           >
-            Últimas Noticias
+            {t('Últimas Noticias', 'Latest News')}
           </Link>
         </div>
       </div>
@@ -104,9 +121,14 @@ const FuturisticHome = () => {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 flex items-center justify-center mb-6 border border-emerald-500/30 shadow-inner">
             <span className="text-2xl">🎁</span>
           </div>
-          <h3 className="text-xl font-bold mb-3 text-emerald-400">Bono de Bienvenida $1 USD</h3>
+          <h3 className="text-xl font-bold mb-3 text-emerald-400">
+            {t('Bono de Bienvenida $1 USD', 'Welcome Bonus $1 USD')}
+          </h3>
           <p className="text-gray-300 leading-relaxed text-sm">
-            Recibe $1 USD en tu billetera al registrarte y reclamarlo en tu panel. ¡Comienza a generar rentabilidad desde el primer segundo!
+            {t(
+              'Recibe $1 USD en tu billetera al registrarte y reclamarlo en tu panel. ¡Comienza a generar rentabilidad desde el primer segundo!',
+              'Receive $1 USD in your wallet upon registration and claim it in your dashboard. Start earning profit from the very first second!'
+            )}
           </p>
         </div>
 
@@ -116,9 +138,14 @@ const FuturisticHome = () => {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500/20 to-yellow-500/10 flex items-center justify-center mb-6 border border-orange-500/20 shadow-inner">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
           </div>
-          <h3 className="text-xl font-bold mb-3 text-white">Tecnología Avanzada</h3>
+          <h3 className="text-xl font-bold mb-3 text-white">
+            {t('Tecnología Avanzada', 'Advanced Technology')}
+          </h3>
           <p className="text-gray-400 leading-relaxed text-sm">
-            Utilizamos algoritmos optimizados constantemente en minería de última generación para maximizar tu rentabilidad diaria.
+            {t(
+              'Utilizamos algoritmos optimizados constantemente en minería de última generación para maximizar tu rentabilidad diaria.',
+              'We use constantly optimized algorithms in next-generation mining to maximize your daily profitability.'
+            )}
           </p>
         </div>
 
@@ -128,9 +155,14 @@ const FuturisticHome = () => {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 flex items-center justify-center mb-6 border border-blue-500/20 shadow-inner">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
           </div>
-          <h3 className="text-xl font-bold mb-3 text-white">Seguridad Encriptada</h3>
+          <h3 className="text-xl font-bold mb-3 text-white">
+            {t('Seguridad Encriptada', 'Encrypted Security')}
+          </h3>
           <p className="text-gray-400 leading-relaxed text-sm">
-            Tus activos están protegidos en billeteras frías con los más altos estándares y protocolos de seguridad cibernética.
+            {t(
+              'Tus activos están protegidos en billeteras frías con los más altos estándares y protocolos de seguridad cibernética.',
+              'Your assets are protected in cold wallets with the highest cybersecurity standards and protocols.'
+            )}
           </p>
         </div>
 
@@ -140,9 +172,14 @@ const FuturisticHome = () => {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/10 flex items-center justify-center mb-6 border border-purple-500/20 shadow-inner">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
           </div>
-          <h3 className="text-xl font-bold mb-3 text-white">Interfaz Intuitiva</h3>
+          <h3 className="text-xl font-bold mb-3 text-white">
+            {t('Interfaz Intuitiva', 'Intuitive Interface')}
+          </h3>
           <p className="text-gray-400 leading-relaxed text-sm">
-            Gestiona tus operaciones de minería de forma clara y precisa con una experiencia de control sin precedentes.
+            {t(
+              'Gestiona tus operaciones de minería de forma clara y precisa con una experiencia de control sin precedentes.',
+              'Manage your mining operations clearly and precisely with an unprecedented control experience.'
+            )}
           </p>
         </div>
 

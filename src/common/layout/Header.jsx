@@ -2,12 +2,15 @@ import React, { useState, useEffect, useContext } from 'react'; // Importar useC
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ThemeContext } from '../../context/ThemeContext'; // Importar ThemeContext
+import { useLanguage } from '../../context/LanguageContext'; // Importar LanguageContext
+import LanguageToggle from '../components/LanguageToggle'; // Importar LanguageToggle
 import { db } from '../../services/firebase'; // Importar Firebase Firestore
 import { doc, getDoc } from 'firebase/firestore';
 
 const Header = () => {
   const { currentUser, logout } = useAuth();
   const { darkMode, setDarkMode, theme } = useContext(ThemeContext); // Usar ThemeContext y theme
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation(); // Obtener la ubicación actual
   const [isOpen, setIsOpen] = useState(false); // Estado para el menú móvil
@@ -55,21 +58,10 @@ const Header = () => {
             <Link to="/" className={`flex-shrink-0 text-xl font-bold mr-4 ${theme.text}`}> {/* Aplicar clases de tema */}
               <span className="text-accent">{siteName.charAt(0)}</span>{siteName.substring(1)}
             </Link>
-            {/* Botón para alternar modo oscuro/claro (desactivado por petición del usuario) */}
-            {/*
-            <button 
-              onClick={toggleDarkMode} 
-              className={`ml-4 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                darkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-              }`}
-            >
-              {darkMode ? 'Modo Claro' : 'Modo Oscuro'}
-            </button>
-            */}
           </div>
 
           {/* Navegación principal (Desktop) */}
-          <nav className="hidden md:flex items-center space-x-0.5"> {/* Reducir espacio entre elementos */}
+          <nav className="hidden md:flex items-center space-x-2">
             {process.env.NODE_ENV === 'development' && (
               <>
                 <Link
@@ -99,7 +91,7 @@ const Header = () => {
                 : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                 }`}
             >
-              Inicio
+              {t('Inicio', 'Home')}
             </Link>
             <Link
               to="/calculator"
@@ -108,7 +100,7 @@ const Header = () => {
                 : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                 }`}
             >
-              Calculadora
+              {t('Calculadora', 'Calculator')}
             </Link>
             <Link
               to="/pool-stats"
@@ -117,7 +109,7 @@ const Header = () => {
                 : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                 }`}
             >
-              Red Global
+              {t('Red Global', 'Global Network')}
             </Link>
             {currentUser ? (
               <>
@@ -128,14 +120,14 @@ const Header = () => {
                     : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                     }`}
                 >
-                  Panel de Usuario
+                  {t('Panel de Usuario', 'User Dashboard')}
                 </Link>
                 <button
                   onClick={handleLogout}
                   className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${`${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                     }`}
                 >
-                  Cerrar Sesión
+                  {t('Cerrar Sesión', 'Logout')}
                 </button>
               </>
             ) : (
@@ -147,7 +139,7 @@ const Header = () => {
                     : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                     }`}
                 >
-                  Registrarse
+                  {t('Registrarse', 'Register')}
                 </Link>
                 <Link
                   to="/login"
@@ -156,14 +148,20 @@ const Header = () => {
                     : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                     }`}
                 >
-                  Iniciar Sesión
+                  {t('Iniciar Sesión', 'Login')}
                 </Link>
               </>
             )}
+
+            {/* Selector de idioma */}
+            <div className="ml-2">
+              <LanguageToggle compact={true} />
+            </div>
           </nav>
 
           {/* Botón de menú móvil */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center gap-2">
+            <LanguageToggle compact={true} />
             <button
               onClick={() => setIsOpen(!isOpen)}
               type="button"
@@ -220,7 +218,7 @@ const Header = () => {
                 : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                 }`}
             >
-              Inicio
+              {t('Inicio', 'Home')}
             </Link>
             <Link
               to="/calculator"
@@ -229,7 +227,7 @@ const Header = () => {
                 : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                 }`}
             >
-              Calculadora
+              {t('Calculadora', 'Calculator')}
             </Link>
             <Link
               to="/pool-stats"
@@ -238,7 +236,7 @@ const Header = () => {
                   : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                 }`}
             >
-              Red Global
+              {t('Red Global', 'Global Network')}
             </Link>
             {currentUser ? (
               <>
@@ -249,14 +247,14 @@ const Header = () => {
                     : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                     }`}
                 >
-                  Panel de Usuario
+                  {t('Panel de Usuario', 'User Dashboard')}
                 </Link>
                 <button
                   onClick={handleLogout}
                   className={`block px-3 py-2 rounded-md text-base font-medium w-full text-left transition-colors duration-200 ${`${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                     }`}
                 >
-                  Cerrar Sesión
+                  {t('Cerrar Sesión', 'Logout')}
                 </button>
               </>
             ) : (
@@ -268,7 +266,7 @@ const Header = () => {
                     : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                     }`}
                 >
-                  Registrarse
+                  {t('Registrarse', 'Register')}
                 </Link>
                 <Link
                   to="/login"
@@ -277,7 +275,7 @@ const Header = () => {
                     : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
                     }`}
                 >
-                  Iniciar Sesión
+                  {t('Iniciar Sesión', 'Login')}
                 </Link>
               </>
             )}

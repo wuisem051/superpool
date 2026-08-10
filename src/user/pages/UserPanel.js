@@ -26,6 +26,7 @@ import styles from './UserPanel.module.css'; // Importar estilos CSS Modules
 import useFormValidation from '../../hooks/useFormValidation'; // Importar useFormValidation
 import { useError } from '../../context/ErrorContext'; // Importar useError
 import minersData from '../../data/miners'; // Importar la lista de mineros
+import { useLanguage } from '../../context/LanguageContext'; // Importar useLanguage
 
 // Función de ayuda para evitar bloqueos si la red tiene mala conexión o está bloqueada por el ISP
 const withTimeout = (promise, ms) => {
@@ -50,17 +51,16 @@ const withTimeout = (promise, ms) => {
 
 const MinersContent = ({ styles }) => {
   const { darkMode } = useContext(ThemeContext); // Usar ThemeContext
+  const { t } = useLanguage();
 
-  // Esta función no necesita hacer nada específico aquí, ya que las suscripciones de Firestore
-  // en UserPanel ya manejan la actualización de los balances y la lista de mineros.
   const handleMinerPurchased = () => {
     console.log("Minero comprado. Las suscripciones de Firestore se encargarán de las actualizaciones.");
   };
 
   return (
     <div className={`${styles.minersContent} ${darkMode ? styles.dark : styles.light}`}>
-      <h1 className={styles.pageTitle}>Tienda de Mineros</h1>
-      <p className={styles.developmentText}>Explora y adquiere los mineros más eficientes para potenciar tu ganancia.</p>
+      <h1 className={styles.pageTitle}>{t('Tienda de Mineros', 'Miners Store')}</h1>
+      <p className={styles.developmentText}>{t('Explora y adquiere los mineros más eficientes para potenciar tu ganancia.', 'Explore and acquire the most efficient miners to boost your earnings.')}</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8">
         {minersData.map(miner => (
           <MinerDisplay key={miner.id} miner={miner} onMinerPurchased={handleMinerPurchased} />
@@ -73,6 +73,7 @@ const MinersContent = ({ styles }) => {
 const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, btcToUsdRate, totalHashratePool, poolCommission, paymentsHistory, withdrawalsHistory, styles, totalHashrate, estimatedDailyUSD, activeMinersAllUsers, pricePerTHs, currentUser }) => {
   const { darkMode } = useContext(ThemeContext); // Usar ThemeContext
   const { showError, showSuccess } = useError();
+  const { t } = useLanguage();
   const [welcomeBonusClaimed, setWelcomeBonusClaimed] = useState(true);
   const [claimingBonus, setClaimingBonus] = useState(false);
 
@@ -133,17 +134,17 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
   const lastPayment = paymentsHistory.length > 0 ? paymentsHistory[0] : null;
   const lastWithdrawal = withdrawalsHistory.length > 0 ? withdrawalsHistory[0] : null;
 
-  let lastTransactionInfo = "No hay historial";
+  let lastTransactionInfo = t("No hay historial", "No history");
   if (lastPayment && lastWithdrawal) {
     if (lastPayment.createdAt > lastWithdrawal.createdAt) {
-      lastTransactionInfo = `Pago: ${lastPayment.amount.toFixed(8)} ${lastPayment.currency} (${lastPayment.createdAt.toLocaleDateString()})`;
+      lastTransactionInfo = `${t('Pago', 'Payment')}: ${lastPayment.amount.toFixed(8)} ${lastPayment.currency} (${lastPayment.createdAt.toLocaleDateString()})`;
     } else {
-      lastTransactionInfo = `Retiro: ${lastWithdrawal.amount.toFixed(8)} ${lastWithdrawal.currency} (${lastWithdrawal.createdAt.toLocaleDateString()})`;
+      lastTransactionInfo = `${t('Retiro', 'Withdrawal')}: ${lastWithdrawal.amount.toFixed(8)} ${lastWithdrawal.currency} (${lastWithdrawal.createdAt.toLocaleDateString()})`;
     }
   } else if (lastPayment) {
-    lastTransactionInfo = `Pago: ${lastPayment.amount.toFixed(8)} ${lastPayment.currency} (${lastPayment.createdAt.toLocaleDateString()})`;
+    lastTransactionInfo = `${t('Pago', 'Payment')}: ${lastPayment.amount.toFixed(8)} ${lastPayment.currency} (${lastPayment.createdAt.toLocaleDateString()})`;
   } else if (lastWithdrawal) {
-    lastTransactionInfo = `Retiro: ${lastWithdrawal.amount.toFixed(8)} ${lastWithdrawal.currency} (${lastWithdrawal.createdAt.toLocaleDateString()})`;
+    lastTransactionInfo = `${t('Retiro', 'Withdrawal')}: ${lastWithdrawal.amount.toFixed(8)} ${lastWithdrawal.currency} (${lastWithdrawal.createdAt.toLocaleDateString()})`;
   }
 
   return (
@@ -155,9 +156,9 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
               🎁
             </div>
             <div>
-              <h4 className="text-emerald-300 font-bold text-base">¡Bono de Bienvenida de $1.00 USD Pendiente!</h4>
+              <h4 className="text-emerald-300 font-bold text-base">{t('¡Bono de Bienvenida de $1.00 USD Pendiente!', '$1.00 USD Welcome Bonus Pending!')}</h4>
               <p className="text-gray-300 text-xs">
-                Haz clic en el botón para reclamarlo y acreditarlo a tu billetera inmediatamente. (Mínimo de retiro: $5.00 USDT)
+                {t('Haz clic en el botón para reclamarlo y acreditarlo a tu billetera inmediatamente. (Mínimo de retiro: $5.00 USDT)', 'Click the button to claim it and credit it to your wallet immediately. (Minimum withdrawal: $5.00 USDT)')}
               </p>
             </div>
           </div>
@@ -166,7 +167,7 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
             disabled={claimingBonus}
             className="px-5 py-2.5 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-gray-950 font-bold rounded-xl text-sm transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 whitespace-nowrap shadow-md"
           >
-            {claimingBonus ? 'Acreditando...' : '🎁 Reclamar Bono $1'}
+            {claimingBonus ? t('Acreditando...', 'Crediting...') : t('🎁 Reclamar Bono $1', '🎁 Claim $1 Bonus')}
           </button>
         </div>
       )}
@@ -174,7 +175,7 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
         {/* Tu Hashrate */}
         <div className="relative overflow-hidden bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl transition-transform hover:-translate-y-1 duration-300">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-          <h3 className="text-gray-400 font-semibold text-sm mb-2">Tu Hashrate</h3>
+          <h3 className="text-gray-400 font-semibold text-sm mb-2">{t('Tu Hashrate', 'Your Hashrate')}</h3>
           <p className="text-3xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
             {totalHashrate.toFixed(2)} TH/s
           </p>
@@ -186,7 +187,7 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
         {/* Ganancia Estimada Diaria */}
         <div className="relative overflow-hidden bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl transition-transform hover:-translate-y-1 duration-300">
           <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-          <h3 className="text-gray-400 font-semibold text-sm mb-2">Ganancia Estimada Diaria</h3>
+          <h3 className="text-gray-400 font-semibold text-sm mb-2">{t('Ganancia Estimada Diaria', 'Estimated Daily Earnings')}</h3>
           <p className="text-3xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">
             ${estimatedDailyUSD.toFixed(2)}
           </p>
@@ -198,7 +199,7 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
         {/* Tasa de Pago */}
         <div className="relative overflow-hidden bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl transition-transform hover:-translate-y-1 duration-300">
           <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-          <h3 className="text-gray-400 font-semibold text-sm mb-2">Tasa de Pago</h3>
+          <h3 className="text-gray-400 font-semibold text-sm mb-2">{t('Tasa de Pago', 'Payment Rate')}</h3>
           <p className="text-3xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-300">
             ${paymentRate.toFixed(2)}<span className="text-lg text-gray-500">/TH/s</span>
           </p>
@@ -216,7 +217,7 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
         <div className="lg:col-span-2 bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl">
           <h3 className="text-white font-bold text-lg mb-4 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
-            Rendimiento Histórico
+            {t('Rendimiento Histórico', 'Historical Performance')}
           </h3>
           <div className="w-full h-72">
             {userMiners.length > 0 ? (
@@ -224,7 +225,7 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-[#1e2330] rounded-xl text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                <p>No hay datos de rendimiento disponibles.</p>
+                <p>{t('No hay datos de rendimiento disponibles.', 'No performance data available.')}</p>
               </div>
             )}
           </div>
@@ -234,16 +235,16 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
         <div className="bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl flex flex-col">
           <h3 className="text-white font-bold text-lg mb-6 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-            Estadísticas de la Pool
+            {t('Estadísticas de la Pool', 'Pool Statistics')}
           </h3>
           <div className="space-y-6 flex-1 flex flex-col justify-center">
             <div className="bg-[#131824] p-4 rounded-xl border border-[#1e2330] flex items-center justify-between">
-              <span className="text-gray-400 font-medium text-sm">Comisión de la Pool</span>
+              <span className="text-gray-400 font-medium text-sm">{t('Comisión de la Pool', 'Pool Commission')}</span>
               <span className="text-red-400 font-bold bg-red-500/10 px-3 py-1 rounded-lg">{poolCommission.toFixed(1)}%</span>
             </div>
 
             <div className="bg-[#131824] p-4 rounded-xl border border-[#1e2330] flex flex-col gap-2">
-              <span className="text-gray-400 font-medium text-sm">Última Transacción</span>
+              <span className="text-gray-400 font-medium text-sm">{t('Última Transacción', 'Last Transaction')}</span>
               <span className="text-green-400 font-semibold font-mono text-sm break-words leading-relaxed text-right">
                 {lastTransactionInfo}
               </span>
@@ -258,6 +259,7 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
 const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) => {
   const { darkMode } = useContext(ThemeContext); // Usar ThemeContext
   const { showError, showSuccess } = useError(); // Usar el contexto de errores
+  const { t } = useLanguage();
   const [poolUrl, setPoolUrl] = useState('stratum+tcp://bitcoinpool.com:4444');
   const [port, setPort] = useState('4444');
   const [defaultWorkerName, setDefaultWorkerName] = useState('worker1');
@@ -433,8 +435,8 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
           <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-white">Configurar Pool de Minería</h1>
-          <p className="text-gray-400 text-sm">Conecta y gestiona tus workers de minería</p>
+          <h1 className="text-2xl font-bold text-white">{t('Configurar Pool de Minería', 'Configure Mining Pool')}</h1>
+          <p className="text-gray-400 text-sm">{t('Conecta y gestiona tus workers de minería', 'Connect and manage your mining workers')}</p>
         </div>
       </div>
 
@@ -442,12 +444,12 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
       <div className="bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl">
         <h3 className="text-white font-bold text-lg mb-5 flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          Datos de Conexión al Pool
+          {t('Datos de Conexión al Pool', 'Pool Connection Data')}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {/* URL */}
           <div className="bg-[#131824] border border-[#1e2330] rounded-xl p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">URL del Pool</p>
+            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">{t('URL del Pool', 'Pool URL')}</p>
             <div className="flex items-center justify-between gap-2">
               <code className="text-orange-400 font-mono text-sm truncate">{poolUrl}</code>
               <button
@@ -461,7 +463,7 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
           </div>
           {/* Puerto */}
           <div className="bg-[#131824] border border-[#1e2330] rounded-xl p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Puerto</p>
+            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">{t('Puerto', 'Port')}</p>
             <div className="flex items-center justify-between gap-2">
               <code className="text-cyan-400 font-mono text-sm">{port}</code>
               <button
@@ -475,7 +477,7 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
           </div>
           {/* Contraseña */}
           <div className="bg-[#131824] border border-[#1e2330] rounded-xl p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Contraseña</p>
+            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">{t('Contraseña', 'Password')}</p>
             <div className="flex items-center justify-between gap-2">
               <code className="text-green-400 font-mono text-sm">{miningPassword}</code>
               <button
@@ -503,7 +505,7 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
               className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-              Copiar todo
+              {t('Copiar todo', 'Copy all')}
             </button>
           </div>
           <pre className="p-4 text-sm font-mono leading-relaxed">
@@ -521,11 +523,11 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
         <div className="bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl">
           <h2 className="text-white font-bold text-lg mb-5 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-            Añadir Nuevo Minero
+            {t('Añadir Nuevo Minero', 'Add New Miner')}
           </h2>
           <form onSubmit={handleMinerSubmit} className="space-y-4">
             <div>
-              <label htmlFor="newMinerThs" className="block text-sm font-semibold text-gray-400 mb-2">Poder de Minado (TH/s)</label>
+              <label htmlFor="newMinerThs" className="block text-sm font-semibold text-gray-400 mb-2">{t('Poder de Minado (TH/s)', 'Mining Power (TH/s)')}</label>
               <input
                 type="number"
                 id="newMinerThs"
@@ -552,7 +554,7 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
               ) : (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
               )}
-              {isLoading || isMinerSubmitting ? 'Añadiendo...' : 'Añadir Minero'}
+              {isLoading || isMinerSubmitting ? t('Añadiendo...', 'Adding...') : t('Añadir Minero', 'Add Miner')}
             </button>
           </form>
         </div>
@@ -561,7 +563,7 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
         <div className="bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl">
           <h2 className="text-white font-bold text-lg mb-5 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" /></svg>
-            Mis Workers
+            {t('Mis Workers', 'My Workers')}
             <span className="ml-auto text-xs bg-green-500/10 text-green-400 px-2.5 py-1 rounded-full font-bold">
               {userMiners.filter(m => m.status !== 'pendiente').length} activo{userMiners.filter(m => m.status !== 'pendiente').length !== 1 ? 's' : ''}
             </span>
@@ -569,8 +571,8 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
           {userMiners.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-[#1e2330] rounded-xl text-gray-500">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" /></svg>
-              <p className="text-sm">No tienes workers.</p>
-              <p className="text-xs mt-1">¡Añade uno para comenzar!</p>
+              <p className="text-sm">{t('No tienes workers.', 'You have no workers.')}</p>
+              <p className="text-xs mt-1">{t('¡Añade uno para comenzar!', 'Add one to get started!')}</p>
             </div>
           ) : (
             <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar pr-1">
@@ -619,6 +621,7 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
 // =============================================
 const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser, styles }) => {
   const { showError, showSuccess } = useError();
+  const { t } = useLanguage();
   // --- Estado de Balances (de WalletDisplay) ---
   const [userPortfolio, setUserPortfolio] = useState(null);
   const [walletLoading, setWalletLoading] = useState(true);
@@ -777,8 +780,8 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
           <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-white">Mi Billetera</h1>
-          <p className="text-gray-400 text-sm">Balance, criptomonedas y retiros en un solo lugar</p>
+          <h1 className="text-2xl font-bold text-white">{t('Mi Billetera', 'My Wallet')}</h1>
+          <p className="text-gray-400 text-sm">{t('Balance, criptomonedas y retiros en un solo lugar', 'Balance, crypto and withdrawals in one place')}</p>
         </div>
       </div>
 
@@ -795,9 +798,9 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                   🎁
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-emerald-300">¡Bono de Bienvenida de $1.00 USD Disponible!</h3>
+                  <h3 className="text-lg font-bold text-emerald-300">{t('¡Bono de Bienvenida de $1.00 USD Disponible!', '$1.00 USD Welcome Bonus Available!')}</h3>
                   <p className="text-gray-300 text-sm">
-                    Haz clic en el botón para reclamarlo y sumarlo a tu saldo. Mínimo de retiro: $5.00 USDT.
+                    {t('Haz clic en el botón para reclamarlo y sumarlo a tu saldo. Mínimo de retiro: $5.00 USDT.', 'Click the button to claim it and add it to your balance. Minimum withdrawal: $5.00 USDT.')}
                   </p>
                 </div>
               </div>
@@ -806,7 +809,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                 disabled={claimingBonus}
                 className="px-6 py-3 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-gray-950 font-bold rounded-xl shadow-lg transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
               >
-                {claimingBonus ? 'Acreditando...' : '🎁 Reclamar Mi Bono $1'}
+                {claimingBonus ? t('Acreditando...', 'Crediting...') : t('🎁 Reclamar Mi Bono $1', '🎁 Claim My $1 Bonus')}
               </button>
             </div>
           )}
@@ -815,7 +818,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
           <div className="bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl">
             <h3 className="text-white font-bold text-lg mb-5 flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V3a1 1 0 00-1-1H4a1 1 0 00-1 1v18a1 1 0 001 1h12a1 1 0 001-1v-5m-1-10v4m-4 0h4" /></svg>
-              Saldos de Criptomonedas
+              {t('Saldos de Criptomonedas', 'Cryptocurrency Balances')}
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {userPortfolio && Object.entries(userPortfolio.holdings).map(([coin, qty]) => (
@@ -836,23 +839,23 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
           <div className="bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl">
             <h3 className="text-white font-bold text-lg mb-5 flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-              Solicitar Retiro
-              <span className="ml-auto text-xs text-gray-500">Balance: <span className="text-white font-mono font-bold">{availableBalance.toFixed(currency === 'USDT' ? 2 : 8)} {currency}</span></span>
+              {t('Solicitar Retiro', 'Request Withdrawal')}
+              <span className="ml-auto text-xs text-gray-500">{t('Balance', 'Balance')}: <span className="text-white font-mono font-bold">{availableBalance.toFixed(currency === 'USDT' ? 2 : 8)} {currency}</span></span>
             </h3>
             <form onSubmit={handleSubmitWithdrawal} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2 p-3.5 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-xs text-yellow-500/90 leading-relaxed flex items-start gap-2">
                 <span className="text-sm select-none">⚠️</span>
                 <span>
-                  <strong>Nota:</strong> Los pagos en BTC serán enviados por cualquier otra moneda que esté en la lista por su alta tasa de fee.
+                  <strong>{t('Nota', 'Note')}:</strong> {t('Los pagos en BTC serán enviados por cualquier otra moneda que esté en la lista por su alta tasa de fee.', 'BTC payments will be sent in any other currency on the list due to its high fee rate.')}
                 </span>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Cantidad</label>
+                <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">{t('Cantidad', 'Amount')}</label>
                 <input type="number" step="any" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" required
                   className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-colors font-mono" />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Moneda</label>
+                <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">{t('Moneda', 'Currency')}</label>
                 <select value={currency} onChange={(e) => setCurrency(e.target.value)}
                   className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500/50 transition-colors">
                   <option value="DOGE">Dogecoin (DOGE)</option>
@@ -862,7 +865,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
               </div>
               {/* Selección de Método de Pago / Dirección (Rediseño visual) */}
               <div className="md:col-span-2 space-y-4">
-                <label className="block text-xs text-gray-400 uppercase tracking-wider font-bold">Método y Dirección de Retiro</label>
+                <label className="block text-xs text-gray-400 uppercase tracking-wider font-bold">{t('Método y Dirección de Retiro', 'Withdrawal Method and Address')}</label>
                 
                 {currency === 'USDT' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -882,7 +885,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                         </div>
                         {useBinancePay && <span className="w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center text-xs text-black font-bold">✓</span>}
                       </div>
-                      <p className="text-[11px] text-gray-400 mt-1 leading-tight">Sin comisiones de red. Directo a tu cuenta de Binance.</p>
+                      <p className="text-[11px] text-gray-400 mt-1 leading-tight">{t('Sin comisiones de red. Directo a tu cuenta de Binance.', 'No network fees. Direct to your Binance account.')}</p>
                       <div className="mt-2 text-[10px] font-semibold text-gray-500">
                         {userPaymentAddresses?.USD ? (
                           <span className="text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full font-mono">
@@ -910,7 +913,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                         </div>
                         {!useBinancePay && <span className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-xs text-white font-bold">✓</span>}
                       </div>
-                      <p className="text-[11px] text-gray-400 mt-1 leading-tight">Retiro estándar a billeteras externas de red Tron.</p>
+                      <p className="text-[11px] text-gray-400 mt-1 leading-tight">{t('Retiro estándar a billeteras externas de red Tron.', 'Standard withdrawal to external Tron network wallets.')}</p>
                       <div className="mt-2 text-[10px] font-semibold text-gray-500">
                         {userPaymentAddresses?.USDT ? (
                           <span className="text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full font-mono">
@@ -938,7 +941,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                           Guardado: {userPaymentAddresses[currency].slice(0, 10)}...{userPaymentAddresses[currency].slice(-8)}
                         </span>
                       ) : (
-                        <span className="text-gray-500 bg-white/5 px-2.5 py-1 rounded-full">No configurado</span>
+                        <span className="text-gray-500 bg-white/5 px-2.5 py-1 rounded-full">{t('No configurado', 'Not configured')}</span>
                       )}
                     </div>
                   </div>
@@ -948,9 +951,9 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                 {((useBinancePay && userPaymentAddresses?.USD) || (!useBinancePay && userPaymentAddresses?.[currency === 'USDT' ? 'USDT' : currency])) ? (
                   <div className="bg-[#131824] border border-[#1e2330] rounded-xl p-4 space-y-3">
                     <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                      <span className="text-xs text-gray-400 font-semibold">Destinatario del Retiro</span>
+                      <span className="text-xs text-gray-400 font-semibold">{t('Destinatario del Retiro', 'Withdrawal Recipient')}</span>
                       <span className="text-[10px] text-gray-500 flex items-center gap-1 font-semibold">
-                        🔒 Tus datos están guardados
+                        🔒 {t('Tus datos están guardados', 'Your data is saved')}
                       </span>
                     </div>
 
@@ -973,7 +976,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                           className="mt-1 text-indigo-500 focus:ring-indigo-500"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-white font-bold">Usar dirección guardada</p>
+                          <p className="text-xs text-white font-bold">{t('Usar dirección guardada', 'Use saved address')}</p>
                           <p className="text-sm font-mono text-indigo-300 break-all mt-0.5 bg-[#0b0e14] px-2.5 py-1 rounded border border-[#1e2330]">
                             {useBinancePay ? userPaymentAddresses.USD : (currency === 'USDT' ? userPaymentAddresses.USDT : userPaymentAddresses[currency])}
                           </p>
@@ -1074,14 +1077,14 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
             {withdrawalsHistory.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-[#1e2330] rounded-xl text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" /></svg>
-                <p className="text-sm">No hay retiros registrados.</p>
+                <p className="text-sm">{t('No hay retiros registrados.', 'No withdrawals recorded.')}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-[#1e2330]">
-                      {['Fecha', 'Cantidad', 'Método', 'Estado'].map(h => (
+                      {[t('Fecha','Date'), t('Cantidad','Amount'), t('Método','Method'), t('Estado','Status')].map(h => (
                         <th key={h} className="pb-3 px-2 text-left text-xs text-gray-500 uppercase tracking-wider font-semibold">{h}</th>
                       ))}
                     </tr>
@@ -1113,8 +1116,9 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
 
 
 const ContactSupportContent = ({ onUnreadCountChange, styles }) => {
-  const { darkMode } = useContext(ThemeContext); // Usar ThemeContext
-  const { showError, showSuccess } = useError(); // Usar el contexto de errores
+  const { darkMode } = useContext(ThemeContext);
+  const { showError, showSuccess } = useError();
+  const { t } = useLanguage();
   const { currentUser } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -1411,7 +1415,7 @@ const ContactSupportContent = ({ onUnreadCountChange, styles }) => {
                   className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all flex justify-center items-center gap-2 disabled:opacity-50"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Enviando...' : 'Enviar Respuesta'}
+                  {isLoading ? t('Enviando...', 'Sending...') : t('Enviar Respuesta', 'Send Reply')}
                 </button>
               </div>
             </div>
@@ -1421,12 +1425,12 @@ const ContactSupportContent = ({ onUnreadCountChange, styles }) => {
                 <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Envía una Nueva Consulta</h2>
-                <p className="text-gray-400 text-sm">Nuestro equipo de soporte te responderá a la brevedad posible.</p>
+                <h2 className="text-2xl font-bold text-white mb-2">{t('Envía una Nueva Consulta', 'Send a New Inquiry')}</h2>
+                <p className="text-gray-400 text-sm">{t('Nuestro equipo de soporte te responderá a la brevedad posible.', 'Our support team will respond to you as soon as possible.')}</p>
               </div>
               <form onSubmit={handleSendMessage} className="space-y-4">
                 <div>
-                  <label htmlFor="subject" className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Asunto</label>
+                  <label htmlFor="subject" className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">{t('Asunto', 'Subject')}</label>
                   <input
                     type="text"
                     id="subject"
@@ -1439,7 +1443,7 @@ const ContactSupportContent = ({ onUnreadCountChange, styles }) => {
                   />
                 </div>
                 <div>
-                  <label htmlFor="messageContent" className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Mensaje</label>
+                  <label htmlFor="messageContent" className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">{t('Mensaje', 'Message')}</label>
                   <textarea
                     id="messageContent"
                     rows="5"
@@ -1456,7 +1460,7 @@ const ContactSupportContent = ({ onUnreadCountChange, styles }) => {
                   className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Enviando...' : 'Enviar Consulta'}
+                  {isLoading ? t('Enviando...', 'Sending...') : t('Enviar Consulta', 'Send Inquiry')}
                 </button>
               </form>
             </div>
@@ -1468,7 +1472,8 @@ const ContactSupportContent = ({ onUnreadCountChange, styles }) => {
 };
 
 const ReferralsContent = ({ styles }) => {
-  const { darkMode } = useContext(ThemeContext); // Usar ThemeContext
+  const { darkMode } = useContext(ThemeContext);
+  const { t } = useLanguage();
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="bg-[#0b0e14] border border-[#1e2330] rounded-3xl p-8 shadow-xl text-center relative overflow-hidden">
@@ -1478,12 +1483,12 @@ const ReferralsContent = ({ styles }) => {
         <div className="w-20 h-20 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
         </div>
-        <h2 className="text-3xl font-bold text-white mb-3">Referidos</h2>
+        <h2 className="text-3xl font-bold text-white mb-3">{t('Referidos', 'Referrals')}</h2>
         <span className="inline-block px-4 py-1.5 bg-yellow-500/10 text-yellow-400 text-sm font-bold uppercase tracking-wider rounded-full mb-4">
-          En Desarrollo
+          {t('En Desarrollo', 'In Development')}
         </span>
         <p className="text-gray-400 max-w-md mx-auto">
-          Pronto podrás invitar a tus amigos, gestionar tus referidos y obtener comisiones por su rendimiento en la plataforma. ¡Mantente atento!
+          {t('Pronto podrás invitar a tus amigos, gestionar tus referidos y obtener comisiones por su rendimiento en la plataforma. ¡Manténte atento!', 'Soon you will be able to invite your friends, manage your referrals and earn commissions for their performance on the platform. Stay tuned!')}
         </p>
       </div>
     </div>
@@ -1491,8 +1496,9 @@ const ReferralsContent = ({ styles }) => {
 };
 
 const SettingsContent = ({ styles }) => {
-  const { darkMode } = useContext(ThemeContext); // Usar ThemeContext
-  const { showError, showSuccess } = useError(); // Usar el contexto de errores
+  const { darkMode } = useContext(ThemeContext);
+  const { showError, showSuccess } = useError();
+  const { t } = useLanguage();
   const { currentUser } = useAuth();
   const [contactEmail, setContactEmail] = useState(currentUser?.email || '');
   const [username, setUsername] = useState('');
@@ -1667,8 +1673,8 @@ const SettingsContent = ({ styles }) => {
           <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-white">Configuración</h1>
-          <p className="text-gray-400 text-sm">Gestiona tu cuenta, seguridad y preferencias</p>
+          <h1 className="text-2xl font-bold text-white">{t('Configuración', 'Settings')}</h1>
+          <p className="text-gray-400 text-sm">{t('Gestiona tu cuenta, seguridad y preferencias', 'Manage your account, security and preferences')}</p>
         </div>
       </div>
 
@@ -1679,7 +1685,7 @@ const SettingsContent = ({ styles }) => {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span className="text-white font-medium">Guardando cambios...</span>
+            <span className="text-white font-medium">{t('Guardando cambios...', 'Saving changes...')}</span>
           </div>
         </div>
       )}
@@ -1690,7 +1696,7 @@ const SettingsContent = ({ styles }) => {
           <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
           <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-            Perfil de Usuario
+            {t('Perfil de Usuario', 'User Profile')}
           </h2>
           <form onSubmit={handleUpdateAccount} className="space-y-4">
             {/* Nombre de usuario editable */}

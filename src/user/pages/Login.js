@@ -4,12 +4,15 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useError } from '../../context/ErrorContext';
 import sanitizeInput from '../../utils/sanitizeInput';
 import { ThemeContext } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
+import LanguageToggle from '../../common/components/LanguageToggle';
 
 const Login = () => {
   const identifierRef = useRef();
   const passwordRef = useRef();
   const { login } = useAuth();
   const { showError, error } = useError();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -30,7 +33,7 @@ const Login = () => {
       if (err.message && err.message.includes('No se encontró el perfil')) {
         showError(err.message);
       } else {
-        showError('Fallo al iniciar sesión: ' + (err.code || err.message));
+        showError(t('Fallo al iniciar sesión: ', 'Login failed: ') + (err.code || err.message));
       }
       console.error("Error al iniciar sesión:", err);
     } finally {
@@ -42,6 +45,11 @@ const Login = () => {
     <div className={`min-h-screen flex items-center justify-center relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8 selection:bg-amber-500/30 ${
       darkMode ? 'bg-[#06080d] text-slate-100' : 'bg-slate-900 text-slate-100'
     }`}>
+      {/* Botón superior de idioma */}
+      <div className="absolute top-6 right-6 z-30">
+        <LanguageToggle />
+      </div>
+
       {/* Dynamic Background Effects */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-tr from-amber-500/15 via-orange-600/10 to-amber-400/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 right-10 w-[350px] h-[350px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -68,10 +76,10 @@ const Login = () => {
               MaxiOS Pool v2.0
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-              Bienvenido de nuevo
+              {t('Bienvenido de nuevo', 'Welcome Back')}
             </h2>
             <p className="mt-1 text-xs sm:text-sm text-slate-400">
-              Accede a tu panel de minería en tiempo real
+              {t('Accede a tu panel de minería en tiempo real', 'Access your real-time mining dashboard')}
             </p>
           </div>
         </div>
@@ -82,13 +90,13 @@ const Login = () => {
             type="button"
             className="py-2.5 rounded-lg text-amber-400 bg-slate-800/90 shadow-sm border border-slate-700/60 transition-all text-center font-bold"
           >
-            Iniciar Sesión
+            {t('Iniciar Sesión', 'Login')}
           </button>
           <Link
             to="/signup"
             className="py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all text-center"
           >
-            Crear Cuenta
+            {t('Crear Cuenta', 'Create Account')}
           </Link>
         </div>
 
@@ -109,7 +117,7 @@ const Login = () => {
             {/* Input 1: Identifier */}
             <div className="space-y-1.5">
               <label htmlFor="identifier" className="block text-xs font-medium text-slate-300">
-                Correo Electrónico
+                {t('Correo Electrónico', 'Email Address')}
               </label>
               <div className="relative rounded-xl shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -124,7 +132,7 @@ const Login = () => {
                   type="text"
                   required
                   className="block w-full pl-11 pr-4 py-3 bg-slate-950/70 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all"
-                  placeholder="ejemplo@correo.com"
+                  placeholder={t('ejemplo@correo.com', 'example@email.com')}
                 />
               </div>
             </div>
@@ -133,7 +141,7 @@ const Login = () => {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label htmlFor="password" className="block text-xs font-medium text-slate-300">
-                  Contraseña
+                  {t('Contraseña', 'Password')}
                 </label>
               </div>
               <div className="relative rounded-xl shadow-sm">
@@ -186,11 +194,11 @@ const Login = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span>Iniciando sesión...</span>
+                  <span>{t('Iniciando sesión...', 'Logging in...')}</span>
                 </>
               ) : (
                 <>
-                  <span>Iniciar Sesión</span>
+                  <span>{t('Iniciar Sesión', 'Login')}</span>
                   <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
@@ -203,9 +211,9 @@ const Login = () => {
         {/* Footer Info */}
         <div className="pt-2 text-center space-y-4">
           <p className="text-xs text-slate-400">
-            ¿Aún no tienes cuenta?{' '}
+            {t('¿Aún no tienes cuenta?', "Don't have an account yet?")}{' '}
             <Link to="/signup" className="text-amber-400 hover:text-amber-300 font-semibold transition-colors underline decoration-amber-500/30 underline-offset-4">
-              Regístrate ahora
+              {t('Regístrate ahora', 'Register now')}
             </Link>
           </p>
 
@@ -213,7 +221,7 @@ const Login = () => {
             <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
-            <span>Conexión Encriptada SSL 256-bit</span>
+            <span>{t('Conexión Encriptada SSL 256-bit', '256-bit SSL Encrypted Connection')}</span>
           </div>
         </div>
 
