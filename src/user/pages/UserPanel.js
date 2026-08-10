@@ -656,7 +656,15 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
           virtualBalanceUSD: d.virtualBalanceUSD || 0,
           holdings: { BTC: d.balanceBTC || 0, LTC: d.balanceLTC || 0, DOGE: d.balanceDOGE || 0, USDT: d.balanceUSDT || 0 },
         });
-        setUserBalances({ balanceUSD: d.balanceUSD || 0, balanceBTC: d.balanceBTC || 0, balanceLTC: d.balanceLTC || 0, balanceDOGE: d.balanceDOGE || 0, balanceUSDT: d.balanceUSDT || 0, balanceVES: d.balanceVES || 0 });
+        setUserBalances({
+          balanceUSD: d.balanceUSD || 0,
+          balanceBTC: d.balanceBTC || 0,
+          balanceLTC: d.balanceLTC || 0,
+          balanceDOGE: d.balanceDOGE || 0,
+          balanceUSDT: d.balanceUSDT || 0,
+          balanceVES: d.balanceVES || 0,
+          customMinPaymentThresholds: d.customMinPaymentThresholds || null,
+        });
         setWelcomeBonusClaimed(d.welcomeBonusClaimed === true);
       } else {
         setUserPortfolio({
@@ -742,8 +750,11 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
     e.preventDefault(); setIsLoading(true);
     const withdrawalAmount = parseFloat(amount);
     if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) { showError('Cantidad inválida.'); setIsLoading(false); return; }
-    const threshold = minPaymentThresholds[currency] || 0;
-    if (withdrawalAmount < threshold) { showError(`Mínimo: ${threshold.toFixed(currency === 'USDT' ? 2 : 8)} ${currency}.`); setIsLoading(false); return; }
+    const userCustom = userBalances?.customMinPaymentThresholds?.[currency];
+    const threshold = (userCustom !== undefined && userCustom !== null && !isNaN(parseFloat(userCustom)))
+      ? parseFloat(userCustom)
+      : (minPaymentThresholds[currency] || 0);
+    if (withdrawalAmount < threshold) { showError(`Mínimo de retiro: ${threshold.toFixed(currency === 'USDT' || currency === 'USD' ? 2 : 8)} ${currency}.`); setIsLoading(false); return; }
     const currentBal = userBalances[`balance${currency}`] || 0;
     if (withdrawalAmount > currentBal) { showError('Fondos insuficientes.'); setIsLoading(false); return; }
     let method = 'Wallet', addressOrId = '';
@@ -1050,7 +1061,12 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                 {/* Mostrar umbral mínimo y aviso rápido */}
                 <div className="flex items-center justify-between text-xs text-gray-500 px-1 pt-1">
                   <span>Mínimo requerido:</span>
-                  <span className="text-white font-mono font-bold">{(minPaymentThresholds[currency] || 0).toFixed(currency === 'USDT' ? 2 : 8)} {currency}</span>
+                  <span className="text-white font-mono font-bold font-semibold">
+                    {((userBalances?.customMinPaymentThresholds?.[currency] !== undefined && userBalances?.customMinPaymentThresholds?.[currency] !== null)
+                      ? parseFloat(userBalances.customMinPaymentThresholds[currency])
+                      : (minPaymentThresholds[currency] || 0)
+                    ).toFixed(currency === 'USDT' || currency === 'USD' ? 2 : 8)} {currency}
+                  </span>
                 </div>
               </div>
               <div className="md:col-span-2">
@@ -2088,6 +2104,7 @@ const UserPanel = () => {
         LTC: settingsData.minPaymentThresholdLTC || 0.01,
         USD: settingsData.minPaymentThresholdUSD || 5,
         USDT: settingsData.minPaymentThresholdUSDT || settingsData.minPaymentThresholdUSD || 5,
+        BTC: settingsData.minPaymentThresholdBTC || 0.001,
       });
     }, (error) => {
       console.error("UserPanel: Error en la suscripción de paymentConfig:", error);
