@@ -70,8 +70,54 @@ const MinersContent = ({ styles }) => {
   );
 };
 
-const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, btcToUsdRate, totalHashratePool, poolCommission, paymentsHistory, withdrawalsHistory, styles, totalHashrate, estimatedDailyUSD, activeMinersAllUsers, pricePerTHs }) => {
+const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, btcToUsdRate, totalHashratePool, poolCommission, paymentsHistory, withdrawalsHistory, styles, totalHashrate, estimatedDailyUSD, activeMinersAllUsers, pricePerTHs, currentUser }) => {
   const { darkMode } = useContext(ThemeContext); // Usar ThemeContext
+  const { showError, showSuccess } = useError();
+  const [welcomeBonusClaimed, setWelcomeBonusClaimed] = useState(true);
+  const [claimingBonus, setClaimingBonus] = useState(false);
+
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    const unsub = onSnapshot(userDocRef, (snap) => {
+      if (snap.exists()) {
+        setWelcomeBonusClaimed(snap.data().welcomeBonusClaimed === true);
+      }
+    });
+    return () => unsub();
+  }, [currentUser]);
+
+  const handleClaimBonus = async () => {
+    if (!currentUser?.uid) return;
+    setClaimingBonus(true);
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        if (data.welcomeBonusClaimed) {
+          showError('El bono de bienvenida ya ha sido reclamado previamente.');
+          setWelcomeBonusClaimed(true);
+          return;
+        }
+        const currentUSD = data.balanceUSD || 0;
+        const currentUSDT = data.balanceUSDT || 0;
+        await updateDoc(userRef, {
+          balanceUSD: currentUSD + 1,
+          balanceUSDT: currentUSDT + 1,
+          welcomeBonusClaimed: true,
+          welcomeBonusClaimedAt: new Date().toISOString()
+        });
+        setWelcomeBonusClaimed(true);
+        showSuccess('🎉 ¡Bono de Bienvenida de $1.00 USD / USDT acreditado exitosamente en tu billetera!');
+      }
+    } catch (err) {
+      console.error("Error al reclamar bono:", err);
+      showError("Error al reclamar bono: " + err.message);
+    } finally {
+      setClaimingBonus(false);
+    }
+  };
 
   console.log("DashboardContent: Renderizando con props:", { userMiners, chartData, userBalances, paymentRate, btcToUsdRate, totalHashratePool, poolCommission, paymentsHistory, withdrawalsHistory, totalHashrate, estimatedDailyUSD });
 
@@ -102,6 +148,28 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
 
   return (
     <div className="p-6 space-y-6">
+      {!welcomeBonusClaimed && (
+        <div className="relative overflow-hidden bg-gradient-to-r from-emerald-900/50 via-teal-900/40 to-[#0b0e14] border border-emerald-500/50 rounded-2xl p-5 shadow-[0_0_30px_rgba(16,185,129,0.15)] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-emerald-500/20 rounded-xl border border-emerald-500/30 text-2xl">
+              🎁
+            </div>
+            <div>
+              <h4 className="text-emerald-300 font-bold text-base">¡Bono de Bienvenida de $1.00 USD Pendiente!</h4>
+              <p className="text-gray-300 text-xs">
+                Haz clic en el botón para reclamarlo y acreditarlo a tu billetera inmediatamente. (Mínimo de retiro: $5.00 USDT)
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleClaimBonus}
+            disabled={claimingBonus}
+            className="px-5 py-2.5 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-gray-950 font-bold rounded-xl text-sm transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 whitespace-nowrap shadow-md"
+          >
+            {claimingBonus ? 'Acreditando...' : '🎁 Reclamar Bono $1'}
+          </button>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Tu Hashrate */}
         <div className="relative overflow-hidden bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl transition-transform hover:-translate-y-1 duration-300">
@@ -556,6 +624,8 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
   const [walletLoading, setWalletLoading] = useState(true);
   const [usdToUsdtAmount, setUsdToUsdtAmount] = useState('');
   const [exchangeLoading, setExchangeLoading] = useState(false);
+  const [welcomeBonusClaimed, setWelcomeBonusClaimed] = useState(true);
+  const [claimingBonus, setClaimingBonus] = useState(false);
 
   // --- Estado de Retiros (de WithdrawalsContent) ---
   const [amount, setAmount] = useState('');
@@ -584,6 +654,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
           holdings: { BTC: d.balanceBTC || 0, LTC: d.balanceLTC || 0, DOGE: d.balanceDOGE || 0, USDT: d.balanceUSDT || 0 },
         });
         setUserBalances({ balanceUSD: d.balanceUSD || 0, balanceBTC: d.balanceBTC || 0, balanceLTC: d.balanceLTC || 0, balanceDOGE: d.balanceDOGE || 0, balanceUSDT: d.balanceUSDT || 0, balanceVES: d.balanceVES || 0 });
+        setWelcomeBonusClaimed(d.welcomeBonusClaimed === true);
       } else {
         setUserPortfolio({
           fiatBalanceUSD: 0,
@@ -592,11 +663,44 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
           holdings: { BTC: 0, LTC: 0, DOGE: 0, USDT: 0 },
         });
         setUserBalances({ balanceUSD: 0, balanceBTC: 0, balanceLTC: 0, balanceDOGE: 0, balanceUSDT: 0, balanceVES: 0 });
+        setWelcomeBonusClaimed(false);
       }
       setWalletLoading(false);
     }, (err) => { console.error(err); setWalletLoading(false); });
     return () => unsubscribe();
   }, [currentUser]);
+
+  const handleClaimBonus = async () => {
+    if (!currentUser?.uid) return;
+    setClaimingBonus(true);
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        if (data.welcomeBonusClaimed) {
+          showError('El bono de bienvenida ya ha sido reclamado previamente.');
+          setWelcomeBonusClaimed(true);
+          return;
+        }
+        const currentUSD = data.balanceUSD || 0;
+        const currentUSDT = data.balanceUSDT || 0;
+        await updateDoc(userRef, {
+          balanceUSD: currentUSD + 1,
+          balanceUSDT: currentUSDT + 1,
+          welcomeBonusClaimed: true,
+          welcomeBonusClaimedAt: new Date().toISOString()
+        });
+        setWelcomeBonusClaimed(true);
+        showSuccess('🎉 ¡Bono de Bienvenida de $1.00 USD / USDT acreditado exitosamente en tu billetera!');
+      }
+    } catch (err) {
+      console.error("Error al reclamar bono:", err);
+      showError("Error al reclamar bono: " + err.message);
+    } finally {
+      setClaimingBonus(false);
+    }
+  };
 
   // Cargar historial de retiros
   useEffect(() => {
@@ -684,7 +788,30 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
         </div>
       ) : (
         <>
-          {/* --- Balances Cripto --- */}
+          {!welcomeBonusClaimed && (
+            <div className="relative overflow-hidden bg-gradient-to-r from-emerald-900/50 via-teal-900/40 to-[#0b0e14] border border-emerald-500/50 rounded-2xl p-6 shadow-[0_0_30px_rgba(16,185,129,0.15)] flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-4 bg-emerald-500/20 rounded-2xl border border-emerald-500/40 text-3xl">
+                  🎁
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-emerald-300">¡Bono de Bienvenida de $1.00 USD Disponible!</h3>
+                  <p className="text-gray-300 text-sm">
+                    Haz clic en el botón para reclamarlo y sumarlo a tu saldo. Mínimo de retiro: $5.00 USDT.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleClaimBonus}
+                disabled={claimingBonus}
+                className="px-6 py-3 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-gray-950 font-bold rounded-xl shadow-lg transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+              >
+                {claimingBonus ? 'Acreditando...' : '🎁 Reclamar Mi Bono $1'}
+              </button>
+            </div>
+          )}
+
+          {/* --- Saldos de Criptomonedas --- */}
           <div className="bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl">
             <h3 className="text-white font-bold text-lg mb-5 flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V3a1 1 0 00-1-1H4a1 1 0 00-1 1v18a1 1 0 001 1h12a1 1 0 001-1v-5m-1-10v4m-4 0h4" /></svg>
@@ -1727,8 +1854,8 @@ const UserPanel = () => {
   const [minPaymentThresholds, setMinPaymentThresholds] = useState({ // Umbrales mínimos de retiro por moneda
     DOGE: 100,
     LTC: 0.01,
-    USD: 10,
-    USDT: 10,
+    USD: 5,
+    USDT: 5,
   });
   const [totalHashratePool, setTotalHashratePool] = useState(0); // Nuevo estado para el hashrate total de la pool
   const [activeMinersAllUsers, setActiveMinersAllUsers] = useState(0); // Nuevo estado para mineros activos de la pool
@@ -1953,8 +2080,8 @@ const UserPanel = () => {
       setMinPaymentThresholds({
         DOGE: settingsData.minPaymentThresholdDOGE || 100,
         LTC: settingsData.minPaymentThresholdLTC || 0.01,
-        USD: settingsData.minPaymentThresholdUSD || 10,
-        USDT: settingsData.minPaymentThresholdUSDT || settingsData.minPaymentThresholdUSD || 10,
+        USD: settingsData.minPaymentThresholdUSD || 5,
+        USDT: settingsData.minPaymentThresholdUSDT || settingsData.minPaymentThresholdUSD || 5,
       });
     }, (error) => {
       console.error("UserPanel: Error en la suscripción de paymentConfig:", error);
@@ -2055,7 +2182,7 @@ const UserPanel = () => {
         {showNavbar && <Navbar />} {/* Renderizar el Navbar condicionalmente */}
 
         <Routes>
-          <Route path="dashboard/*" element={<DashboardContent userMiners={userMiners} chartData={chartData} userBalances={userBalances} paymentRate={paymentRate} btcToUsdRate={btcToUsdRate} totalHashratePool={totalHashratePool} poolCommission={poolCommission} paymentsHistory={paymentsHistory} withdrawalsHistory={withdrawalsHistory} styles={styles} totalHashrate={totalHashrate} estimatedDailyUSD={estimatedDailyUSD} activeMinersAllUsers={activeMinersAllUsers} pricePerTHs={paymentRate} />} />
+          <Route path="dashboard/*" element={<DashboardContent userMiners={userMiners} chartData={chartData} userBalances={userBalances} paymentRate={paymentRate} btcToUsdRate={btcToUsdRate} totalHashratePool={totalHashratePool} poolCommission={poolCommission} paymentsHistory={paymentsHistory} withdrawalsHistory={withdrawalsHistory} styles={styles} totalHashrate={totalHashrate} estimatedDailyUSD={estimatedDailyUSD} activeMinersAllUsers={activeMinersAllUsers} pricePerTHs={paymentRate} currentUser={currentUser} />} />
 
           <Route path="mining-info/*" element={<MiningInfoContent currentUser={currentUser} userMiners={userMiners} setUserMiners={setUserMiners} styles={styles} />} />
           <Route path="contact-support/*" element={<ContactSupportContent onUnreadCountChange={handleUnreadCountChange} styles={styles} />} />
@@ -2066,7 +2193,7 @@ const UserPanel = () => {
           <Route path="withdrawals/*" element={<WalletSection currentUser={currentUser} minPaymentThresholds={minPaymentThresholds} userPaymentAddresses={userPaymentAddresses} styles={styles} />} />
           <Route path="settings/*" element={<SettingsContent styles={styles} />} />
           {/* Ruta por defecto */}
-          <Route path="/*" element={<DashboardContent userMiners={userMiners} chartData={chartData} userBalances={userBalances} paymentRate={paymentRate} btcToUsdRate={btcToUsdRate} totalHashratePool={totalHashratePool} poolCommission={poolCommission} paymentsHistory={paymentsHistory} withdrawalsHistory={withdrawalsHistory} styles={styles} totalHashrate={totalHashrate} estimatedDailyUSD={estimatedDailyUSD} activeMinersAllUsers={activeMinersAllUsers} pricePerTHs={paymentRate} />} />
+          <Route path="/*" element={<DashboardContent userMiners={userMiners} chartData={chartData} userBalances={userBalances} paymentRate={paymentRate} btcToUsdRate={btcToUsdRate} totalHashratePool={totalHashratePool} poolCommission={poolCommission} paymentsHistory={paymentsHistory} withdrawalsHistory={withdrawalsHistory} styles={styles} totalHashrate={totalHashrate} estimatedDailyUSD={estimatedDailyUSD} activeMinersAllUsers={activeMinersAllUsers} pricePerTHs={paymentRate} currentUser={currentUser} />} />
         </Routes>
       </MainContent>
     </div>

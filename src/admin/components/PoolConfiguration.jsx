@@ -17,8 +17,8 @@ const PoolConfiguration = () => {
   const [minPaymentThresholdBTC, setMinPaymentThresholdBTC] = useState(0.001);
   const [minPaymentThresholdDOGE, setMinPaymentThresholdDOGE] = useState(100);
   const [minPaymentThresholdLTC, setMinPaymentThresholdLTC] = useState(0.01);
-  const [minPaymentThresholdUSD, setMinPaymentThresholdUSD] = useState(10);
-  const [minPaymentThresholdUSDT, setMinPaymentThresholdUSDT] = useState(10);
+  const [minPaymentThresholdUSD, setMinPaymentThresholdUSD] = useState(5);
+  const [minPaymentThresholdUSDT, setMinPaymentThresholdUSDT] = useState(5);
   const [paymentInterval, setPaymentInterval] = useState('Diario');
   const [supportedCurrencies, setSupportedCurrencies] = useState({
     bitcoin: true,
@@ -62,8 +62,8 @@ const PoolConfiguration = () => {
           setMinPaymentThresholdBTC(data.minPaymentThresholdBTC || 0.001);
           setMinPaymentThresholdDOGE(data.minPaymentThresholdDOGE || 100);
           setMinPaymentThresholdLTC(data.minPaymentThresholdLTC || 0.01);
-          setMinPaymentThresholdUSD(data.minPaymentThresholdUSD || 10);
-          setMinPaymentThresholdUSDT(data.minPaymentThresholdUSDT || data.minPaymentThresholdUSD || 10);
+          setMinPaymentThresholdUSD(data.minPaymentThresholdUSD || 5);
+          setMinPaymentThresholdUSDT(data.minPaymentThresholdUSDT || data.minPaymentThresholdUSD || 5);
           setPaymentInterval(data.paymentInterval || 'Diario');
           setSupportedCurrencies(data.supportedCurrencies || { bitcoin: true, dogecoin: true, litecoin: true });
           setEnableBinancePay(data.enableBinancePay || false);

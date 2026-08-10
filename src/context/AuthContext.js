@@ -45,7 +45,8 @@ export function AuthProvider({ children }) {
     await setDoc(doc(db, "users", userCredential.user.uid), {
       email: userCredential.user.email,
       role: 'user', // Rol por defecto
-      // Otros campos iniciales si son necesarios
+      welcomeBonusClaimed: false, // Pendiente de reclamar por el usuario en su panel
+      createdAt: new Date().toISOString()
     });
     return userCredential;
   }
@@ -57,7 +58,8 @@ export function AuthProvider({ children }) {
       payeerAccount: payeerAccount,
       email: email, // Guardamos el email generado para referencia
       role: 'user', // Rol por defecto
-      // Otros campos iniciales si son necesarios
+      welcomeBonusClaimed: false, // Pendiente de reclamar por el usuario en su panel
+      createdAt: new Date().toISOString()
     });
     return userCredential;
   }

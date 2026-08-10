@@ -57,6 +57,12 @@ const FuturisticHome = () => {
       </div>
 
       <div className="text-center max-w-4xl relative z-10">
+        {/* Insignia del Bono de Bienvenida */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/40 text-emerald-300 mb-6 text-sm font-semibold shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+          <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+          🎁 ¡Bono de Bienvenida de $1.00 USD al registrarte! | Retiro Mínimo: $5.00 USDT / USD
+        </div>
+
         <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight">
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-300">
             {siteConfig.siteName}
@@ -76,7 +82,7 @@ const FuturisticHome = () => {
           >
             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
             <span className="relative flex items-center gap-2">
-              Comenzar a Minar
+              Registrarme y Obtener $1 Gratis
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
             </span>
           </Link>
@@ -90,7 +96,22 @@ const FuturisticHome = () => {
       </div>
 
       {/* Sección de características futuristas */}
-      <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full relative z-10 pb-20">
+      <div className="mt-24 grid grid-cols-1 md:grid-cols-4 gap-6 max-w-7xl w-full relative z-10 pb-20">
+
+        {/* Card Bono Bienvenida */}
+        <div className="group relative bg-[#131824]/80 backdrop-blur-xl p-8 rounded-3xl border border-emerald-500/40 hover:border-emerald-400 transition-all duration-300 hover:-translate-y-2 overflow-hidden shadow-[0_0_30px_rgba(16,185,129,0.15)]">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none group-hover:bg-emerald-500/20 transition-colors"></div>
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 flex items-center justify-center mb-6 border border-emerald-500/30 shadow-inner">
+            <span className="text-2xl">🎁</span>
+          </div>
+          <h3 className="text-xl font-bold mb-3 text-emerald-400">Bono de Bienvenida $1 USD</h3>
+          <p className="text-gray-300 leading-relaxed text-sm">
+            Recibe $1 USD automáticamente en tu billetera al registrarte. ¡Comienza a generar rentabilidad desde el primer segundo!
+          </p>
+          <div className="mt-4 pt-3 border-t border-emerald-500/20 text-xs font-semibold text-emerald-300">
+            ⚡ Mínimo de retiro: $5.00 USD / USDT
+          </div>
+        </div>
 
         {/* Card 1 */}
         <div className="group relative bg-[#131824]/60 backdrop-blur-xl p-8 rounded-3xl border border-[#1e2330] hover:border-orange-500/30 transition-all duration-300 hover:-translate-y-2 overflow-hidden shadow-2xl">
