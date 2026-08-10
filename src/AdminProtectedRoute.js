@@ -20,9 +20,10 @@ const AdminProtectedRoute = ({ children }) => {
     return children;
   }
 
-  // Si no hay usuario autenticado o no tiene rol de admin, redirigir a la página de login admin
+  // Si no hay usuario autenticado o no tiene rol de admin, redirigir a la página principal ('/')
+  // para no revelar la ruta secreta de inicio de sesión (/introflow-login)
   if (!currentUser || !isAdmin) {
-    return <Navigate to="/introflow-login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;

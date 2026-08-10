@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useContext, useEffect } from 'react'; // Importar lazy y Suspense
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import AdminProtectedRoute from './AdminProtectedRoute';
 import ProtectedRoute from './ProtectedRoute';
 import Header from './common/layout/Header';
@@ -107,6 +107,7 @@ function AppContent() {
               <Route path="/news" element={<AllNewsPage />} />
               <Route path="/calculator" element={<ProfitabilityCalculatorPage />} />
               <Route path="/pool-stats" element={<PoolStatsPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
         </AuthProvider>
