@@ -97,7 +97,7 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
       if (userSnap.exists()) {
         const data = userSnap.data();
         if (data.welcomeBonusClaimed) {
-          showError('El bono de bienvenida ya ha sido reclamado previamente.');
+          showError(t('El bono de bienvenida ya ha sido reclamado previamente.', 'The welcome bonus has already been claimed previously.'));
           setWelcomeBonusClaimed(true);
           return;
         }
@@ -110,11 +110,11 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
           welcomeBonusClaimedAt: new Date().toISOString()
         });
         setWelcomeBonusClaimed(true);
-        showSuccess('🎉 ¡Bono de Bienvenida de $1.00 USD / USDT acreditado exitosamente en tu billetera!');
+        showSuccess(t('🎉 ¡Bono de Bienvenida de $1.00 USD / USDT acreditado exitosamente en tu billetera!', '🎉 $1.00 USD / USDT Welcome Bonus successfully credited to your wallet!'));
       }
     } catch (err) {
       console.error("Error al reclamar bono:", err);
-      showError("Error al reclamar bono: " + err.message);
+      showError(t("Error al reclamar bono: ", "Error claiming bonus: ") + err.message);
     } finally {
       setClaimingBonus(false);
     }
@@ -582,8 +582,8 @@ const MiningInfoContent = ({ currentUser, userMiners, setUserMiners, styles }) =
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full flex-shrink-0 ${miner.status === 'pendiente' ? 'bg-yellow-500' : miner.status === 'testing' ? 'bg-blue-500 animate-pulse' : 'bg-green-500 animate-pulse'}`}></div>
                       <code className={`font-mono text-sm truncate ${miner.status === 'pendiente' ? 'text-gray-500' : 'text-gray-300'}`}>{miner.workerName}</code>
-                      {miner.status === 'pendiente' && <span className="text-xs text-yellow-500 ml-1 font-semibold">(En Revisión)</span>}
-                      {miner.status === 'testing' && <span className="text-xs text-blue-400 ml-1 font-semibold">(Probando {miner.testingTime || '5m'})</span>}
+                      {miner.status === 'pendiente' && <span className="text-xs text-yellow-500 ml-1 font-semibold">({t('En Revisión', 'Under Review')})</span>}
+                      {miner.status === 'testing' && <span className="text-xs text-blue-400 ml-1 font-semibold">({t('Probando', 'Testing')} {miner.testingTime || '5m'})</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -690,7 +690,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
       if (userSnap.exists()) {
         const data = userSnap.data();
         if (data.welcomeBonusClaimed) {
-          showError('El bono de bienvenida ya ha sido reclamado previamente.');
+          showError(t('El bono de bienvenida ya ha sido reclamado previamente.', 'The welcome bonus has already been claimed previously.'));
           setWelcomeBonusClaimed(true);
           return;
         }
@@ -703,11 +703,11 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
           welcomeBonusClaimedAt: new Date().toISOString()
         });
         setWelcomeBonusClaimed(true);
-        showSuccess('🎉 ¡Bono de Bienvenida de $1.00 USD / USDT acreditado exitosamente en tu billetera!');
+        showSuccess(t('🎉 ¡Bono de Bienvenida de $1.00 USD / USDT acreditado exitosamente en tu billetera!', '🎉 $1.00 USD / USDT Welcome Bonus successfully credited to your wallet!'));
       }
     } catch (err) {
       console.error("Error al reclamar bono:", err);
-      showError("Error al reclamar bono: " + err.message);
+      showError(t("Error al reclamar bono: ", "Error claiming bonus: ") + err.message);
     } finally {
       setClaimingBonus(false);
     }
@@ -719,7 +719,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
     const q = query(collection(db, 'withdrawals'), where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc'));
     const unsub = onSnapshot(q, (snapshot) => {
       setWithdrawalsHistory(snapshot.docs.map(d => ({ id: d.id, ...d.data(), createdAt: d.data().createdAt.toDate() })));
-    }, (err) => showError('Error al cargar retiros.'));
+    }, (err) => showError(t('Error al cargar retiros.', 'Error loading withdrawals.')));
     return () => unsub();
   }, [currentUser]);
 
@@ -734,13 +734,13 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
   // Intercambio USD -> USDT
   const handleExchange = async () => {
     const amt = parseFloat(usdToUsdtAmount);
-    if (isNaN(amt) || amt <= 0) { showError('Cantidad inválida.'); return; }
-    if (!userPortfolio || userPortfolio.fiatBalanceUSD < amt) { showError('Fondos insuficientes en USD.'); return; }
+    if (isNaN(amt) || amt <= 0) { showError(t('Cantidad inválida.', 'Invalid amount.')); return; }
+    if (!userPortfolio || userPortfolio.fiatBalanceUSD < amt) { showError(t('Fondos insuficientes en USD.', 'Insufficient USD funds.')); return; }
     setExchangeLoading(true);
     try {
       await setDoc(doc(db, 'users', currentUser.uid), { balanceUSD: userPortfolio.fiatBalanceUSD - amt, balanceUSDT: userPortfolio.holdings.USDT + amt }, { merge: true });
       setUsdToUsdtAmount('');
-      showSuccess('Intercambio realizado con éxito!');
+      showSuccess(t('Intercambio realizado con éxito!', 'Exchange completed successfully!'));
     } catch (err) { showError(`Error: ${err.message}`); }
     finally { setExchangeLoading(false); }
   };
@@ -749,29 +749,29 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
   const handleSubmitWithdrawal = async (e) => {
     e.preventDefault(); setIsLoading(true);
     const withdrawalAmount = parseFloat(amount);
-    if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) { showError('Cantidad inválida.'); setIsLoading(false); return; }
+    if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) { showError(t('Cantidad inválida.', 'Invalid amount.')); setIsLoading(false); return; }
     const userCustom = userBalances?.customMinPaymentThresholds?.[currency];
     const threshold = (userCustom !== undefined && userCustom !== null && !isNaN(parseFloat(userCustom)))
       ? parseFloat(userCustom)
       : (minPaymentThresholds[currency] || 0);
-    if (withdrawalAmount < threshold) { showError(`Mínimo de retiro: ${threshold.toFixed(currency === 'USDT' || currency === 'USD' ? 2 : 8)} ${currency}.`); setIsLoading(false); return; }
+    if (withdrawalAmount < threshold) { showError(`${t('Mínimo de retiro:', 'Minimum withdrawal:')} ${threshold.toFixed(currency === 'USDT' || currency === 'USD' ? 2 : 8)} ${currency}.`); setIsLoading(false); return; }
     const currentBal = userBalances[`balance${currency}`] || 0;
-    if (withdrawalAmount > currentBal) { showError('Fondos insuficientes.'); setIsLoading(false); return; }
+    if (withdrawalAmount > currentBal) { showError(t('Fondos insuficientes.', 'Insufficient funds.')); setIsLoading(false); return; }
     let method = 'Wallet', addressOrId = '';
     if (selectedAddress && selectedAddress !== 'new') {
       addressOrId = selectedAddress;
       method = (currency === 'USDT' && useBinancePay) ? 'Binance Pay' : 'Wallet';
     } else if (useBinancePay) {
-      if (!binanceId.trim()) { showError('Introduce tu ID de Binance.'); setIsLoading(false); return; }
+      if (!binanceId.trim()) { showError(t('Introduce tu ID de Binance.', 'Enter your Binance ID.')); setIsLoading(false); return; }
       method = 'Binance Pay'; addressOrId = binanceId.trim();
     } else {
-      if (!walletAddress.trim()) { showError('Introduce tu dirección de Wallet.'); setIsLoading(false); return; }
+      if (!walletAddress.trim()) { showError(t('Introduce tu dirección de Wallet.', 'Enter your Wallet address.')); setIsLoading(false); return; }
       addressOrId = walletAddress.trim();
     }
     try {
       await addDoc(collection(db, 'withdrawals'), { userId: currentUser.uid, userEmail: currentUser.email, amount: withdrawalAmount, currency, method, addressOrId, status: 'Pendiente', createdAt: new Date() });
       await updateDoc(doc(db, 'users', currentUser.uid), { [`balance${currency}`]: currentBal - withdrawalAmount });
-      showSuccess('Solicitud de retiro enviada.');
+      showSuccess(t('Solicitud de retiro enviada.', 'Withdrawal request sent.'));
       setAmount(''); setWalletAddress(''); setBinanceId('');
     } catch (err) { showError(`Error: ${err.message}`); }
     finally { setIsLoading(false); }
@@ -1009,7 +1009,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                           className="mt-1 text-indigo-500 focus:ring-indigo-500"
                         />
                         <div className="flex-grow">
-                          <p className="text-xs text-white font-bold">Ingresar dirección diferente / nueva</p>
+                          <p className="text-xs text-white font-bold">{t('Ingresar dirección diferente / nueva', 'Enter a different / new address')}</p>
                         </div>
                       </label>
                     </div>
@@ -1021,21 +1021,21 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                   <div className="grid grid-cols-1 gap-3 p-4 bg-[#131824]/50 border border-[#1e2330] rounded-xl">
                     {useBinancePay ? (
                       <div>
-                        <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Email / ID Binance Pay</label>
+                        <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">{t('Email / ID Binance Pay', 'Email / Binance Pay ID')}</label>
                         <input 
                           type="text" 
                           value={binanceId} 
                           onChange={(e) => setBinanceId(e.target.value)} 
                           disabled={isLoading}
                           required
-                          placeholder="Introduce tu Binance ID o Email"
+                          placeholder={t('Introduce tu Binance ID o Email', 'Enter your Binance ID or Email')}
                           className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-colors" 
                         />
-                        <p className="text-[10px] text-gray-500 mt-1">⚠️ Recuerda que no podemos validar externamente IDs incorrectos.</p>
+                        <p className="text-[10px] text-gray-500 mt-1">⚠️ {t('Recuerda que no podemos validar externamente IDs incorrectos.', 'Remember we cannot externally validate incorrect IDs.')}</p>
                       </div>
                     ) : (
                       <div>
-                        <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Dirección Wallet ({currency === 'USDT' ? 'TRC20' : currency})</label>
+                        <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">{t('Dirección Wallet', 'Wallet Address')} ({currency === 'USDT' ? 'TRC20' : currency})</label>
                         <input 
                           type="text" 
                           value={walletAddress} 
@@ -1045,14 +1045,14 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                           placeholder={currency === 'LTC' ? 'ltc1q...' : currency === 'USDT' ? 'T...' : 'D...'}
                           className="w-full bg-[#131824] border border-[#1e2330] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-colors font-mono" 
                         />
-                        <p className="text-[10px] text-gray-500 mt-1">⚠️ Envía únicamente a direcciones de la red de {currency === 'USDT' ? 'TRON (TRC20)' : currency}.</p>
+                        <p className="text-[10px] text-gray-500 mt-1">⚠️ {t('Envía únicamente a direcciones de la red de', 'Only send to addresses on the network of')} {currency === 'USDT' ? 'TRON (TRC20)' : currency}.</p>
                       </div>
                     )}
                     
                     {/* Tip amigable si no tienen nada configurado */}
                     {!((useBinancePay && userPaymentAddresses?.USD) || (!useBinancePay && userPaymentAddresses?.[currency === 'USDT' ? 'USDT' : currency])) && (
                       <p className="text-[11px] text-indigo-400 bg-indigo-500/5 p-2 rounded-lg border border-indigo-500/10">
-                        💡 <strong>Consejo:</strong> Puedes guardar tus direcciones en la pestaña de <strong>Configuración</strong> para no tener que escribirlas en cada retiro.
+                        💡 <strong>{t('Consejo:', 'Tip:')}</strong> {t('Puedes guardar tus direcciones en la pestaña de', 'You can save your addresses in the')} <strong>{t('Configuración', 'Settings')}</strong> {t('para no tener que escribirlas en cada retiro.', 'to avoid typing them in for each withdrawal.')}
                       </p>
                     )}
                   </div>
@@ -1060,7 +1060,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
 
                 {/* Mostrar umbral mínimo y aviso rápido */}
                 <div className="flex items-center justify-between text-xs text-gray-500 px-1 pt-1">
-                  <span>Mínimo requerido:</span>
+                  <span>{t('Mínimo requerido:', 'Minimum required:')}</span>
                   <span className="text-white font-mono font-bold font-semibold">
                     {((userBalances?.customMinPaymentThresholds?.[currency] !== undefined && userBalances?.customMinPaymentThresholds?.[currency] !== null)
                       ? parseFloat(userBalances.customMinPaymentThresholds[currency])
@@ -1077,7 +1077,7 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7" /></svg>
                   )}
-                  {isLoading ? 'Procesando...' : 'Solicitar Retiro'}
+                  {isLoading ? t('Procesando...', 'Processing...') : t('Solicitar Retiro', 'Request Withdrawal')}
                 </button>
               </div>
             </form>
@@ -1087,8 +1087,8 @@ const WalletSection = ({ minPaymentThresholds, userPaymentAddresses, currentUser
           <div className="bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl">
             <h3 className="text-white font-bold text-lg mb-5 flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-              Historial de Retiros
-              <span className="ml-auto text-xs bg-white/5 px-3 py-1 rounded-full text-gray-400">{withdrawalsHistory.length} registros</span>
+              {t('Historial de Retiros', 'Withdrawals History')}
+              <span className="ml-auto text-xs bg-white/5 px-3 py-1 rounded-full text-gray-400">{withdrawalsHistory.length} {t('registros', 'records')}</span>
             </h3>
             {withdrawalsHistory.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-[#1e2330] rounded-xl text-gray-500">

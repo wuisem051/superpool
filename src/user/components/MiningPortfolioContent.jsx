@@ -3,6 +3,7 @@ import { ThemeContext } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../services/firebase';
 import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
+import { useLanguage } from '../../context/LanguageContext';
 
 /* ─────────────────────────────────────────
    ÍCONOS  (inline SVG)
@@ -55,6 +56,7 @@ const StatCard = ({ icon, label, value, sub, gradient, glow }) => (
    STATUS BADGE
 ───────────────────────────────────────── */
 const StatusBadge = ({ status }) => {
+  const { t } = useLanguage();
   const isActive = status === 'activo';
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${isActive
@@ -62,7 +64,7 @@ const StatusBadge = ({ status }) => {
       : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
       }`}>
       <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-      {status}
+      {isActive ? t('activo', 'active') : status}
     </span>
   );
 };
@@ -72,6 +74,7 @@ const StatusBadge = ({ status }) => {
 ───────────────────────────────────────── */
 const MiningPortfolioContent = () => {
   const { currentUser } = useAuth();
+  const { t, language } = useLanguage();
   const [userMiners, setUserMiners] = useState([]);
   const [totalHashratePool, setTotalHashratePool] = useState(0);
   const [paymentRate, setPaymentRate] = useState(0);
@@ -81,7 +84,7 @@ const MiningPortfolioContent = () => {
 
   useEffect(() => {
     if (!currentUser?.uid) {
-      setError('Debes iniciar sesión para ver tu portafolio.');
+      setError(t('Debes iniciar sesión para ver tu portafolio.', 'You must be logged in to view your portfolio.'));
       setLoading(false);
       return;
     }
@@ -92,7 +95,7 @@ const MiningPortfolioContent = () => {
     const unsubMiners = onSnapshot(
       query(collection(db, 'miners'), where('userId', '==', currentUser.uid)),
       (snap) => setUserMiners(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
-      (err) => { console.error(err); setError('Error al cargar tus mineros.'); setLoading(false); }
+      (err) => { console.error(err); setError(t('Error al cargar tus mineros.', 'Error loading your miners.')); setLoading(false); }
     );
 
     const unsubPool = onSnapshot(
@@ -126,7 +129,7 @@ const MiningPortfolioContent = () => {
     );
 
     return () => { unsubMiners(); unsubPool(); unsubProfitability(); unsubAll(); };
-  }, [currentUser]);
+  }, [currentUser, t]);
 
   const totalUserHashrate = useMemo(() =>
     userMiners.reduce((s, m) => s + (m.currentHashrate || 0), 0), [userMiners]);
@@ -146,7 +149,7 @@ const MiningPortfolioContent = () => {
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
-        <p className="text-gray-400 text-sm font-medium animate-pulse">Cargando portafolio...</p>
+        <p className="text-gray-400 text-sm font-medium animate-pulse">{t('Cargando portafolio...', 'Loading portfolio...')}</p>
       </div>
     </div>
   );
@@ -171,9 +174,9 @@ const MiningPortfolioContent = () => {
         </div>
         <div>
           <h1 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
-            Mi Portafolio de Minería
+            {t('Mi Portafolio de Minería', 'My Mining Portfolio')}
           </h1>
-          <p className="text-gray-500 text-sm mt-0.5">Resumen en tiempo real de tu actividad en la pool</p>
+          <p className="text-gray-500 text-sm mt-0.5">{t('Resumen en tiempo real de tu actividad en la pool', 'Real-time summary of your pool activity')}</p>
         </div>
       </div>
 
@@ -181,25 +184,25 @@ const MiningPortfolioContent = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 mb-8">
         <StatCard
           icon={<IconBolt />}
-          label="Tu Hashrate Total"
+          label={t('Tu Hashrate Total', 'Your Total Hashrate')}
           value={`${totalUserHashrate.toFixed(2)} TH/s`}
-          sub="Potencia de cómputo activa"
+          sub={t('Potencia de cómputo activa', 'Active computing power')}
           gradient="from-blue-400 to-cyan-400"
           glow="bg-blue-500"
         />
         <StatCard
           icon={<IconCoin />}
-          label="Ganancia Diaria Est."
+          label={t('Ganancia Diaria Est.', 'Est. Daily Earnings')}
           value={`$${estimatedDailyUSD.toFixed(4)}`}
-          sub="USD estimados por día"
+          sub={t('USD estimados por día', 'Estimated USD per day')}
           gradient="from-emerald-400 to-green-300"
           glow="bg-emerald-500"
         />
         <StatCard
           icon={<IconPie />}
-          label="Participación en Pool"
+          label={t('Participación en Pool', 'Pool Share')}
           value={`${userPct.toFixed(4)}%`}
-          sub={`Pool total: ${totalHashratePool.toFixed(2)} TH/s`}
+          sub={`${t('Pool total', 'Total pool')}: ${totalHashratePool.toFixed(2)} TH/s`}
           gradient="from-orange-400 to-amber-300"
           glow="bg-orange-500"
         />
@@ -208,7 +211,7 @@ const MiningPortfolioContent = () => {
       {/* ── POOL PROGRESS BAR ── */}
       <div className="bg-[#0d1117] border border-white/5 rounded-2xl p-6 mb-8 shadow-xl">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-semibold text-gray-400">Tu contribución al hashrate global</span>
+          <span className="text-sm font-semibold text-gray-400">{t('Tu contribución al hashrate global', 'Your contribution to global hashrate')}</span>
           <span className="text-sm font-bold text-orange-400">{userPct.toFixed(4)}%</span>
         </div>
         <div className="w-full h-3 bg-[#1a2035] rounded-full overflow-hidden">
@@ -232,12 +235,12 @@ const MiningPortfolioContent = () => {
               <IconCpu />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Mineros Adquiridos</h2>
-              <p className="text-xs text-gray-500">{userMiners.length} minero{userMiners.length !== 1 ? 's' : ''} registrado{userMiners.length !== 1 ? 's' : ''}</p>
+              <h2 className="text-base font-bold text-white">{t('Mineros Adquiridos', 'Purchased Miners')}</h2>
+              <p className="text-xs text-gray-500">{userMiners.length} {t('minero', 'miner')}{userMiners.length !== 1 ? 's' : ''} {t('registrado', 'registered')}{userMiners.length !== 1 ? (language === 'en' ? 's' : 's') : ''}</p>
             </div>
           </div>
           <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/20">
-            En vivo
+            {t('En vivo', 'Live')}
           </span>
         </div>
 
@@ -247,9 +250,9 @@ const MiningPortfolioContent = () => {
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/20 flex items-center justify-center mb-5">
               <IconCpu />
             </div>
-            <h3 className="text-lg font-bold text-white mb-2">Sin mineros aún</h3>
+            <h3 className="text-lg font-bold text-white mb-2">{t('Sin mineros aún', 'No miners yet')}</h3>
             <p className="text-gray-500 text-sm max-w-xs">
-              Aún no tienes mineros en tu portafolio. Conecta o adquiere un minero para comenzar a generar ganancias.
+              {t('Aún no tienes mineros en tu portafolio. Conecta o adquiere un minero para comenzar a generar ganancias.', 'You do not have any miners in your portfolio yet. Connect or acquire a miner to start earning.')}
             </p>
           </div>
         ) : (
@@ -258,7 +261,13 @@ const MiningPortfolioContent = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/5 bg-[#0a0d12]">
-                  {['ID Minero', 'Worker Name', 'Hashrate (TH/s)', 'Estado', 'Fecha Adquisición'].map(h => (
+                  {[
+                    t('ID Minero', 'Miner ID'),
+                    t('Worker Name', 'Worker Name'),
+                    t('Hashrate (TH/s)', 'Hashrate (TH/s)'),
+                    t('Estado', 'Status'),
+                    t('Fecha Adquisición', 'Acquisition Date')
+                  ].map(h => (
                     <th key={h} className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-widest text-gray-500">
                       {h}
                     </th>
@@ -285,7 +294,7 @@ const MiningPortfolioContent = () => {
                     </td>
                     <td className="px-6 py-4 text-gray-400 text-xs">
                       {miner.createdAt?.toDate
-                        ? miner.createdAt.toDate().toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
+                        ? miner.createdAt.toDate().toLocaleDateString(language === 'en' ? 'en-US' : 'es-ES', { year: 'numeric', month: 'short', day: 'numeric' })
                         : '—'
                       }
                     </td>
@@ -303,7 +312,7 @@ const MiningPortfolioContent = () => {
           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-orange-500/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          Tasa BTC/USD de referencia: <span className="text-gray-500 font-semibold">${btcToUsdRate.toLocaleString()}</span>
+          {t('Tasa BTC/USD de referencia', 'Reference BTC/USD rate')}: <span className="text-gray-500 font-semibold">${btcToUsdRate.toLocaleString()}</span>
         </div>
       )}
 

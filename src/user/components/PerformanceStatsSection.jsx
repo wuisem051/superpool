@@ -3,11 +3,13 @@ import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { db } from '../../services/firebase'; // Importar Firebase Firestore
 import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Registrar los componentes de Chart.js que se van a usar
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const PerformanceStatsSection = () => {
+  const { t, language } = useLanguage();
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [],
@@ -51,11 +53,12 @@ const PerformanceStatsSection = () => {
         const labels = [];
         const data = [];
         const today = new Date();
+        const locale = language === 'en' ? 'en-US' : 'es-ES';
         for (let i = 6; i >= 0; i--) { // Últimos 7 días
           const date = new Date(today);
           date.setDate(today.getDate() - i);
           if (date >= resetDate) {
-            labels.push(date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }));
+            labels.push(date.toLocaleDateString(locale, { month: 'short', day: 'numeric' }));
             // Simular una variación para el gráfico de hashrate
             data.push((currentTotalHashrate * (0.9 + Math.random() * 0.2)).toFixed(2));
           }
@@ -65,7 +68,7 @@ const PerformanceStatsSection = () => {
           labels,
           datasets: [
             {
-              label: `Hashrate Total de la Pool (TH/s)`,
+              label: t('Hashrate Total de la Pool (TH/s)', 'Total Pool Hashrate (TH/s)'),
               data: data,
               borderColor: '#3B82F6', // blue_link
               backgroundColor: 'rgba(59, 130, 246, 0.2)',
@@ -77,14 +80,14 @@ const PerformanceStatsSection = () => {
 
       } catch (err) {
         console.error("Error fetching performance stats from Firebase:", err);
-        setError('Error al cargar las estadísticas de rendimiento.');
+        setError(t('Error al cargar las estadísticas de rendimiento.', 'Error loading performance statistics.'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [language, t]);
 
   const chartOptions = {
     responsive: true,
@@ -96,7 +99,7 @@ const PerformanceStatsSection = () => {
       },
       title: {
         display: true,
-        text: 'Rendimiento del Hashrate Total (Últimos 7 Días)',
+        text: t('Rendimiento del Hashrate Total (Últimos 7 Días)', 'Total Hashrate Performance (Last 7 Days)'),
         color: '#e5e7eb',
         font: { size: 14, weight: 'bold' },
       },
@@ -120,8 +123,8 @@ const PerformanceStatsSection = () => {
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
         </div>
         <div>
-          <h2 className="text-xl font-bold text-white">Estadísticas de Rendimiento de la Pool</h2>
-          <p className="text-gray-500 text-xs">Historial de los últimos 7 días</p>
+          <h2 className="text-xl font-bold text-white">{t('Estadísticas de Rendimiento de la Pool', 'Pool Performance Statistics')}</h2>
+          <p className="text-gray-500 text-xs">{t('Historial de los últimos 7 días', 'History of the last 7 days')}</p>
         </div>
       </div>
 
@@ -131,7 +134,7 @@ const PerformanceStatsSection = () => {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
           </svg>
-          <span>Cargando estadísticas...</span>
+          <span>{t('Cargando estadísticas...', 'Loading statistics...')}</span>
         </div>
       )}
       {error && (
@@ -141,7 +144,7 @@ const PerformanceStatsSection = () => {
       {!loading && !error && (
         <>
           <div className="bg-[#131824] border border-[#1e2330] rounded-2xl p-5 text-center mb-5">
-            <h3 className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Hashrate Total de la Pool</h3>
+            <h3 className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">{t('Hashrate Total de la Pool', 'Total Pool Hashrate')}</h3>
             <p className="text-4xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">{totalHashrate.toFixed(2)} <span className="text-2xl">TH/s</span></p>
           </div>
           <div className="bg-[#131824] border border-[#1e2330] rounded-2xl p-4 h-72">

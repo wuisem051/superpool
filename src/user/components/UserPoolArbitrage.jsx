@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../context/AuthContext'; // Importar useAuth
+import { useLanguage } from '../../context/LanguageContext';
 
 const UserPoolArbitrage = () => {
+  const { t } = useLanguage();
   const { currentUser } = useAuth(); // Obtener el usuario actual
   const [availablePools, setAvailablePools] = useState([]);
   const [userActivePools, setUserActivePools] = useState([]);
@@ -44,7 +46,7 @@ const UserPoolArbitrage = () => {
           setAvailablePools(poolsList);
         }, (err) => {
           console.error("Error subscribing to available arbitrage pools:", err);
-          setError('Error al cargar las pools de arbitraje disponibles.');
+          setError(t('Error al cargar las pools de arbitraje disponibles.', 'Error loading available arbitrage pools.'));
         });
 
         // Suscripción a las pools activas del usuario
@@ -81,7 +83,7 @@ const UserPoolArbitrage = () => {
           setLoading(false);
         }, (err) => {
           console.error("Error subscribing to user's active arbitrage pools:", err);
-          setError('Error al cargar tus pools de arbitraje activas.');
+          setError(t('Error al cargar tus pools de arbitraje activas.', 'Error loading your active arbitrage pools.'));
           setLoading(false);
         });
 
@@ -91,7 +93,7 @@ const UserPoolArbitrage = () => {
         };
       } catch (fetchError) {
         console.error("Error fetching arbitrage pools:", fetchError);
-        setError('Error al cargar las pools de arbitraje.');
+        setError(t('Error al cargar las pools de arbitraje.', 'Error loading arbitrage pools.'));
         setLoading(false);
       }
     };
@@ -101,7 +103,7 @@ const UserPoolArbitrage = () => {
 
   const handleJoinPool = async (pool) => {
     if (!currentUser) {
-      setError('Debes iniciar sesión para unirte a una pool.');
+      setError(t('Debes iniciar sesión para unirte a una pool.', 'You must be logged in to join a pool.'));
       return;
     }
     setPoolToJoin(pool); // Establecer la pool seleccionada para confirmación
@@ -111,7 +113,7 @@ const UserPoolArbitrage = () => {
   const confirmJoinPool = async () => {
     console.log("confirmJoinPool: poolToJoin (antes de guardar)", JSON.stringify(poolToJoin, null, 2)); // Log detallado
     if (!currentUser || !poolToJoin) {
-      setError('No se ha seleccionado ninguna pool o no hay usuario autenticado.');
+      setError(t('No se ha seleccionado ninguna pool o no hay usuario autenticado.', 'No pool selected or no authenticated user.'));
       return;
     }
     try {
@@ -136,11 +138,11 @@ const UserPoolArbitrage = () => {
         joinedAt: new Date(),
       });
       setError('');
-      alert(`Te has unido a la pool ${poolToJoin.name} exitosamente!`);
+      alert(`${t('Te has unido a la pool', 'You have joined pool')} ${poolToJoin.name} ${t('exitosamente!', 'successfully!')}`);
       setPoolToJoin(null); // Cerrar el modal de confirmación
     } catch (err) {
       console.error("Error al unirse a la pool:", err);
-      setError('Fallo al unirse a la pool de arbitraje.');
+      setError(t('Fallo al unirse a la pool de arbitraje.', 'Failed to join the arbitrage pool.'));
     }
   };
 
@@ -156,18 +158,18 @@ const UserPoolArbitrage = () => {
 
   const confirmLeavePool = async () => {
     if (!currentUser || !poolToLeave) {
-      setError('No se ha seleccionado ninguna pool para desconectar o no hay usuario autenticado.');
+      setError(t('No se ha seleccionado ninguna pool para desconectar o no hay usuario autenticado.', 'No pool selected to disconnect or no authenticated user.'));
       return;
     }
     try {
       console.log("Intentando eliminar documento con ID:", poolToLeave.id); // Log para depuración
       await deleteDoc(doc(db, 'userArbitragePools', poolToLeave.id));
       setError('');
-      alert(`Te has desconectado de la pool ${poolToLeave.poolName} exitosamente!`);
+      alert(`${t('Te has desconectado de la pool', 'You have disconnected from pool')} ${poolToLeave.poolName} ${t('exitosamente!', 'successfully!')}`);
       setPoolToLeave(null); // Cerrar el modal de confirmación
     } catch (err) {
       console.error("Error detallado al desconectarse de la pool:", err); // Log para depuración
-      setError('Fallo al desconectarse de la pool de arbitraje. Consulta la consola para más detalles.');
+      setError(t('Fallo al desconectarse de la pool de arbitraje. Consulta la consola para más detalles.', 'Failed to disconnect from the arbitrage pool. Check the console for details.'));
     }
   };
 
@@ -183,7 +185,7 @@ const UserPoolArbitrage = () => {
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <p className="text-gray-400 font-medium">Cargando panel de arbitraje...</p>
+        <p className="text-gray-400 font-medium">{t('Cargando panel de arbitraje...', 'Loading arbitrage panel...')}</p>
       </div>
     );
   }
@@ -210,17 +212,17 @@ const UserPoolArbitrage = () => {
           </svg>
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-white">Pools de Arbitraje</h1>
-          <p className="text-gray-400 text-sm">Maximiza tus ganancias conectándote a las mejores pools</p>
+          <h1 className="text-2xl font-bold text-white">{t('Pools de Arbitraje', 'Arbitrage Pools')}</h1>
+          <p className="text-gray-400 text-sm">{t('Maximiza tus ganancias conectándote a las mejores pools', 'Maximize your earnings by connecting to the best pools')}</p>
         </div>
       </div>
 
       {/* Estadísticas Rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { label: 'Pools Activas', value: activePoolsCount, icon: '⚡', color: 'from-blue-400 to-cyan-300', bg: 'bg-blue-500/10' },
-          { label: 'Ganancias Totales', value: `$${totalEarnings.toFixed(2)}`, icon: '💰', color: 'from-green-400 to-emerald-300', bg: 'bg-green-500/10' },
-          { label: 'Mejor Tasa', value: `${bestRate.toFixed(2)}%`, icon: '📈', color: 'from-purple-400 to-violet-300', bg: 'bg-purple-500/10' },
+          { label: t('Pools Activas', 'Active Pools'), value: activePoolsCount, icon: '⚡', color: 'from-blue-400 to-cyan-300', bg: 'bg-blue-500/10' },
+          { label: t('Ganancias Totales', 'Total Earnings'), value: `$${totalEarnings.toFixed(2)}`, icon: '💰', color: 'from-green-400 to-emerald-300', bg: 'bg-green-500/10' },
+          { label: t('Mejor Tasa', 'Best Rate'), value: `${bestRate.toFixed(2)}%`, icon: '📈', color: 'from-purple-400 to-violet-300', bg: 'bg-purple-500/10' },
         ].map(({ label, value, icon, color, bg }) => (
           <div key={label} className="relative overflow-hidden bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform duration-300">
             <div className={`absolute top-0 right-0 w-32 h-32 ${bg} rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none`}></div>
@@ -242,18 +244,18 @@ const UserPoolArbitrage = () => {
             </svg>
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white">Pools Disponibles</h2>
-            <p className="text-gray-500 text-xs">Únete a una pool para comenzar a generar rendimientos</p>
+            <h2 className="text-xl font-bold text-white">{t('Pools Disponibles', 'Available Pools')}</h2>
+            <p className="text-gray-500 text-xs">{t('Únete a una pool para comenzar a generar rendimientos', 'Join a pool to start generating returns')}</p>
           </div>
-          <span className="ml-auto text-xs bg-yellow-500/10 text-yellow-400 px-3 py-1 rounded-full font-bold">{availablePools.length} disponibles</span>
+          <span className="ml-auto text-xs bg-yellow-500/10 text-yellow-400 px-3 py-1 rounded-full font-bold">{availablePools.length} {t('disponibles', 'available')}</span>
         </div>
 
         <div className="mt-5">
           {availablePools.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-14 border-2 border-dashed border-[#1e2330] rounded-2xl text-gray-500">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
-              <p className="font-semibold mb-1">Sin pools disponibles</p>
-              <p className="text-sm">Vuelve más tarde para ver nuevas oportunidades.</p>
+              <p className="font-semibold mb-1">{t('Sin pools disponibles', 'No pools available')}</p>
+              <p className="text-sm">{t('Vuelve más tarde para ver nuevas oportunidades.', 'Check back later for new opportunities.')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -268,7 +270,7 @@ const UserPoolArbitrage = () => {
                       <span className="text-xs text-yellow-400 font-mono bg-yellow-500/10 px-2 py-0.5 rounded-full">{pool.cryptocurrency}</span>
                       <div className="mt-1.5 flex flex-wrap gap-2">
                         <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-md">💵 ${pool.thsRate.toFixed(3)} /TH/s</span>
-                        <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-md">🏷️ {pool.commission.toFixed(1)}% comisión</span>
+                        <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-md">🏷️ {pool.commission.toFixed(1)}% {t('comisión', 'commission')}</span>
                       </div>
                     </div>
                   </div>
@@ -276,7 +278,7 @@ const UserPoolArbitrage = () => {
                     onClick={() => handleJoinPool(pool)}
                     className="ml-4 flex-shrink-0 px-5 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-bold rounded-xl shadow-lg shadow-yellow-500/20 transition-all text-sm"
                   >
-                    Unirse
+                    {t('Unirse', 'Join')}
                   </button>
                 </div>
               ))}
@@ -294,17 +296,17 @@ const UserPoolArbitrage = () => {
             </svg>
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white">Mis Pools Activas</h2>
-            <p className="text-gray-500 text-xs">Pools a las que actualmente estás conectado</p>
+            <h2 className="text-xl font-bold text-white">{t('Mis Pools Activas', 'My Active Pools')}</h2>
+            <p className="text-gray-500 text-xs">{t('Pools a las que actualmente estás conectado', 'Pools you are currently connected to')}</p>
           </div>
-          <span className="ml-auto text-xs bg-green-500/10 text-green-400 px-3 py-1 rounded-full font-bold">{userActivePools.length} activas</span>
+          <span className="ml-auto text-xs bg-green-500/10 text-green-400 px-3 py-1 rounded-full font-bold">{userActivePools.length} {t('activas', 'active')}</span>
         </div>
 
         {userActivePools.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-14 border-2 border-dashed border-[#1e2330] rounded-2xl text-gray-500">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <p className="font-semibold mb-1">Ninguna pool activa</p>
-            <p className="text-sm">Únete a una pool arriba para comenzar a generar ganancias.</p>
+            <p className="font-semibold mb-1">{t('Ninguna pool activa', 'No active pools')}</p>
+            <p className="text-sm">{t('Únete a una pool arriba para comenzar a generar ganancias.', 'Join a pool above to start earning.')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -320,7 +322,7 @@ const UserPoolArbitrage = () => {
                     <div className="mt-2 space-y-1">
                       <div className="flex flex-wrap gap-2">
                         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pool.status === 'Activa' ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>● {pool.status}</span>
-                        <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-md">💵 ${pool.earnings.toFixed(2)} ganados</span>
+                        <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-md">💵 ${pool.earnings.toFixed(2)} {t('ganados', 'earned')}</span>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-md">📊 ${pool.thsRate.toFixed(3)} /TH/s</span>
@@ -336,7 +338,7 @@ const UserPoolArbitrage = () => {
                   onClick={() => handleLeavePool(pool)}
                   className="flex-shrink-0 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 font-bold rounded-xl border border-red-500/20 transition-all text-sm"
                 >
-                  Desconectar
+                  {t('Desconectar', 'Disconnect')}
                 </button>
               </div>
             ))}
@@ -353,14 +355,14 @@ const UserPoolArbitrage = () => {
               <div className="w-16 h-16 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Confirmar Unión</h3>
-              <p className="text-gray-400 text-sm">¿Unirte a la siguiente pool de arbitraje?</p>
+              <h3 className="text-2xl font-bold text-white mb-2">{t('Confirmar Unión', 'Confirm Join')}</h3>
+              <p className="text-gray-400 text-sm">{t('¿Unirte a la siguiente pool de arbitraje?', 'Join the following arbitrage pool?')}</p>
             </div>
             <div className="bg-[#131824] border border-[#1e2330] rounded-2xl p-5 mb-6 space-y-2">
               <p className="text-white font-bold text-lg">{poolToJoin.name} <span className="text-yellow-400 text-base font-mono">({poolToJoin.cryptocurrency})</span></p>
               <div className="flex flex-wrap gap-2 mt-2">
                 <span className="text-xs text-gray-300 bg-white/5 px-3 py-1 rounded-lg">💵 ${poolToJoin.thsRate.toFixed(3)} / TH/s</span>
-                <span className="text-xs text-gray-300 bg-white/5 px-3 py-1 rounded-lg">🏷️ {poolToJoin.commission.toFixed(1)}% comisión</span>
+                <span className="text-xs text-gray-300 bg-white/5 px-3 py-1 rounded-lg">🏷️ {poolToJoin.commission.toFixed(1)}% {t('comisión', 'commission')}</span>
               </div>
               {poolToJoin.url && poolToJoin.port && (
                 <p className="text-xs text-gray-500 font-mono mt-1">🔗 {poolToJoin.url}:{poolToJoin.port} | Worker: {poolToJoin.defaultWorkerName}</p>
@@ -368,10 +370,10 @@ const UserPoolArbitrage = () => {
             </div>
             <div className="flex gap-3">
               <button onClick={confirmJoinPool} className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all">
-                ✓ Confirmar
+                ✓ {t('Confirmar', 'Confirm')}
               </button>
               <button onClick={cancelJoinPool} className="flex-1 py-3 bg-[#131824] hover:bg-white/5 text-gray-400 hover:text-white font-bold rounded-xl border border-[#1e2330] transition-all">
-                Cancelar
+                {t('Cancelar', 'Cancel')}
               </button>
             </div>
           </div>
@@ -387,18 +389,18 @@ const UserPoolArbitrage = () => {
               <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Confirmar Desconexión</h3>
-              <p className="text-gray-400 text-sm">Esta acción marcará la pool como inactiva.</p>
+              <h3 className="text-2xl font-bold text-white mb-2">{t('Confirmar Desconexión', 'Confirm Disconnect')}</h3>
+              <p className="text-gray-400 text-sm">{t('Esta acción marcará la pool como inactiva.', 'This action will mark the pool as inactive.')}</p>
             </div>
             <div className="bg-[#131824] border border-red-500/20 rounded-2xl p-5 mb-6">
               <p className="text-white font-bold text-lg">{poolToLeave.poolName} <span className="text-red-400 text-base font-mono">({poolToLeave.cryptocurrency})</span></p>
             </div>
             <div className="flex gap-3">
               <button onClick={confirmLeavePool} className="flex-1 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white font-bold rounded-xl shadow-lg shadow-red-500/20 transition-all">
-                Desconectar
+                {t('Desconectar', 'Disconnect')}
               </button>
               <button onClick={cancelLeavePool} className="flex-1 py-3 bg-[#131824] hover:bg-white/5 text-gray-400 hover:text-white font-bold rounded-xl border border-[#1e2330] transition-all">
-                Cancelar
+                {t('Cancelar', 'Cancel')}
               </button>
             </div>
           </div>

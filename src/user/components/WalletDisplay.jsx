@@ -2,10 +2,12 @@ import React, { useState, useEffect, useContext } from 'react';
 import { doc, onSnapshot, getFirestore, setDoc } from 'firebase/firestore';
 import { ThemeContext } from '../../context/ThemeContext'; // Importar ThemeContext
 import { useError } from '../../context/ErrorContext'; // Importar useError para mostrar mensajes
+import { useLanguage } from '../../context/LanguageContext';
 
 const WalletDisplay = ({ currentUser }) => {
   const { theme, darkMode } = useContext(ThemeContext);
   const { showSuccess } = useError(); // Usar el contexto de errores
+  const { t } = useLanguage();
   const [userPortfolio, setUserPortfolio] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,13 +67,13 @@ const WalletDisplay = ({ currentUser }) => {
             console.log("Balances por defecto creados exitosamente en el documento del usuario.");
           } catch (setDocError) {
             console.error("Error al inicializar balances por defecto:", setDocError);
-            setError("Error al inicializar el saldo de la billetera.");
+            setError(t("Error al inicializar el saldo de la billetera.", "Error initializing wallet balance."));
           }
         }
         setLoading(false);
       }, (err) => {
         console.error("Error al obtener balances de usuario en tiempo real:", err);
-        setError("Error al cargar el saldo de la billetera.");
+        setError(t("Error al cargar el saldo de la billetera.", "Error loading wallet balance."));
         setLoading(false);
       });
       return () => unsubscribe();
@@ -79,7 +81,7 @@ const WalletDisplay = ({ currentUser }) => {
       setUserPortfolio(null);
       setLoading(false);
     }
-  }, [currentUser, db]);
+  }, [currentUser, db, t]);
 
   const [usdToUsdtAmount, setUsdToUsdtAmount] = useState('');
   const [exchangeLoading, setExchangeLoading] = useState(false);
@@ -87,18 +89,18 @@ const WalletDisplay = ({ currentUser }) => {
   const handleExchange = async () => {
     setError(null);
     if (!currentUser?.uid) {
-      setError('Debes iniciar sesión para realizar intercambios.');
+      setError(t('Debes iniciar sesión para realizar intercambios.', 'You must be logged in to perform exchanges.'));
       return;
     }
 
     const amountToExchange = parseFloat(usdToUsdtAmount);
     if (isNaN(amountToExchange) || amountToExchange <= 0) {
-      setError('Por favor, introduce una cantidad válida para intercambiar.');
+      setError(t('Por favor, introduce una cantidad válida para intercambiar.', 'Please enter a valid amount to exchange.'));
       return;
     }
 
     if (userPortfolio.fiatBalanceUSD < amountToExchange) {
-      setError('Fondos insuficientes en USD para realizar el intercambio.');
+      setError(t('Fondos insuficientes en USD para realizar el intercambio.', 'Insufficient USD funds to perform the exchange.'));
       return;
     }
 
@@ -114,10 +116,10 @@ const WalletDisplay = ({ currentUser }) => {
       }, { merge: true });
 
       setUsdToUsdtAmount('');
-      showSuccess('Intercambio de USD a USDT realizado con éxito!');
+      showSuccess(t('Intercambio de USD a USDT realizado con éxito!', 'Exchange from USD to USDT performed successfully!'));
     } catch (err) {
       console.error("Error al realizar el intercambio:", err);
-      setError(`Fallo al realizar el intercambio: ${err.message}`);
+      setError(`${t('Fallo al realizar el intercambio', 'Failed to perform exchange')}: ${err.message}`);
     } finally {
       setExchangeLoading(false);
     }
@@ -126,7 +128,7 @@ const WalletDisplay = ({ currentUser }) => {
   if (loading) {
     return (
       <div className={`p-6 rounded-lg shadow-xl max-w-4xl mx-auto my-8 ${theme.backgroundAlt} ${theme.text}`}>
-        <p className="text-center text-gray-400">Cargando tu billetera...</p>
+        <p className="text-center text-gray-400">{t('Cargando tu billetera...', 'Loading your wallet...')}</p>
       </div>
     );
   }
@@ -143,25 +145,25 @@ const WalletDisplay = ({ currentUser }) => {
   if (!userPortfolio) {
     return (
       <div className={`p-6 rounded-lg shadow-xl max-w-4xl mx-auto my-8 ${theme.backgroundAlt} ${theme.text}`}>
-        <p className="text-center text-gray-400">No se pudo cargar la información de tu billetera. Por favor, intenta de nuevo o contacta a soporte.</p>
+        <p className="text-center text-gray-400">{t('No se pudo cargar la información de tu billetera. Por favor, intenta de nuevo o contacta a soporte.', 'Could not load your wallet information. Please try again or contact support.')}</p>
       </div>
     );
   }
 
   return (
     <div className={`p-6 rounded-lg shadow-xl max-w-4xl mx-auto my-8 ${theme.backgroundAlt} ${theme.text}`}>
-      <h2 className="text-3xl font-bold text-center mb-6">Mi Billetera</h2>
+      <h2 className="text-3xl font-bold text-center mb-6">{t('Mi Billetera', 'My Wallet')}</h2>
 
       {/* Sección de Saldos de Criptomonedas */}
       <div className="p-4 rounded-md border border-gray-300 dark:border-gray-600">
-        <h3 className="text-2xl font-semibold mb-4 text-center">Saldos de Criptomonedas</h3>
+        <h3 className="text-2xl font-semibold mb-4 text-center">{t('Saldos de Criptomonedas', 'Cryptocurrency Balances')}</h3>
         {userPortfolio.holdings && Object.keys(userPortfolio.holdings).length > 0 ? (
           <div className="overflow-x-auto">
             <table className={`min-w-full rounded-lg overflow-hidden ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
               <thead className={`${darkMode ? 'bg-gray-600' : 'bg-gray-200'} ${theme.text}`}>
                 <tr>
-                  <th className="py-3 px-4 text-left">Moneda</th>
-                  <th className="py-3 px-4 text-left">Cantidad</th>
+                  <th className="py-3 px-4 text-left">{t('Moneda', 'Currency')}</th>
+                  <th className="py-3 px-4 text-left">{t('Cantidad', 'Amount')}</th>
                 </tr>
               </thead>
               <tbody className={`${theme.text}`}>
@@ -175,7 +177,7 @@ const WalletDisplay = ({ currentUser }) => {
             </table>
           </div>
         ) : (
-          <p className="text-center text-gray-400">No tienes criptomonedas en tu billetera.</p>
+          <p className="text-center text-gray-400">{t('No tienes criptomonedas en tu billetera.', 'You have no cryptocurrencies in your wallet.')}</p>
         )}
       </div>
     </div>
