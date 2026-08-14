@@ -6,8 +6,7 @@ export const LanguageProvider = ({ children }) => {
   const [language, setLanguageState] = useState(() => {
     const saved = localStorage.getItem('app_language');
     if (saved) return saved;
-    const browserLang = (typeof navigator !== 'undefined' && (navigator.language || navigator.userLanguage) || '').toLowerCase();
-    return browserLang.startsWith('en') ? 'en' : 'es';
+    return 'en'; // Por defecto en Inglés
   });
 
   const setLanguage = (lang) => {

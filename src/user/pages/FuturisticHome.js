@@ -11,8 +11,10 @@ const FuturisticHome = () => {
   const { t, language } = useLanguage();
   const [siteConfig, setSiteConfig] = useState({
     siteName: 'MaxiOS Pool',
-    heroTitle: 'Bienvenido a nuestra Pool de Minería Bitcoin',
-    homeText: 'Minando el futuro, un bloque a la vez.',
+    heroTitle: '',
+    heroTitleEn: '',
+    homeText: '',
+    homeTextEn: '',
   });
 
   useEffect(() => {
@@ -25,36 +27,29 @@ const FuturisticHome = () => {
           const data = docSnap.data();
           setSiteConfig(data || {
             siteName: 'MaxiOS Pool',
-            heroTitle: 'Bienvenido a nuestra Pool de Minería Bitcoin',
-            homeText: 'Minando el futuro, un bloque a la vez.',
-          });
-        } else {
-          setSiteConfig({
-            siteName: 'MaxiOS Pool',
-            heroTitle: 'Bienvenido a nuestra Pool de Minería Bitcoin',
-            homeText: 'Minando el futuro, un bloque a la vez.',
+            heroTitle: '',
+            heroTitleEn: '',
+            homeText: '',
+            homeTextEn: '',
           });
         }
       } catch (err) {
         console.error("Error fetching site config for FuturisticHome page from Firebase:", err);
-        setSiteConfig({
-          siteName: 'MaxiOS Pool',
-          heroTitle: 'Bienvenido a nuestra Pool de Minería Bitcoin',
-          homeText: 'Minando el futuro, un bloque a la vez.',
-        });
       }
     };
 
     fetchSiteConfig();
   }, []);
 
-  // Title & Text translated dynamically
+  // Title & Text translated dynamically with zero flash of Spanish
+  const isDefaultSpanishTitle = !siteConfig.heroTitle || siteConfig.heroTitle === 'Bienvenido a nuestra Pool de Minería Bitcoin';
   const displayHeroTitle = language === 'en'
-    ? (siteConfig.heroTitleEn || siteConfig.heroTitle || 'Welcome to our Bitcoin Mining Pool')
+    ? (siteConfig.heroTitleEn || (!isDefaultSpanishTitle ? siteConfig.heroTitle : 'Welcome to our Bitcoin Mining Pool'))
     : (siteConfig.heroTitle || 'Bienvenido a nuestra Pool de Minería Bitcoin');
 
+  const isDefaultSpanishText = !siteConfig.homeText || siteConfig.homeText === 'Minando el futuro, un bloque a la vez.';
   const displayHomeText = language === 'en'
-    ? (siteConfig.homeTextEn || siteConfig.homeText || 'Mining the future, one block at a time.')
+    ? (siteConfig.homeTextEn || (!isDefaultSpanishText ? siteConfig.homeText : 'Mining the future, one block at a time.'))
     : (siteConfig.homeText || 'Minando el futuro, un bloque a la vez.');
 
   return (
