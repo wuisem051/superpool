@@ -39,16 +39,16 @@ const SiteSettingsContent = () => {
           setFooterTextEn(data.footerTextEn || '');
         } else {
           const defaults = {
-            siteName: 'BitcoinPool',
-            homeText: 'Minando el futuro, un bloque a la vez.',
-            homeTextEn: 'Mining the future, one block at a time.',
-            heroTitle: 'Bienvenido a nuestra Pool de Minería Bitcoin',
-            heroTitleEn: 'Welcome to our Bitcoin Mining Pool',
+            siteName: 'MaxiOS Arbitraje Pool BTC',
+            homeText: 'Maximiza el rendimiento de tus ASICs Enrutamiento inteligente Mining Failover para Mining Rig Rentals Arbitraje P2P Market pool Garantizamos una tasa Fija por cada Ths que nos da Tu Equipo Empieza a minar Hoy !',
+            homeTextEn: 'Maximize your ASIC performance with intelligent routing and mining failover for mining rig rentals, P2P arbitrage, and market pools. We guarantee a fixed rate for every TH/s your equipment provides. Start mining today!',
+            heroTitle: 'Tasa de hash Garantizada Fija y Optima Empieza Hoy !',
+            heroTitleEn: 'Guaranteed, Fixed, and Optimal Hash Rate – Start Today!',
             performanceStatsResetDate: null,
-            siteDomain: '',
+            siteDomain: 'MaxiOS Professional Fixed-Rate BTC',
             faviconUrl: '',
-            footerText: `© ${new Date().getFullYear()} BitcoinPool. Todos los derechos reservados.`,
-            footerTextEn: `© ${new Date().getFullYear()} BitcoinPool. All rights reserved.`,
+            footerText: '© 2025 MaxiOS. Todos los derechos reservados.',
+            footerTextEn: '© 2025 MaxiOS. All rights reserved.',
           };
           await setDoc(docRef, defaults);
           setSiteName(defaults.siteName);

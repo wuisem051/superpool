@@ -14,7 +14,7 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation(); // Obtener la ubicación actual
   const [isOpen, setIsOpen] = useState(false); // Estado para el menú móvil
-  const [siteName, setSiteName] = useState('MaxiOS Pool'); // Estado para el nombre del sitio
+  const [siteName, setSiteName] = useState('MaxiOS Arbitraje Pool BTC'); // Estado para el nombre del sitio
 
   useEffect(() => {
     const fetchSiteName = async () => {
@@ -24,13 +24,13 @@ const Header = () => {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setSiteName(data.siteName || 'MaxiOS Pool');
+          setSiteName(data.siteName || 'MaxiOS Arbitraje Pool BTC');
         } else {
-          setSiteName('MaxiOS Pool');
+          setSiteName('MaxiOS Arbitraje Pool BTC');
         }
       } catch (err) {
         console.error("Error fetching site name for Header from Firebase:", err);
-        setSiteName('MaxiOS Pool'); // Fallback en caso de error
+        setSiteName('MaxiOS Arbitraje Pool BTC'); // Fallback en caso de error
       }
     };
     fetchSiteName();

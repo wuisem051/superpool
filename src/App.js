@@ -56,14 +56,14 @@ function AppContent() {
           if (data.siteName) {
             document.title = data.siteName;
           } else {
-            document.title = 'MaxiOS Pool';
+            document.title = 'MaxiOS Arbitraje Pool BTC';
           }
         } else {
-          document.title = 'MaxiOS Pool';
+          document.title = 'MaxiOS Arbitraje Pool BTC';
         }
       } catch (err) {
         console.error("Error fetching site settings for App component from Firebase:", err);
-        document.title = 'MaxiOS Pool';
+        document.title = 'MaxiOS Arbitraje Pool BTC';
       }
     };
     fetchSiteSettings();

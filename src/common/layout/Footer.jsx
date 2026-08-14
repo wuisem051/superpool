@@ -5,8 +5,8 @@ import { useLanguage } from '../../context/LanguageContext';
 
 const Footer = () => {
   const { t, language } = useLanguage();
-  const [customTextEs, setCustomTextEs] = useState('');
-  const [customTextEn, setCustomTextEn] = useState('');
+  const [customTextEs, setCustomTextEs] = useState('© 2025 MaxiOS. Todos los derechos reservados.');
+  const [customTextEn, setCustomTextEn] = useState('© 2025 MaxiOS. All rights reserved.');
 
   useEffect(() => {
     const fetchFooterText = async () => {
@@ -26,7 +26,7 @@ const Footer = () => {
     fetchFooterText();
   }, []);
 
-  const defaultText = `© ${new Date().getFullYear()} MaxiOS Pool. ${t('Todos los derechos reservados.', 'All rights reserved.')} ${t('Versión del proyecto 1.0 Beta', 'Project Version 1.0 Beta')}`;
+  const defaultText = language === 'en' ? '© 2025 MaxiOS. All rights reserved.' : '© 2025 MaxiOS. Todos los derechos reservados.';
 
   const currentCustomText = language === 'en' ? (customTextEn || customTextEs) : customTextEs;
   const displayText = currentCustomText || defaultText;

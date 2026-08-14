@@ -10,11 +10,11 @@ const FuturisticHome = () => {
   const { theme } = useContext(ThemeContext);
   const { t, language } = useLanguage();
   const [siteConfig, setSiteConfig] = useState({
-    siteName: 'MaxiOS Pool',
-    heroTitle: '',
-    heroTitleEn: '',
-    homeText: '',
-    homeTextEn: '',
+    siteName: 'MaxiOS Arbitraje Pool BTC',
+    heroTitle: 'Tasa de hash Garantizada Fija y Optima Empieza Hoy !',
+    heroTitleEn: 'Guaranteed, Fixed, and Optimal Hash Rate – Start Today!',
+    homeText: 'Maximiza el rendimiento de tus ASICs Enrutamiento inteligente Mining Failover para Mining Rig Rentals Arbitraje P2P Market pool Garantizamos una tasa Fija por cada Ths que nos da Tu Equipo Empieza a minar Hoy !',
+    homeTextEn: 'Maximize your ASIC performance with intelligent routing and mining failover for mining rig rentals, P2P arbitrage, and market pools. We guarantee a fixed rate for every TH/s your equipment provides. Start mining today!',
   });
 
   useEffect(() => {
@@ -25,13 +25,10 @@ const FuturisticHome = () => {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setSiteConfig(data || {
-            siteName: 'MaxiOS Pool',
-            heroTitle: '',
-            heroTitleEn: '',
-            homeText: '',
-            homeTextEn: '',
-          });
+          setSiteConfig(prev => ({
+            ...prev,
+            ...data
+          }));
         }
       } catch (err) {
         console.error("Error fetching site config for FuturisticHome page from Firebase:", err);
@@ -41,16 +38,14 @@ const FuturisticHome = () => {
     fetchSiteConfig();
   }, []);
 
-  // Title & Text translated dynamically with zero flash of Spanish
-  const isDefaultSpanishTitle = !siteConfig.heroTitle || siteConfig.heroTitle === 'Bienvenido a nuestra Pool de Minería Bitcoin';
+  // Title & Text translated dynamically with zero flash
   const displayHeroTitle = language === 'en'
-    ? (siteConfig.heroTitleEn || (!isDefaultSpanishTitle ? siteConfig.heroTitle : 'Welcome to our Bitcoin Mining Pool'))
-    : (siteConfig.heroTitle || 'Bienvenido a nuestra Pool de Minería Bitcoin');
+    ? (siteConfig.heroTitleEn || siteConfig.heroTitle)
+    : (siteConfig.heroTitle || 'Tasa de hash Garantizada Fija y Optima Empieza Hoy !');
 
-  const isDefaultSpanishText = !siteConfig.homeText || siteConfig.homeText === 'Minando el futuro, un bloque a la vez.';
   const displayHomeText = language === 'en'
-    ? (siteConfig.homeTextEn || (!isDefaultSpanishText ? siteConfig.homeText : 'Mining the future, one block at a time.'))
-    : (siteConfig.homeText || 'Minando el futuro, un bloque a la vez.');
+    ? (siteConfig.homeTextEn || siteConfig.homeText)
+    : (siteConfig.homeText || 'Maximiza el rendimiento de tus ASICs Enrutamiento inteligente Mining Failover para Mining Rig Rentals Arbitraje P2P Market pool Garantizamos una tasa Fija por cada Ths que nos da Tu Equipo Empieza a minar Hoy !');
 
   return (
     <div className="relative min-h-screen bg-[#0b0e14] flex flex-col items-center justify-center p-4 overflow-hidden z-0 pt-24">
