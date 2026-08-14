@@ -8,47 +8,83 @@ const DEFAULT_PROJECT_NEWS = [
   {
     id: 'project-manifesto-1',
     title: 'Manifiesto Colectivo: Optimización de Rendimiento a Tasa Fija Garantizada',
+    titleEn: 'Collective Manifesto: Yield Optimization at Guaranteed Fixed Rate',
     category: 'Manifiesto & Misión',
+    categoryEn: 'Manifesto & Mission',
     createdAt: new Date('2026-08-10'),
     author: 'Colectivo MaxiOS',
+    authorEn: 'MaxiOS Collective',
     summary: 'Somos una agrupación colaborativa sin fines de lucro enfocada en maximizar los ingresos de los mineros mediante enrutamiento inteligente y arbitraje de pools a tasa fija.',
+    summaryEn: 'We are a non-profit collaborative group focused on maximizing miner revenue through intelligent routing and fixed-rate pool arbitrage.',
     content: `MaxiOS nació como una iniciativa colectiva libre de afán de lucro corporativo. Creemos firmemente que el futuro de la minería de Bitcoin pertenece a los mineros independientes y no a intermediarios que cobran elevadas comisiones.
 
-En lugar de depender de las fluctuaciones impredecibles de una pool tradicional, nuestra tecnología enruta de forma inteligente la potencia computacional de tus equipos hacia los destinos de mayor rendimiento (arbitraje P2P, Mining Rig Rentals y pools de alto retorno). De esta forma, garantizamos una tasa fija predecible por cada TH/s aportado.`
+En lugar de depender de las fluctuaciones impredecibles de una pool tradicional, nuestra tecnología enruta de forma inteligente la potencia computacional de tus equipos hacia los destinos de mayor rendimiento (arbitraje P2P, Mining Rig Rentals y pools de alto retorno). De esta forma, garantizamos una tasa fija predecible por cada TH/s aportado.`,
+    contentEn: `MaxiOS was born as a collective initiative free from corporate profit motives. We firmly believe that the future of Bitcoin mining belongs to independent miners, not intermediaries charging high fees.
+
+Instead of relying on the unpredictable fluctuations of traditional solo or payout pools, our technology intelligently routes your equipment's computing power to highest-yield destinations (P2P arbitrage, Mining Rig Rentals, and high-return market pools). In this way, we guarantee a predictable fixed rate for every TH/s provided.`
   },
   {
     id: 'project-stabilization-2',
     title: 'Enrutamiento Inteligente, Failover y Arbitraje de Mercado P2P',
+    titleEn: 'Intelligent Routing, Failover and P2P Market Arbitrage',
     category: 'Tecnología & Arbitraje',
+    categoryEn: 'Technology & Arbitrage',
     createdAt: new Date('2026-08-05'),
     author: 'Equipo Técnico de Hashrate',
+    authorEn: 'Hashrate Technical Team',
     summary: 'Optimizamos la conexión de tus ASICs con sistemas automatizados de failover y colocación de capacidad en los mercados con mejores tarifas.',
+    summaryEn: 'We optimize your ASIC connections with automated failover systems and capacity placement in top-paying markets.',
     content: `Para maximizar la rentabilidad de cada minero, implementamos un sistema continuo de monitoreo y enrutamiento inteligente.
 
-Si una pool disminuye su rendimiento o presenta fallas, nuestro mecanismo de Mining Failover redirige automáticamente tu hashrate en milisegundos. Además, comercializamos la capacidad agregada en mercados P2P y de alquiler de potencia para asegurar que recibas la tasa fija más alta y estable posible.`
+Si una pool disminuye su rendimiento o presenta fallas, nuestro mecanismo de Mining Failover redirige automáticamente tu hashrate en milisegundos. Además, comercializamos la capacidad agregada en mercados P2P y de alquiler de potencia para asegurar que recibas la tasa fija más alta y estable posible.`,
+    contentEn: `To maximize the profitability of every miner, we deployed a continuous monitoring and intelligent routing system.
+
+If a pool experiences performance drops or downtime, our Mining Failover mechanism automatically reroutes your hashrate within milliseconds. Furthermore, we sell aggregated capacity in P2P and power rental markets to ensure you receive the highest and most stable fixed rate possible.`
   },
   {
     id: 'project-community-3',
     title: 'Incentivo de Inclusión Comunitario: Bono de $1.00 USD para Nuevos Mineros',
+    titleEn: 'Community Inclusion Incentive: $1.00 USD Bonus for New Miners',
     category: 'Comunidad',
+    categoryEn: 'Community',
     createdAt: new Date('2026-07-28'),
     author: 'Soporte Comunitario',
+    authorEn: 'Community Support',
     summary: 'Lanzamos el programa de estímulo inicial que otorga $1.00 USD en el registro para fomentar el inicio de nuevos equipos en la red.',
+    summaryEn: 'We launched an initial incentive program giving $1.00 USD at registration to encourage new equipment onboarding.',
     content: `Como parte de nuestro compromiso de democratizar el acceso a la minería eficiente, otorgamos a cada nuevo minero un bono inicial de $1.00 USD en su billetera interna al momento de registrarse.
 
-Este beneficio busca romper barreras de entrada y permitir que cualquier persona experimente el poder del arbitraje de potencia en un entorno seguro, transparente y predecible.`
+Este beneficio busca romper barreras de entrada y permitir que cualquier persona experimente el poder del arbitraje de potencia en un entorno seguro, transparente y predecible.`,
+    contentEn: `As part of our commitment to democratizing access to efficient mining, we grant every new miner an initial $1.00 USD bonus in their internal wallet upon registration.
+
+This benefit aims to lower entry barriers and allow anyone to experience the power of hashrate arbitrage in a secure, transparent, and predictable environment.`
   },
   {
     id: 'project-transparency-4',
     title: 'Transparencia en Pagos y Rendimiento por TH/s',
+    titleEn: 'Payout Transparency & TH/s Yield Records',
     category: 'Transparencia & Seguridad',
+    categoryEn: 'Transparency & Security',
     createdAt: new Date('2026-07-15'),
     author: 'Comité de Auditoría',
+    authorEn: 'Audit Committee',
     summary: 'Acceso en tiempo real al estado de tu equipo, registro de enrutamiento y acreditación constante de tu tasa fija sin comisiones ocultas.',
+    summaryEn: 'Real-time access to your equipment status, routing logs, and constant fixed-rate credits without hidden fees.',
     content: `La transparencia es nuestro compromiso central. Cada usuario cuenta con métricas detalladas en su panel para verificar el rendimiento exacto de sus ASICs, la tasa fija asignada por TH/s y el historial completo de sus acreditaciones.
 
-No aplicamos retenciones arbitrarias ni comisiones ocultas. Nuestro objetivo es que recibas la mayor rentabilidad neta posible por la potencia computacional que aporta tu equipo.`
+No aplicamos retenciones arbitrarias ni comisiones ocultas. Nuestro objetivo es que recibas la mayor rentabilidad neta posible por la potencia computacional que aporta tu equipo.`,
+    contentEn: `Transparency is our core commitment. Every user has detailed metrics on their dashboard to verify the exact performance of their ASICs, the assigned fixed rate per TH/s, and their complete credit history.
+
+We apply no arbitrary withholdings or hidden fees. Our goal is for you to receive the highest net return possible for the computing power your equipment provides.`
   }
+];
+
+const CATEGORIES_LIST = [
+  { key: 'Todas', labelEs: 'Todas', labelEn: 'All' },
+  { key: 'Manifiesto & Misión', labelEs: 'Manifiesto & Misión', labelEn: 'Manifesto & Mission' },
+  { key: 'Tecnología & Arbitraje', labelEs: 'Tecnología & Arbitraje', labelEn: 'Technology & Arbitrage' },
+  { key: 'Comunidad', labelEs: 'Comunidad', labelEn: 'Community' },
+  { key: 'Transparencia & Seguridad', labelEs: 'Transparencia & Seguridad', labelEn: 'Transparency & Security' }
 ];
 
 const AllNewsPage = () => {
@@ -56,7 +92,7 @@ const AllNewsPage = () => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Todas');
+  const [selectedCategoryKey, setSelectedCategoryKey] = useState('Todas');
   const [activeNewsModal, setActiveNewsModal] = useState(null);
 
   useEffect(() => {
@@ -75,10 +111,15 @@ const AllNewsPage = () => {
           return {
             id: doc.id,
             title: data.title || 'Noticia del Proyecto',
+            titleEn: data.titleEn || data.title || 'Project News',
             category: data.category || 'Anuncio',
+            categoryEn: data.categoryEn || data.category || 'Announcement',
             author: data.author || 'Equipo MaxiOS',
+            authorEn: data.authorEn || data.author || 'MaxiOS Team',
             summary: data.summary || data.content?.substring(0, 150) + '...',
+            summaryEn: data.summaryEn || data.summary || data.contentEn?.substring(0, 150) + '...',
             content: data.content || '',
+            contentEn: data.contentEn || data.content || '',
             createdAt: dateObj,
           };
         });
@@ -103,19 +144,15 @@ const AllNewsPage = () => {
     fetchAllNews();
   }, []);
 
-  const categories = [
-    'Todas',
-    'Manifiesto & Misión',
-    'Tecnología & Arbitraje',
-    'Comunidad',
-    'Transparencia & Seguridad'
-  ];
-
   const filteredNews = news.filter(item => {
-    const matchesCategory = selectedCategory === 'Todas' || item.category === selectedCategory;
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (item.summary && item.summary.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                          (item.content && item.content.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesCategory = selectedCategoryKey === 'Todas' ||
+                          item.category === selectedCategoryKey ||
+                          item.categoryEn === selectedCategoryKey;
+    const titleText = (language === 'en' ? (item.titleEn || item.title) : item.title).toLowerCase();
+    const summaryText = (language === 'en' ? (item.summaryEn || item.summary) : (item.summary || '')).toLowerCase();
+    const contentText = (language === 'en' ? (item.contentEn || item.content) : (item.content || '')).toLowerCase();
+    const queryStr = searchQuery.toLowerCase();
+    const matchesSearch = titleText.includes(queryStr) || summaryText.includes(queryStr) || contentText.includes(queryStr);
     return matchesCategory && matchesSearch;
   });
 
@@ -205,19 +242,22 @@ const AllNewsPage = () => {
           
           {/* Tabs de Categorías */}
           <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${
-                  selectedCategory === cat
-                    ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.4)]'
-                    : 'bg-[#131824]/80 border border-[#1e2330] text-gray-400 hover:text-white hover:border-gray-600'
-                }`}
-              >
-                {t(cat, cat)}
-              </button>
-            ))}
+            {CATEGORIES_LIST.map((catObj) => {
+              const label = language === 'en' ? catObj.labelEn : catObj.labelEs;
+              return (
+                <button
+                  key={catObj.key}
+                  onClick={() => setSelectedCategoryKey(catObj.key)}
+                  className={`px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${
+                    selectedCategoryKey === catObj.key
+                      ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.4)]'
+                      : 'bg-[#131824]/80 border border-[#1e2330] text-gray-400 hover:text-white hover:border-gray-600'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Campo de Búsqueda */}
@@ -243,56 +283,63 @@ const AllNewsPage = () => {
           </div>
         ) : filteredNews.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredNews.map((item) => (
-              <div
-                key={item.id}
-                className="group relative bg-[#131824]/80 backdrop-blur-xl p-6 rounded-3xl border border-[#1e2330] hover:border-orange-500/40 transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between shadow-xl overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 w-28 h-28 bg-orange-500/5 rounded-full blur-2xl group-hover:bg-orange-500/15 transition-colors pointer-events-none"></div>
+            {filteredNews.map((item) => {
+              const displayCategory = language === 'en' ? (item.categoryEn || item.category) : item.category;
+              const displayTitle = language === 'en' ? (item.titleEn || item.title) : item.title;
+              const displaySummary = language === 'en' ? (item.summaryEn || item.summary) : (item.summary || item.content);
+              const displayAuthor = language === 'en' ? (item.authorEn || item.author) : item.author;
 
-                <div>
-                  {/* Categoría y Fecha */}
-                  <div className="flex items-center justify-between mb-4 text-xs">
-                    <span className="px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 font-semibold">
-                      {item.category || 'Anuncio'}
-                    </span>
-                    <span className="text-gray-400 font-medium">
-                      {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
-                    </span>
+              return (
+                <div
+                  key={item.id}
+                  className="group relative bg-[#131824]/80 backdrop-blur-xl p-6 rounded-3xl border border-[#1e2330] hover:border-orange-500/40 transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between shadow-xl overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-28 h-28 bg-orange-500/5 rounded-full blur-2xl group-hover:bg-orange-500/15 transition-colors pointer-events-none"></div>
+
+                  <div>
+                    {/* Categoría y Fecha */}
+                    <div className="flex items-center justify-between mb-4 text-xs">
+                      <span className="px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 font-semibold">
+                        {displayCategory || 'Anuncio'}
+                      </span>
+                      <span className="text-gray-400 font-medium">
+                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'es-ES') : ''}
+                      </span>
+                    </div>
+
+                    {/* Título */}
+                    <h3 className="text-lg font-bold text-white mb-3 group-hover:text-orange-400 transition-colors leading-snug">
+                      {displayTitle}
+                    </h3>
+
+                    {/* Resumen */}
+                    <p className="text-gray-400 text-sm leading-relaxed mb-6 line-clamp-3">
+                      {displaySummary}
+                    </p>
                   </div>
 
-                  {/* Título */}
-                  <h3 className="text-lg font-bold text-white mb-3 group-hover:text-orange-400 transition-colors leading-snug">
-                    {item.title}
-                  </h3>
+                  {/* Pie de tarjeta y Acción */}
+                  <div className="pt-4 border-t border-[#1e2330]/80 flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      {displayAuthor || (language === 'en' ? 'MaxiOS Team' : 'Equipo MaxiOS')}
+                    </span>
 
-                  {/* Resumen */}
-                  <p className="text-gray-400 text-sm leading-relaxed mb-6 line-clamp-3">
-                    {item.summary || item.content}
-                  </p>
+                    <button
+                      onClick={() => setActiveNewsModal(item)}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors group-hover:translate-x-0.5"
+                    >
+                      <span>{t('Leer Noticia', 'Read News')}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-
-                {/* Pie de tarjeta y Acción */}
-                <div className="pt-4 border-t border-[#1e2330]/80 flex items-center justify-between">
-                  <span className="text-xs text-gray-500 font-medium flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    {item.author || 'Equipo MaxiOS'}
-                  </span>
-
-                  <button
-                    onClick={() => setActiveNewsModal(item)}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors group-hover:translate-x-0.5"
-                  >
-                    <span>{t('Leer Noticia', 'Read News')}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="bg-[#131824]/60 backdrop-blur-xl p-12 rounded-3xl border border-[#1e2330] text-center max-w-lg mx-auto my-12">
@@ -302,7 +349,7 @@ const AllNewsPage = () => {
             <p className="text-gray-300 font-semibold mb-2">{t('No se encontraron noticias', 'No news found')}</p>
             <p className="text-gray-500 text-sm mb-6">{t('Prueba ajustando el término de búsqueda o seleccionando otra categoría.', 'Try adjusting your search term or selecting another category.')}</p>
             <button
-              onClick={() => { setSearchQuery(''); setSelectedCategory('Todas'); }}
+              onClick={() => { setSearchQuery(''); setSelectedCategoryKey('Todas'); }}
               className="px-6 py-2 bg-gradient-to-r from-orange-600 to-yellow-500 text-white rounded-full text-xs font-bold shadow-lg"
             >
               {t('Ver Todas las Noticias', 'View All News')}
@@ -356,25 +403,25 @@ const AllNewsPage = () => {
 
             <div className="flex items-center gap-3 mb-4">
               <span className="px-3 py-1 rounded-full bg-orange-500/20 border border-orange-500/40 text-orange-400 text-xs font-bold">
-                {activeNewsModal.category || 'Anuncio'}
+                {(language === 'en' ? (activeNewsModal.categoryEn || activeNewsModal.category) : activeNewsModal.category) || 'Anuncio'}
               </span>
               <span className="text-xs text-gray-400">
-                {activeNewsModal.createdAt ? new Date(activeNewsModal.createdAt).toLocaleDateString() : ''}
+                {activeNewsModal.createdAt ? new Date(activeNewsModal.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'es-ES') : ''}
               </span>
             </div>
 
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-4 leading-snug">
-              {activeNewsModal.title}
+              {language === 'en' ? (activeNewsModal.titleEn || activeNewsModal.title) : activeNewsModal.title}
             </h2>
 
             <div className="flex items-center gap-2 pb-6 border-b border-[#1e2330] mb-6 text-xs text-emerald-400 font-semibold">
-              <span>🛡️ {t('Publicado por', 'Published by')}: {activeNewsModal.author || 'Equipo MaxiOS'}</span>
+              <span>🛡️ {t('Publicado por', 'Published by')}: {language === 'en' ? (activeNewsModal.authorEn || activeNewsModal.author) : activeNewsModal.author}</span>
               <span>•</span>
               <span>{t('Garantía Sin Fines de Lucro', 'Non-Profit Guarantee')}</span>
             </div>
 
             <div className="text-gray-300 text-sm sm:text-base leading-relaxed whitespace-pre-line space-y-4">
-              {activeNewsModal.content}
+              {language === 'en' ? (activeNewsModal.contentEn || activeNewsModal.content) : activeNewsModal.content}
             </div>
 
             <div className="mt-8 pt-6 border-t border-[#1e2330] flex justify-end">
