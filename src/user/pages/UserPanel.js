@@ -174,6 +174,93 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
       {/* Global Network Status - Datos en tiempo real de la red */}
       <StatsSection />
 
+      {/* ───── Ganancias Estimadas del Usuario ───── */}
+      <div className="bg-[#0b0e14] border border-[#1e2330] rounded-3xl p-6 shadow-xl">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="p-2.5 bg-green-500/10 rounded-xl border border-green-500/20">
+            <svg className="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-white">{t('Tu Rendimiento Estimado', 'Your Estimated Earnings')}</h2>
+            <p className="text-xs text-gray-500">{t('Basado en tu hashrate actual y la tasa de pago vigente', 'Based on your current hashrate and active payment rate')}</p>
+          </div>
+        </div>
+
+        {userMiners.length === 0 ? (
+          /* Sin mineros — CTA */
+          <div className="flex flex-col items-center justify-center py-10 border-2 border-dashed border-[#1e2330] rounded-2xl text-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+              <svg className="w-7 h-7 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-white font-semibold">{t('Aún no tienes mineros activos', 'You have no active miners yet')}</p>
+              <p className="text-gray-500 text-sm mt-1">{t('Agrega un minero para ver tus ganancias estimadas en tiempo real', 'Add a miner to see your estimated earnings in real time')}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+            {/* Tu Hashrate */}
+            <div className="relative overflow-hidden bg-[#131824] border border-[#1e2330] rounded-2xl p-5 hover:border-blue-500/30 transition-all">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl -mr-6 -mt-6 pointer-events-none"></div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">{t('TU HASHRATE', 'YOUR HASHRATE')}</p>
+              <p className="text-2xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
+                {totalHashrate.toFixed(2)} <span className="text-sm text-gray-400">TH/s</span>
+              </p>
+              <p className="text-xs text-gray-600 mt-1">{userMiners.length} {t('minero(s) activo(s)', 'active miner(s)')}</p>
+            </div>
+
+            {/* Tasa de Pago */}
+            <div className="relative overflow-hidden bg-[#131824] border border-[#1e2330] rounded-2xl p-5 hover:border-orange-500/30 transition-all">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-orange-500/10 rounded-full blur-2xl -mr-6 -mt-6 pointer-events-none"></div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">{t('TASA DE PAGO', 'PAYMENT RATE')}</p>
+              <p className="text-2xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-300">
+                ${paymentRate.toFixed(4)} <span className="text-sm text-gray-400">/TH/s</span>
+              </p>
+              <p className="text-xs text-gray-600 mt-1">{t('por día por TH/s', 'per day per TH/s')}</p>
+            </div>
+
+            {/* Ganancia Diaria USD */}
+            <div className="relative overflow-hidden bg-[#131824] border border-[#1e2330] rounded-2xl p-5 hover:border-green-500/30 transition-all">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-green-500/10 rounded-full blur-2xl -mr-6 -mt-6 pointer-events-none"></div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">{t('GANANCIA DIARIA', 'DAILY EARNINGS')}</p>
+              <p className="text-2xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">
+                ${estimatedDailyUSD.toFixed(4)}
+              </p>
+              <p className="text-xs text-emerald-600 font-semibold mt-1">≈ {estimatedDailyBTC.toFixed(8)} BTC</p>
+            </div>
+
+            {/* Ganancia Mensual USD */}
+            <div className="relative overflow-hidden bg-[#131824] border border-[#1e2330] rounded-2xl p-5 hover:border-purple-500/30 transition-all">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl -mr-6 -mt-6 pointer-events-none"></div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">{t('GANANCIA MENSUAL', 'MONTHLY EARNINGS')}</p>
+              <p className="text-2xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-300">
+                ${(estimatedDailyUSD * 30).toFixed(2)}
+              </p>
+              <p className="text-xs text-purple-600 font-semibold mt-1">≈ {(estimatedDailyBTC * 30).toFixed(8)} BTC</p>
+            </div>
+          </div>
+        )}
+
+        {/* Nota de transparencia */}
+        {userMiners.length > 0 && (
+          <div className="mt-4 flex items-start gap-2 bg-blue-500/5 border border-blue-500/15 rounded-xl p-3">
+            <svg className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              {t(
+                `Las ganancias estimadas se calculan como: Tu Hashrate (${totalHashrate.toFixed(2)} TH/s) × Tasa de Pago ($${paymentRate.toFixed(4)}/TH/s/día). Los valores son aproximados y pueden variar con las condiciones del mercado y la red.`,
+                `Estimated earnings are calculated as: Your Hashrate (${totalHashrate.toFixed(2)} TH/s) × Payment Rate ($${paymentRate.toFixed(4)}/TH/s/day). Values are approximate and may vary with market and network conditions.`
+              )}
+            </p>
+          </div>
+        )}
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Rendimiento Histórico */}
         <div className="lg:col-span-2 bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl">
