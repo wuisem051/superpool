@@ -8,11 +8,14 @@ import { useError } from '../../context/ErrorContext';
 const SiteSettingsContent = () => {
   const [siteName, setSiteName] = useState('');
   const [homeText, setHomeText] = useState('');
+  const [homeTextEn, setHomeTextEn] = useState('');
   const [heroTitle, setHeroTitle] = useState('');
+  const [heroTitleEn, setHeroTitleEn] = useState('');
   const [siteDomain, setSiteDomain] = useState('');
   const [faviconUrl, setFaviconUrl] = useState('');
   const [faviconFile, setFaviconFile] = useState(null);
   const [footerText, setFooterText] = useState('');
+  const [footerTextEn, setFooterTextEn] = useState('');
   const [loading, setLoading] = useState(true);
   const { showError, showSuccess } = useError();
   const storage = getStorage();
@@ -27,25 +30,34 @@ const SiteSettingsContent = () => {
           const data = docSnap.data();
           setSiteName(data.siteName || '');
           setHomeText(data.homeText || '');
+          setHomeTextEn(data.homeTextEn || '');
           setHeroTitle(data.heroTitle || '');
+          setHeroTitleEn(data.heroTitleEn || '');
           setSiteDomain(data.siteDomain || '');
           setFaviconUrl(data.faviconUrl || '');
           setFooterText(data.footerText || '');
+          setFooterTextEn(data.footerTextEn || '');
         } else {
           const defaults = {
             siteName: 'BitcoinPool',
             homeText: 'Minando el futuro, un bloque a la vez.',
+            homeTextEn: 'Mining the future, one block at a time.',
             heroTitle: 'Bienvenido a nuestra Pool de Minería Bitcoin',
+            heroTitleEn: 'Welcome to our Bitcoin Mining Pool',
             performanceStatsResetDate: null,
             siteDomain: '',
             faviconUrl: '',
             footerText: `© ${new Date().getFullYear()} BitcoinPool. Todos los derechos reservados.`,
+            footerTextEn: `© ${new Date().getFullYear()} BitcoinPool. All rights reserved.`,
           };
           await setDoc(docRef, defaults);
           setSiteName(defaults.siteName);
           setHomeText(defaults.homeText);
+          setHomeTextEn(defaults.homeTextEn);
           setHeroTitle(defaults.heroTitle);
+          setHeroTitleEn(defaults.heroTitleEn);
           setFooterText(defaults.footerText);
+          setFooterTextEn(defaults.footerTextEn);
         }
       } catch (err) {
         console.error(err);
@@ -67,7 +79,17 @@ const SiteSettingsContent = () => {
         await uploadBytes(faviconRef, faviconFile);
         updatedFaviconUrl = await getDownloadURL(faviconRef);
       }
-      await updateDoc(doc(db, 'settings', 'siteConfig'), { siteName, homeText, heroTitle, siteDomain, faviconUrl: updatedFaviconUrl, footerText });
+      await updateDoc(doc(db, 'settings', 'siteConfig'), {
+        siteName,
+        homeText,
+        homeTextEn,
+        heroTitle,
+        heroTitleEn,
+        siteDomain,
+        faviconUrl: updatedFaviconUrl,
+        footerText,
+        footerTextEn
+      });
       setFaviconUrl(updatedFaviconUrl);
       showSuccess('Configuración del sitio guardada exitosamente!');
     } catch (err) {
@@ -99,7 +121,7 @@ const SiteSettingsContent = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold text-white">⚙️ Configuración del Sitio</h2>
-        <p className="text-xs text-gray-500 mt-1">Personaliza el nombre, textos y aspecto del sitio público.</p>
+        <p className="text-xs text-gray-500 mt-1">Personaliza el nombre, textos y aspecto del sitio público en Español e Inglés.</p>
       </div>
 
       {loading && (
@@ -124,21 +146,41 @@ const SiteSettingsContent = () => {
             </div>
           </div>
 
-          <div>
-            <label htmlFor="heroTitle" className={labelClass}>Título Principal (Hero)</label>
-            <input type="text" id="heroTitle" value={heroTitle} onChange={(e) => setHeroTitle(e.target.value)} className={inputClass} placeholder="Bienvenido a nuestra Pool de Minería Bitcoin" required />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="heroTitle" className={labelClass}>Título Principal (Español)</label>
+              <input type="text" id="heroTitle" value={heroTitle} onChange={(e) => setHeroTitle(e.target.value)} className={inputClass} placeholder="Bienvenido a nuestra Pool de Minería Bitcoin" required />
+            </div>
+            <div>
+              <label htmlFor="heroTitleEn" className={labelClass}>Título Principal (Inglés - Opcional)</label>
+              <input type="text" id="heroTitleEn" value={heroTitleEn} onChange={(e) => setHeroTitleEn(e.target.value)} className={inputClass} placeholder="Welcome to our Bitcoin Mining Pool" />
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="homeText" className={labelClass}>Texto Descriptivo (Home)</label>
-            <textarea id="homeText" rows="3" value={homeText} onChange={(e) => setHomeText(e.target.value)}
-              className={`${inputClass} resize-none`} placeholder="Minando el futuro, un bloque a la vez." required />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="homeText" className={labelClass}>Texto Descriptivo (Español)</label>
+              <textarea id="homeText" rows="3" value={homeText} onChange={(e) => setHomeText(e.target.value)}
+                className={`${inputClass} resize-none`} placeholder="Minando el futuro, un bloque a la vez." required />
+            </div>
+            <div>
+              <label htmlFor="homeTextEn" className={labelClass}>Texto Descriptivo (Inglés - Opcional)</label>
+              <textarea id="homeTextEn" rows="3" value={homeTextEn} onChange={(e) => setHomeTextEn(e.target.value)}
+                className={`${inputClass} resize-none`} placeholder="Mining the future, one block at a time." />
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="footerText" className={labelClass}>Texto del Footer</label>
-            <textarea id="footerText" rows="2" value={footerText} onChange={(e) => setFooterText(e.target.value)}
-              className={`${inputClass} resize-none`} placeholder="© 2024 BitcoinPool. Todos los derechos reservados." required />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="footerText" className={labelClass}>Texto del Footer (Español)</label>
+              <textarea id="footerText" rows="2" value={footerText} onChange={(e) => setFooterText(e.target.value)}
+                className={`${inputClass} resize-none`} placeholder="© 2026 BitcoinPool. Todos los derechos reservados." />
+            </div>
+            <div>
+              <label htmlFor="footerTextEn" className={labelClass}>Texto del Footer (Inglés - Opcional)</label>
+              <textarea id="footerTextEn" rows="2" value={footerTextEn} onChange={(e) => setFooterTextEn(e.target.value)}
+                className={`${inputClass} resize-none`} placeholder="© 2026 BitcoinPool. All rights reserved." />
+            </div>
           </div>
         </div>
 

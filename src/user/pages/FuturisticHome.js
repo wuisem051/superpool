@@ -50,11 +50,11 @@ const FuturisticHome = () => {
 
   // Title & Text translated dynamically
   const displayHeroTitle = language === 'en'
-    ? 'Welcome to our Bitcoin Mining Pool'
+    ? (siteConfig.heroTitleEn || siteConfig.heroTitle || 'Welcome to our Bitcoin Mining Pool')
     : (siteConfig.heroTitle || 'Bienvenido a nuestra Pool de Minería Bitcoin');
 
   const displayHomeText = language === 'en'
-    ? 'Mining the future, one block at a time.'
+    ? (siteConfig.homeTextEn || siteConfig.homeText || 'Mining the future, one block at a time.')
     : (siteConfig.homeText || 'Minando el futuro, un bloque a la vez.');
 
   return (
