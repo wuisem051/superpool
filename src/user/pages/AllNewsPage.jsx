@@ -7,25 +7,25 @@ import { Link } from 'react-router-dom';
 const DEFAULT_PROJECT_NEWS = [
   {
     id: 'project-manifesto-1',
-    title: 'Manifiesto Colectivo: Minería 100% Sin Fines de Lucro para Todos los Mineros',
+    title: 'Manifiesto Colectivo: Optimización de Rendimiento a Tasa Fija Garantizada',
     category: 'Manifiesto & Misión',
     createdAt: new Date('2026-08-10'),
     author: 'Colectivo MaxiOS',
-    summary: 'Somos un grupo colaborativo de mineros sin fines de lucro dedicado a eliminar comisiones corporativas y redistribuir el 100% del rendimiento a la comunidad.',
-    content: `MaxiOS Pool nació como una iniciativa colectiva libre de afán de lucro corporativo. Creemos firmemente que el futuro de la minería de Bitcoin pertenece a los mineros independientes y no a intermediarios que cobran elevadas comisiones.
+    summary: 'Somos una agrupación colaborativa sin fines de lucro enfocada en maximizar los ingresos de los mineros mediante enrutamiento inteligente y arbitraje de pools a tasa fija.',
+    content: `MaxiOS nació como una iniciativa colectiva libre de afán de lucro corporativo. Creemos firmemente que el futuro de la minería de Bitcoin pertenece a los mineros independientes y no a intermediarios que cobran elevadas comisiones.
 
-Nuestra estructura está diseñada para que cada satoshi obtenido a través de los bloques minados sea distribuido equitativamente entre todos los participantes en función de su aporte de trabajo. Al operar como una organización sin fines de lucro, reutilizamos cualquier excedente operativo exclusivamente en mantener y optimizar los servidores comunitarios, ofrecer bonos de bienvenida para nuevos mineros y garantizar una plataforma segura y accesible para todos.`
+En lugar de depender de las fluctuaciones impredecibles de una pool tradicional, nuestra tecnología enruta de forma inteligente la potencia computacional de tus equipos hacia los destinos de mayor rendimiento (arbitraje P2P, Mining Rig Rentals y pools de alto retorno). De esta forma, garantizamos una tasa fija predecible por cada TH/s aportado.`
   },
   {
     id: 'project-stabilization-2',
-    title: 'Estabilización del Hashrate y Mitigación de Varianza en la Red',
-    category: 'Estabilidad & Hashrate',
+    title: 'Enrutamiento Inteligente, Failover y Arbitraje de Mercado P2P',
+    category: 'Tecnología & Arbitraje',
     createdAt: new Date('2026-08-05'),
     author: 'Equipo Técnico de Hashrate',
-    summary: 'Implementamos un nuevo protocolo de balance de carga computacional para estabilizar la tasa de recompensa diaria y proteger a los mineros pequeños y medianos.',
-    content: `La alta varianza de dificultad en la red Bitcoin puede ocasionar largos períodos sin encontrar bloques, afectando de manera desproporcionada a los pequeños y medianos mineros. 
+    summary: 'Optimizamos la conexión de tus ASICs con sistemas automatizados de failover y colocación de capacidad en los mercados con mejores tarifas.',
+    content: `Para maximizar la rentabilidad de cada minero, implementamos un sistema continuo de monitoreo y enrutamiento inteligente.
 
-Para resolver este desafío, nuestro equipo técnico ha desplegado un sistema de agregación y balanceo dinámico de tasa de minería. Este mecanismo estabiliza la tasa efectiva recibida por la pool, suavizando las curvas de recompensa y garantizando rendimientos más estables, continuos y predecibles día a día.`
+Si una pool disminuye su rendimiento o presenta fallas, nuestro mecanismo de Mining Failover redirige automáticamente tu hashrate en milisegundos. Además, comercializamos la capacidad agregada en mercados P2P y de alquiler de potencia para asegurar que recibas la tasa fija más alta y estable posible.`
   },
   {
     id: 'project-community-3',
@@ -33,21 +33,21 @@ Para resolver este desafío, nuestro equipo técnico ha desplegado un sistema de
     category: 'Comunidad',
     createdAt: new Date('2026-07-28'),
     author: 'Soporte Comunitario',
-    summary: 'Lanzamos el programa de estímulo inicial que otorga $1.00 USD en el registro para fomentar el inicio de nuevos nodos y mineros en la red.',
-    content: `Como parte de nuestro compromiso de democratizar el acceso a la minería de Bitcoin, hemos establecido un fondo comunitario destinado a incentivar la llegada de nuevos mineros.
+    summary: 'Lanzamos el programa de estímulo inicial que otorga $1.00 USD en el registro para fomentar el inicio de nuevos equipos en la red.',
+    content: `Como parte de nuestro compromiso de democratizar el acceso a la minería eficiente, otorgamos a cada nuevo minero un bono inicial de $1.00 USD en su billetera interna al momento de registrarse.
 
-Cada nuevo usuario que se registra en MaxiOS Pool recibe automáticamente un bono de $1.00 USD directo en su billetera interna para comenzar a generar rentabilidad desde el primer segundo. Este beneficio busca romper barreras de entrada y permitir que cualquier persona experimente el poder de la minería en un entorno seguro y transparente.`
+Este beneficio busca romper barreras de entrada y permitir que cualquier persona experimente el poder del arbitraje de potencia en un entorno seguro, transparente y predecible.`
   },
   {
     id: 'project-transparency-4',
-    title: 'Compromiso de Transparencia Operativa y Trazabilidad On-Chain',
-    category: 'Protocolo & Seguridad',
+    title: 'Transparencia en Pagos y Rendimiento por TH/s',
+    category: 'Transparencia & Seguridad',
     createdAt: new Date('2026-07-15'),
     author: 'Comité de Auditoría',
-    summary: 'Todas las operaciones, recompensas de bloque y pagos se pueden verificar públicamente en la cadena de bloques con cero comisiones ocultas.',
-    content: `La confianza de nuestros usuarios se sostiene sobre la transparencia absoluta. En MaxiOS Pool, cada bloque minado, cada distribución de recompensas y cada retiro procesado es totalmente trazable on-chain.
+    summary: 'Acceso en tiempo real al estado de tu equipo, registro de enrutamiento y acreditación constante de tu tasa fija sin comisiones ocultas.',
+    content: `La transparencia es nuestro compromiso central. Cada usuario cuenta con métricas detalladas en su panel para verificar el rendimiento exacto de sus ASICs, la tasa fija asignada por TH/s y el historial completo de sus acreditaciones.
 
-No existen tarifas ocultas ni retenciones sorpresa. Ponemos a disposición de la comunidad herramientas de monitoreo en tiempo real, estadísticas globales del estado de la red y registros contables auditables para que cada minero verifique que recibe exactamente la parte que le corresponde.`
+No aplicamos retenciones arbitrarias ni comisiones ocultas. Nuestro objetivo es que recibas la mayor rentabilidad neta posible por la potencia computacional que aporta tu equipo.`
   }
 ];
 
@@ -74,7 +74,7 @@ const AllNewsPage = () => {
           }
           return {
             id: doc.id,
-            title: data.title || 'Noticia de la Pool',
+            title: data.title || 'Noticia del Proyecto',
             category: data.category || 'Anuncio',
             author: data.author || 'Equipo MaxiOS',
             summary: data.summary || data.content?.substring(0, 150) + '...',
@@ -84,7 +84,6 @@ const AllNewsPage = () => {
         });
 
         // Combinar noticias de Firebase con las noticias institucionales por defecto
-        // Evitar duplicados si ya existen en Firebase
         const combined = [...fetchedNews];
         DEFAULT_PROJECT_NEWS.forEach(defItem => {
           if (!combined.some(item => item.id === defItem.id || item.title === defItem.title)) {
@@ -107,9 +106,9 @@ const AllNewsPage = () => {
   const categories = [
     'Todas',
     'Manifiesto & Misión',
-    'Estabilidad & Hashrate',
+    'Tecnología & Arbitraje',
     'Comunidad',
-    'Protocolo & Seguridad'
+    'Transparencia & Seguridad'
   ];
 
   const filteredNews = news.filter(item => {
@@ -136,7 +135,7 @@ const AllNewsPage = () => {
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/40 text-emerald-300 mb-6 text-sm font-semibold shadow-[0_0_20px_rgba(16,185,129,0.2)]">
             <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-            {t('🛡️ Proyecto Sin Fines de Lucro • Estabilización de Minería', '🛡️ Non-Profit Project • Mining Stabilization')}
+            {t('🛡️ Proyecto Sin Fines de Lucro • Arbitraje de Pools a Tasa Fija', '🛡️ Non-Profit Project • Fixed-Rate Pool Arbitrage')}
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-4 leading-tight tracking-tight">
@@ -147,8 +146,8 @@ const AllNewsPage = () => {
 
           <p className="text-gray-300 text-base sm:text-lg leading-relaxed">
             {t(
-              'Transparencia total para nuestra comunidad. Descubre cómo trabajamos de forma sin fines de lucro para estabilizar la tasa de minería, eliminar tarifas abusivas y mejorar el rendimiento de todos los mineros.',
-              'Total transparency for our community. Discover how we work on a non-profit basis to stabilize the mining rate, eliminate unfair fees, and boost returns for all miners.'
+              'Transparencia total para nuestra comunidad. Descubre cómo trabajamos de forma sin fines de lucro para optimizar el rendimiento de tus ASICs, ofrecer una tasa fija garantizada y maximizar las ganancias de cada minero.',
+              'Total transparency for our community. Discover how we work on a non-profit basis to optimize your ASIC yield, offer a guaranteed fixed rate, and maximize earnings for every miner.'
             )}
           </p>
         </div>
@@ -173,8 +172,8 @@ const AllNewsPage = () => {
               </h2>
               <p className="text-gray-300 text-sm sm:text-base leading-relaxed mb-4">
                 {t(
-                  'No cobramos comisiones corporativas. Toda la potencia minera conectada a MaxiOS Pool contribuye a un fondo común de equilibrio que minimiza la varianza de bloques, estabilizando los ingresos diarios para que pequeños y grandes mineros prosperen juntos.',
-                  'We charge no corporate fees. All mining power connected to MaxiOS Pool contributes to a collective balancing fund that minimizes block variance, stabilizing daily payouts so both small and large miners thrive together.'
+                  'No cobramos comisiones corporativas excesivas. Enrutamos de manera inteligente el hashrate de tus equipos mediante arbitraje de pools y mercados P2P, garantizando una tasa fija y estable por cada TH/s aportado para que pequeños y grandes mineros maximicen sus ingresos.',
+                  'We charge no excessive corporate fees. We intelligently route your equipment hashrate through pool arbitrage and P2P markets, guaranteeing a stable fixed rate for every TH/s provided so both small and large miners maximize their yield.'
                 )}
               </p>
 
@@ -186,15 +185,15 @@ const AllNewsPage = () => {
                 </div>
                 <div className="flex items-center justify-center lg:justify-start gap-2 bg-[#0b0e14]/60 p-2.5 rounded-xl border border-[#1e2330] text-orange-400">
                   <span>⚡</span>
-                  <span>{t('Hashrate Estable', 'Stable Hashrate')}</span>
+                  <span>{t('Tasa Fija Garantizada', 'Guaranteed Fixed Rate')}</span>
                 </div>
                 <div className="flex items-center justify-center lg:justify-start gap-2 bg-[#0b0e14]/60 p-2.5 rounded-xl border border-[#1e2330] text-yellow-400">
                   <span>🎁</span>
                   <span>{t('Bono $1.00 USD Gratis', 'Free $1.00 USD Bonus')}</span>
                 </div>
                 <div className="flex items-center justify-center lg:justify-start gap-2 bg-[#0b0e14]/60 p-2.5 rounded-xl border border-[#1e2330] text-blue-400">
-                  <span>🔍</span>
-                  <span>{t('Auditoría On-Chain', 'On-Chain Audit')}</span>
+                  <span>🔄</span>
+                  <span>{t('Enrutamiento P2P', 'P2P Routing')}</span>
                 </div>
               </div>
             </div>

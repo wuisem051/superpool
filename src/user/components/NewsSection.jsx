@@ -7,17 +7,17 @@ import { useLanguage } from '../../context/LanguageContext';
 const DEFAULT_HOME_NEWS = [
   {
     id: 'news-home-1',
-    title: 'Manifiesto Colectivo: Minería 100% Sin Fines de Lucro',
+    title: 'Manifiesto Colectivo: Optimización de Rendimiento a Tasa Fija',
     category: 'Manifiesto',
     createdAt: new Date('2026-08-10'),
-    summary: 'Redistribuimos el 100% del rendimiento a nuestros mineros sin cobrar comisiones corporativas.',
+    summary: 'Maximizamos el rendimiento de tus ASICs a tasa fija garantizada mediante enrutamiento inteligente y arbitraje P2P.',
   },
   {
     id: 'news-home-2',
-    title: 'Estabilización de Hashrate y Reducción de Varianza',
-    category: 'Hashrate',
+    title: 'Enrutamiento Inteligente y Failover Automatizado',
+    category: 'Tecnología',
     createdAt: new Date('2026-08-05'),
-    summary: 'Nuevo protocolo de equilibrio para asegurar recompensas constantes a pequeños y grandes mineros.',
+    summary: 'Sistema de colocación de hashrate en mercados P2P y pools de alto retorno para evitar caídas y asegurar ganancias constantes.',
   },
   {
     id: 'news-home-3',
