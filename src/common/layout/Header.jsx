@@ -111,6 +111,15 @@ const Header = () => {
             >
               {t('Red Global', 'Global Network')}
             </Link>
+            <Link
+              to="/news"
+              className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${location.pathname === '/news'
+                ? 'bg-accent text-white'
+                : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                }`}
+            >
+              {t('Noticias', 'News')}
+            </Link>
             {currentUser ? (
               <>
                 <Link
@@ -237,6 +246,15 @@ const Header = () => {
                 }`}
             >
               {t('Red Global', 'Global Network')}
+            </Link>
+            <Link
+              to="/news"
+              className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname === '/news'
+                  ? 'bg-accent text-white'
+                  : `${theme.textSoft} hover:${theme.backgroundAlt} hover:${theme.text}`
+                }`}
+            >
+              {t('Noticias', 'News')}
             </Link>
             {currentUser ? (
               <>

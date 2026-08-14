@@ -5,8 +5,8 @@ import { useLanguage } from '../../context/LanguageContext';
 
 const Footer = () => {
   const { t, language } = useLanguage();
-  const defaultText = `© ${new Date().getFullYear()} MaxiOS Pool. ${t('Todos los derechos reservados.', 'All rights reserved.')} ${t('Versión del proyecto 1.0 Beta', 'Project Version 1.0 Beta')}`;
-  const [footerText, setFooterText] = useState('');
+  const [customTextEs, setCustomTextEs] = useState('');
+  const [customTextEn, setCustomTextEn] = useState('');
 
   useEffect(() => {
     const fetchFooterText = async () => {
@@ -16,19 +16,20 @@ const Footer = () => {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          if (data.footerText) {
-            setFooterText(data.footerText);
-            return;
-          }
+          if (data.footerText) setCustomTextEs(data.footerText);
+          if (data.footerTextEn) setCustomTextEn(data.footerTextEn);
         }
-        setFooterText(defaultText);
       } catch (err) {
         console.error("Error fetching footer text from Firebase:", err);
-        setFooterText(defaultText);
       }
     };
     fetchFooterText();
-  }, [language]);
+  }, []);
+
+  const defaultText = `© ${new Date().getFullYear()} MaxiOS Pool. ${t('Todos los derechos reservados.', 'All rights reserved.')} ${t('Versión del proyecto 1.0 Beta', 'Project Version 1.0 Beta')}`;
+
+  const currentCustomText = language === 'en' ? (customTextEn || customTextEs) : customTextEs;
+  const displayText = currentCustomText || defaultText;
 
   return (
     <footer className="relative bg-[#0b0e14]/90 backdrop-blur-lg border-t border-[#1e2330] mt-auto z-40 overflow-hidden">
@@ -48,7 +49,7 @@ const Footer = () => {
               </div>
             </div>
             <p className="text-gray-400 font-medium text-xs sm:text-sm tracking-wide text-center">
-              {footerText || defaultText}
+              {displayText}
             </p>
           </div>
         </div>
