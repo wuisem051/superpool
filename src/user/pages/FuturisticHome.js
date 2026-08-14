@@ -11,6 +11,7 @@ const FuturisticHome = () => {
   const { t, language } = useLanguage();
   const [siteConfig, setSiteConfig] = useState({
     siteName: 'MaxiOS Arbitraje Pool BTC',
+    siteDomain: 'MaxiOS Professional Fixed-Rate BTC',
     heroTitle: 'Tasa de hash Garantizada Fija y Optima Empieza Hoy !',
     heroTitleEn: 'Guaranteed, Fixed, and Optimal Hash Rate – Start Today!',
     homeText: 'Maximiza el rendimiento de tus ASICs Enrutamiento inteligente Mining Failover para Mining Rig Rentals Arbitraje P2P Market pool Garantizamos una tasa Fija por cada Ths que nos da Tu Equipo Empieza a minar Hoy !',
@@ -47,6 +48,11 @@ const FuturisticHome = () => {
     ? (siteConfig.homeTextEn || siteConfig.homeText)
     : (siteConfig.homeText || 'Maximiza el rendimiento de tus ASICs Enrutamiento inteligente Mining Failover para Mining Rig Rentals Arbitraje P2P Market pool Garantizamos una tasa Fija por cada Ths que nos da Tu Equipo Empieza a minar Hoy !');
 
+  // Nombre del sitio: en inglés usa siteDomain, en español usa siteName
+  const displaySiteName = language === 'en'
+    ? (siteConfig.siteDomain || siteConfig.siteName || 'MaxiOS Professional Fixed-Rate BTC')
+    : (siteConfig.siteName || 'MaxiOS Arbitraje Pool BTC');
+
   return (
     <div className="relative min-h-screen bg-[#0b0e14] flex flex-col items-center justify-center p-4 overflow-hidden z-0 pt-24">
 
@@ -72,7 +78,7 @@ const FuturisticHome = () => {
 
         <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight">
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-300">
-            {siteConfig.siteName}
+            {displaySiteName}
           </span>
         </h1>
         <p className="text-xl md:text-2xl mb-6 text-gray-300 font-medium max-w-3xl mx-auto">

@@ -171,46 +171,8 @@ const DashboardContent = ({ userMiners, chartData, userBalances, paymentRate, bt
           </button>
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Tu Hashrate */}
-        <div className="relative overflow-hidden bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl transition-transform hover:-translate-y-1 duration-300">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-          <h3 className="text-gray-400 font-semibold text-sm mb-2">{t('Tu Hashrate', 'Your Hashrate')}</h3>
-          <p className="text-3xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
-            {totalHashrate.toFixed(2)} TH/s
-          </p>
-          <div className="absolute top-6 right-6 p-3 bg-blue-500/10 rounded-2xl">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-          </div>
-        </div>
-
-        {/* Ganancia Estimada Diaria */}
-        <div className="relative overflow-hidden bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl transition-transform hover:-translate-y-1 duration-300">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-          <h3 className="text-gray-400 font-semibold text-sm mb-2">{t('Ganancia Estimada Diaria', 'Estimated Daily Earnings')}</h3>
-          <p className="text-3xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">
-            ${estimatedDailyUSD.toFixed(2)}
-          </p>
-          <div className="absolute top-6 right-6 p-3 bg-green-500/10 rounded-2xl">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V3a1 1 0 00-1-1H4a1 1 0 00-1 1v18a1 1 0 001 1h12a1 1 0 001-1v-5m-1-10v4m-4 0h4" /></svg>
-          </div>
-        </div>
-
-        {/* Tasa de Pago */}
-        <div className="relative overflow-hidden bg-[#0b0e14] border border-[#1e2330] rounded-2xl p-6 shadow-xl transition-transform hover:-translate-y-1 duration-300">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-          <h3 className="text-gray-400 font-semibold text-sm mb-2">{t('Tasa de Pago', 'Payment Rate')}</h3>
-          <p className="text-3xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-300">
-            ${paymentRate.toFixed(2)}<span className="text-lg text-gray-500">/TH/s</span>
-          </p>
-          <div className="absolute top-6 right-6 p-3 bg-orange-500/10 rounded-2xl">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-          </div>
-        </div>
-      </div>
-
-      <PerformanceStatsSection /> {/* Añadir PerformanceStatsSection */}
-      <StatsSection totalHashrate={totalHashratePool} activeMiners={activeMinersAllUsers} pricePerTHs={pricePerTHs} /> {/* Añadir StatsSection */}
+      {/* Global Network Status - Datos en tiempo real de la red */}
+      <StatsSection />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Rendimiento Histórico */}
