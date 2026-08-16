@@ -3,6 +3,35 @@ import { collection, getDocs, doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { ThemeContext } from '../../context/ThemeContext';
 
+/* ── Error Boundary para evitar pantalla en blanco ── */
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 text-center">
+          <div className="inline-flex items-center gap-3 px-5 py-4 rounded-2xl bg-red-500/10 border border-red-500/30">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="text-left">
+              <p className="text-red-400 font-bold text-sm">Error al cargar la sección</p>
+              <p className="text-red-400/70 text-xs mt-0.5">{String(this.state.error)}</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 /* ── Helpers de formato ── */
 const fmtDate = (iso) => {
   if (!iso) return '—';
@@ -11,8 +40,8 @@ const fmtDate = (iso) => {
       day: '2-digit', month: '2-digit', year: 'numeric',
       hour: '2-digit', minute: '2-digit', second: '2-digit',
     }).format(new Date(iso));
-  } catch {
-    return iso;
+  } catch (e) {
+    return String(iso);
   }
 };
 
@@ -68,8 +97,7 @@ const SessionRow = ({ s, idx }) => (
   </div>
 );
 
-/* ── Componente principal ── */
-const UserActivityManagement = () => {
+const UserActivityManagementInner = () => {
   const { darkMode } = useContext(ThemeContext);
   const [users, setUsers] = useState([]);
   const [sessions, setSessions] = useState({});
@@ -319,5 +347,12 @@ const UserActivityManagement = () => {
     </div>
   );
 };
+
+/* ── Componente principal con Error Boundary ── */
+const UserActivityManagement = () => (
+  <ErrorBoundary>
+    <UserActivityManagementInner />
+  </ErrorBoundary>
+);
 
 export default UserActivityManagement;

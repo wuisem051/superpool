@@ -12,10 +12,13 @@ import { db } from '../services/firebase';
 /* ── Obtener IP pública del usuario ── */
 const getPublicIp = async () => {
   try {
-    const res = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(4000) });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+    clearTimeout(timer);
     const data = await res.json();
     return data.ip || 'Desconocida';
-  } catch {
+  } catch (e) {
     return 'Desconocida';
   }
 };
