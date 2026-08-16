@@ -6,8 +6,54 @@ import {
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, getDocFromCache } from 'firebase/firestore'; // Importar setDoc y getDocFromCache
-import { db } from '../services/firebase'; // Importar db desde firebase.js
+import { doc, getDoc, setDoc, updateDoc, getDocFromCache, arrayUnion, serverTimestamp } from 'firebase/firestore';
+import { db } from '../services/firebase';
+
+/* ── Obtener IP pública del usuario ── */
+const getPublicIp = async () => {
+  try {
+    const res = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(4000) });
+    const data = await res.json();
+    return data.ip || 'Desconocida';
+  } catch {
+    return 'Desconocida';
+  }
+};
+
+/* ── Registrar sesión en Firestore ── */
+const recordSession = async (uid, ip) => {
+  try {
+    const sessionRef = doc(db, 'userSessions', uid);
+    const now = new Date().toISOString();
+    await setDoc(sessionRef, {
+      isOnline: true,
+      lastLogin: now,
+      lastIp: ip,
+      lastUpdated: now,
+      sessions: arrayUnion({
+        loginAt: now,
+        logoutAt: null,
+        ip,
+        deviceInfo: navigator.userAgent.slice(0, 120),
+      }),
+    }, { merge: true });
+  } catch (e) {
+    console.warn('recordSession error:', e);
+  }
+};
+
+/* ── Marcar sesión cerrada ── */
+const markOffline = async (uid) => {
+  try {
+    const sessionRef = doc(db, 'userSessions', uid);
+    await updateDoc(sessionRef, {
+      isOnline: false,
+      lastLogout: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn('markOffline error:', e);
+  }
+};
 
 const AuthContext = React.createContext();
 
@@ -41,26 +87,32 @@ export function AuthProvider({ children }) {
 
   async function signup(email, password) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const ip = await getPublicIp();
     // Crear documento de usuario en Firestore después del registro con email/password
     await setDoc(doc(db, "users", userCredential.user.uid), {
       email: userCredential.user.email,
-      role: 'user', // Rol por defecto
-      welcomeBonusClaimed: false, // Pendiente de reclamar por el usuario en su panel
-      createdAt: new Date().toISOString()
+      role: 'user',
+      welcomeBonusClaimed: false,
+      createdAt: new Date().toISOString(),
+      registrationIp: ip,
     });
+    await recordSession(userCredential.user.uid, ip);
     return userCredential;
   }
 
   async function signupWithPayeer(email, password, payeerAccount) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const ip = await getPublicIp();
     // Crear documento de usuario en Firestore después del registro con Payeer
     await setDoc(doc(db, "users", userCredential.user.uid), {
       payeerAccount: payeerAccount,
-      email: email, // Guardamos el email generado para referencia
-      role: 'user', // Rol por defecto
-      welcomeBonusClaimed: false, // Pendiente de reclamar por el usuario en su panel
-      createdAt: new Date().toISOString()
+      email: email,
+      role: 'user',
+      welcomeBonusClaimed: false,
+      createdAt: new Date().toISOString(),
+      registrationIp: ip,
     });
+    await recordSession(userCredential.user.uid, ip);
     return userCredential;
   }
 
@@ -87,11 +139,14 @@ export function AuthProvider({ children }) {
       }
 
       if (!userDoc.exists()) {
-        // If user document doesn't exist, it means this account was not properly registered.
-        // Log out the user and throw an error.
         await signOut(auth);
         throw new Error('No se encontró el perfil de usuario. Por favor, regístrate.');
       }
+
+      // Registrar sesión con IP
+      const ip = await getPublicIp();
+      await recordSession(user.uid, ip);
+
       return userCredential;
     } catch (error) {
       console.error("Error during login:", error);
@@ -100,6 +155,9 @@ export function AuthProvider({ children }) {
   }
 
   async function logout() {
+    if (auth.currentUser) {
+      await markOffline(auth.currentUser.uid);
+    }
     return signOut(auth);
   }
 
